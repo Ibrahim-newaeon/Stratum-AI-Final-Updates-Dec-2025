@@ -821,6 +821,41 @@ class TestTikTokOAuthService:
         assert tokens.access_token == "new_tiktok_tok"
 
     @pytest.mark.asyncio
+    async def test_exchange_raises_on_5xx(self) -> None:
+        # OAUTH-002: a 5xx must raise, not be parsed as a success envelope.
+        from app.services.oauth.base import OAuthProviderError
+
+        svc = TikTokOAuthService()
+        _set_test_credentials(svc)
+        resp = _mock_response(503, {})
+        resp.text = AsyncMock(return_value="Service Unavailable")
+        session = _mock_session(resp)
+
+        with patch(
+            "app.services.oauth.tiktok.aiohttp.ClientSession", return_value=session
+        ):
+            with pytest.raises(OAuthProviderError):
+                await svc.exchange_code_for_tokens("code123", "http://redirect")
+
+    @pytest.mark.asyncio
+    async def test_refresh_raises_on_5xx(self) -> None:
+        # OAUTH-002: previously a 5xx with a body lacking "code" could slip
+        # through as success (access_token=None); now it raises.
+        from app.services.oauth.base import OAuthProviderError
+
+        svc = TikTokOAuthService()
+        _set_test_credentials(svc)
+        resp = _mock_response(500, {})
+        resp.text = AsyncMock(return_value="Internal Server Error")
+        session = _mock_session(resp)
+
+        with patch(
+            "app.services.oauth.tiktok.aiohttp.ClientSession", return_value=session
+        ):
+            with pytest.raises(OAuthProviderError):
+                await svc.refresh_access_token("old_refresh")
+
+    @pytest.mark.asyncio
     async def test_revoke_access_returns_true(self) -> None:
         """TikTok has no revoke endpoint; service returns True (let expire)."""
         svc = TikTokOAuthService()
