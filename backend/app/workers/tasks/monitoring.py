@@ -19,6 +19,37 @@ from app.workers.locks import with_distributed_lock
 logger = get_task_logger(__name__)
 
 
+def post_alert_webhook(url: str | None, payload: dict) -> bool:
+    """POST a P0 operational alert to the configured on-call webhook (MON-002).
+
+    No-op (returns False) when no URL is configured. Only http(s) URLs are
+    honored — the scheme guard keeps this from being turned into an SSRF vector
+    via a misconfigured non-http scheme. Best-effort: never raises, so alerting
+    can't take down the monitoring task itself.
+    """
+    if not url:
+        return False
+    if not url.lower().startswith(("http://", "https://")):
+        logger.warning("Ignoring alert_webhook_url with non-http scheme")
+        return False
+    try:
+        import json
+        import urllib.request
+
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode(),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        # nosec B310 — scheme validated to http(s) above; URL is operator config.
+        urllib.request.urlopen(req, timeout=5)  # nosec B310
+        return True
+    except Exception as e:  # noqa: BLE001 - alerting must never break monitoring
+        logger.warning("Webhook escalation failed: %s", e)
+        return False
+
+
 # Explicit name: this module was split out of the old app/workers/tasks.py;
 # without it the auto-generated name gains the submodule segment and the
 # beat schedule's task reference silently dispatches to nothing.
@@ -156,24 +187,9 @@ def check_pipeline_health():
             except (ImportError, Exception) as e:
                 logger.warning("Sentry escalation unavailable: %s", e)
 
-        # Escalate webhook if configured
-        alert_webhook = getattr(settings, "alert_webhook_url", None)
-        if alert_webhook:
-            try:
-                import json
-                import urllib.request
-
-                req = urllib.request.Request(
-                    alert_webhook,
-                    data=json.dumps(health_status).encode(),
-                    headers={"Content-Type": "application/json"},
-                    method="POST",
-                )
-                # nosec B310 — alert_webhook is an operator-configured https URL,
-                # not user input; the scheme is fixed by our own config.
-                urllib.request.urlopen(req, timeout=5)  # nosec B310
-            except Exception as e:
-                logger.warning("Webhook escalation failed: %s", e)
+        # Escalate to the configured on-call webhook (MON-002)
+        if critical_issues:
+            post_alert_webhook(settings.alert_webhook_url, health_status)
 
     logger.info(f"Pipeline health check complete: {health_status['status']}")
     return health_status
