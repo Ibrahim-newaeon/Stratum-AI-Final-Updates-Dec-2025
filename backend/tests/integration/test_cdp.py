@@ -13,7 +13,7 @@ Tests:
 """
 
 from datetime import UTC, datetime, timedelta
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 import pytest_asyncio
@@ -315,6 +315,99 @@ class TestEventIngestion:
         # Verify profile exists
         profile_response = await cdp_client.get(f"/api/v1/cdp/profiles/{profile_id}")
         assert profile_response.status_code == 200
+
+
+class TestGDPRProfileErasure:
+    """SEC-002: a profile erasure must remove ALL of the profile's PII."""
+
+    async def test_erasure_deletes_events_even_when_flag_false(
+        self, cdp_client: AsyncClient
+    ):
+        # Ingest an event with PII → creates a profile + a PII-bearing event.
+        unique_id = uuid4().hex[:8]
+        resp = await cdp_client.post(
+            "/api/v1/cdp/events",
+            json={
+                "events": [
+                    {
+                        "event_name": "Purchase",
+                        "event_time": datetime.now(UTC).isoformat(),
+                        "identifiers": [
+                            {"type": "email", "value": f"erase_{unique_id}@example.com"}
+                        ],
+                        "properties": {"value": 99.0},
+                    }
+                ]
+            },
+        )
+        assert resp.status_code == 201
+        profile_id = resp.json()["results"][0]["profile_id"]
+
+        # Erase with delete_events=false — events must STILL be removed.
+        deleted = await cdp_client.delete(
+            f"/api/v1/cdp/profiles/{profile_id}?delete_events=false"
+        )
+        assert deleted.status_code == 200
+        assert deleted.json()["events_deleted"] >= 1  # erased despite the flag
+
+        # Profile is gone.
+        gone = await cdp_client.get(f"/api/v1/cdp/profiles/{profile_id}")
+        assert gone.status_code == 404
+
+    async def test_erasure_deletes_profile_merge_records(
+        self, cdp_client: AsyncClient, db_session
+    ):
+        from sqlalchemy import func, select
+
+        from app.models.cdp import CDPProfileMerge
+
+        unique_id = uuid4().hex[:8]
+        resp = await cdp_client.post(
+            "/api/v1/cdp/events",
+            json={
+                "events": [
+                    {
+                        "event_name": "SignUp",
+                        "event_time": datetime.now(UTC).isoformat(),
+                        "identifiers": [
+                            {"type": "email", "value": f"merge_{unique_id}@example.com"}
+                        ],
+                    }
+                ]
+            },
+        )
+        profile_id = UUID(resp.json()["results"][0]["profile_id"])
+
+        # A merge record referencing this profile as the surviving party.
+        db_session.add(
+            CDPProfileMerge(
+                tenant_id=(await _tenant_of(db_session, profile_id)),
+                surviving_profile_id=profile_id,
+                merged_profile_id=uuid4(),
+                merge_reason="test",
+            )
+        )
+        await db_session.commit()
+
+        await cdp_client.delete(f"/api/v1/cdp/profiles/{profile_id}")
+
+        remaining = await db_session.execute(
+            select(func.count(CDPProfileMerge.id)).where(
+                CDPProfileMerge.surviving_profile_id == profile_id
+            )
+        )
+        assert (remaining.scalar() or 0) == 0
+
+
+async def _tenant_of(db_session, profile_id):
+    from sqlalchemy import select
+
+    from app.models.cdp import CDPProfile
+
+    row = await db_session.execute(
+        select(CDPProfile.tenant_id).where(CDPProfile.id == profile_id)
+    )
+    return row.scalar_one()
 
 
 # =============================================================================
@@ -1627,7 +1720,11 @@ class TestProfileDeletion:
         assert gone.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_delete_profile_keep_events(self, authenticated_client: AsyncClient):
+    async def test_delete_profile_always_erases_events(
+        self, authenticated_client: AsyncClient
+    ):
+        # SEC-002: delete_events=false no longer keeps events — a GDPR erasure
+        # always removes the profile's PII-bearing events, and the profile.
         profile_id = await _make_profile(authenticated_client)
 
         resp = await authenticated_client.delete(
@@ -1635,7 +1732,8 @@ class TestProfileDeletion:
         )
 
         assert resp.status_code == 200
-        assert resp.json()["events_deleted"] == 0
+        gone = await authenticated_client.get(f"/api/v1/cdp/profiles/{profile_id}")
+        assert gone.status_code == 404
 
     @pytest.mark.asyncio
     async def test_delete_profile_not_found(self, authenticated_client: AsyncClient):

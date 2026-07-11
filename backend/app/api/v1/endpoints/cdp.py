@@ -3916,7 +3916,10 @@ async def remove_profile_from_segment(
 )
 async def delete_profile(
     profile_id: UUID,
-    delete_events: bool = Query(True, description="Also delete all events"),
+    delete_events: bool = Query(
+        True,
+        description="Deprecated — events are always erased for GDPR compliance",
+    ),
     reason: Optional[str] = Query(None, description="Reason for deletion"),
     db: AsyncSession = Depends(get_async_session),
     current_user=Depends(get_current_user),
@@ -3951,13 +3954,13 @@ async def delete_profile(
             detail="Profile not found",
         )
 
-    # Count items to be deleted
-    events_deleted = 0
-    if delete_events:
-        events_result = await db.execute(
-            select(func.count(CDPEvent.id)).where(CDPEvent.profile_id == profile_id)
-        )
-        events_deleted = events_result.scalar() or 0
+    # Count items to be deleted. Events are ALWAYS erased (SEC-002): their JSONB
+    # payloads carry PII (email/phone/raw identifiers), so a GDPR erasure must
+    # remove them regardless of the legacy delete_events flag.
+    events_result = await db.execute(
+        select(func.count(CDPEvent.id)).where(CDPEvent.profile_id == profile_id)
+    )
+    events_deleted = events_result.scalar() or 0
 
     identifiers_result = await db.execute(
         select(func.count(CDPProfileIdentifier.id)).where(
@@ -3978,9 +3981,22 @@ async def delete_profile(
     )
     memberships_deleted = memberships_result.scalar() or 0
 
-    # Delete events if requested
-    if delete_events:
-        await db.execute(delete(CDPEvent).where(CDPEvent.profile_id == profile_id))
+    # Delete events unconditionally — GDPR erasure must remove the events' PII
+    # (SEC-002). The CDPEvent.profile_id FK is ON DELETE SET NULL, so relying on
+    # the profile delete would orphan, not remove, these rows.
+    await db.execute(delete(CDPEvent).where(CDPEvent.profile_id == profile_id))
+
+    # Delete profile-merge records referencing this profile as the surviving OR
+    # the merged party (SEC-002) — their FK is SET NULL, so they would otherwise
+    # survive with an indirect identity link.
+    await db.execute(
+        delete(CDPProfileMerge).where(
+            CDPProfileMerge.surviving_profile_id == profile_id
+        )
+    )
+    await db.execute(
+        delete(CDPProfileMerge).where(CDPProfileMerge.merged_profile_id == profile_id)
+    )
 
     # Delete segment memberships
     await db.execute(
