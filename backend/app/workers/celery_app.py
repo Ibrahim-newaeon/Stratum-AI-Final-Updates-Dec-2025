@@ -131,6 +131,13 @@ celery_app.conf.beat_schedule = {
         "schedule": crontab(minute=30),
         "options": {"queue": "default"},
     },
+    # Worker liveness heartbeat every minute (INF-003) — Railway can't HTTP-probe
+    # the worker, so the API reports its liveness from this Redis heartbeat.
+    "worker-heartbeat": {
+        "task": "app.workers.tasks.worker_heartbeat",
+        "schedule": crontab(minute="*"),
+        "options": {"queue": "default"},
+    },
     # Daily scoring at 4 AM UTC
     "calculate-daily-scores": {
         "task": "app.workers.tasks.calculate_daily_scores",

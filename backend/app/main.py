@@ -587,12 +587,22 @@ def create_application() -> FastAPI:
         provider configuration is reported as configured/not_configured only.
         """
         readiness = await check_readiness()
+        # Worker liveness is informational — it does NOT gate readiness (the API
+        # serves fine without the worker), but surfaces a dead worker/beat that
+        # Railway can't HTTP-probe directly (INF-003).
+        try:
+            from app.workers.tasks.monitoring import worker_is_alive
+
+            worker_status = "alive" if worker_is_alive() else "down"
+        except (ImportError, RuntimeError, OSError):
+            worker_status = "unknown"
         return {
             "status": "healthy" if readiness["ready"] else "unhealthy",
             "version": "1.0.0",
             "environment": settings.app_env,
             "database": readiness["database"],
             "redis": readiness["redis"],
+            "worker": worker_status,
             "email_provider": (
                 "configured" if settings.sendgrid_api_key else "not_configured"
             ),
