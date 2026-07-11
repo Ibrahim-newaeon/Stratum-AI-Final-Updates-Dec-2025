@@ -62,7 +62,9 @@ def validate_outbound_url(url: str) -> None:
         raise SSRFError(f"{host!r} did not resolve to any address")
 
     for info in infos:
-        ip_str = info[4][0]
+        # info[4] is the sockaddr; [0] is the IP address string (str for both
+        # AF_INET and AF_INET6). Cast for mypy since sockaddr is a union type.
+        ip_str = str(info[4][0])
         if _ip_is_blocked(ip_str):
             raise SSRFError(f"{host!r} resolves to a disallowed address: {ip_str}")
 
