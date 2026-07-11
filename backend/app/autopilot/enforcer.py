@@ -103,7 +103,11 @@ class EnforcementSettings(BaseModel):
     tenant_id: int
     enforcement_enabled: bool = True  # Guardrails toggle (False = checks off)
     autopilot_frozen: bool = False  # Emergency stop — True halts all execution
-    default_mode: EnforcementMode = EnforcementMode.ADVISORY
+    # Fail safe (TRUST-003): an unconfigured tenant defaults to SOFT_BLOCK, so a
+    # rule/budget/ROAS violation requires human confirmation instead of being
+    # auto-executed with only a warning (the old ADVISORY default). Clean
+    # actions with no violations are still allowed.
+    default_mode: EnforcementMode = EnforcementMode.SOFT_BLOCK
 
     # Budget thresholds
     max_daily_budget: Optional[float] = None
@@ -258,7 +262,8 @@ class AutopilotEnforcer:
             new_db_settings = TenantEnforcementSettingsDB(
                 tenant_id=tenant_id,
                 enforcement_enabled=True,
-                default_mode=DBEnforcementMode.ADVISORY,
+                # Fail safe on first use (TRUST-003) — see EnforcementSettings.
+                default_mode=DBEnforcementMode.SOFT_BLOCK,
                 budget_increase_limit_pct=30.0,
                 min_roas_threshold=1.0,
                 roas_lookback_days=7,
