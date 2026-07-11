@@ -41,9 +41,11 @@ except ImportError:  # pragma: no cover - redis is a hard dependency in prod
 
 
 from sqlalchemy import and_, delete, func, select, update
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.db.session import async_session_factory
 
 logger = logging.getLogger(__name__)
 
@@ -315,7 +317,15 @@ class DeadLetterQueue:
         return entry
 
     async def _store_entry(self, entry: DLQEntry):
-        """Store entry in Redis or memory."""
+        """Store entry in Redis (fast-access working set) and Postgres (durable
+        system of record).
+
+        Redis/memory carry a TTL and can be evicted or wiped on restart, so on
+        their own they cannot be trusted to retain failed events long enough to
+        investigate or replay. Postgres persistence (CAPI-001) guarantees the
+        failed event survives regardless of the cache tier's state.
+        """
+        stored_in_redis = False
         if self._connected and self._redis:
             try:
                 # Store entry data
@@ -331,17 +341,58 @@ class DeadLetterQueue:
                     self.QUEUE_KEY,
                     {entry.id: entry.last_failure_at.timestamp()},
                 )
-
-                return
+                stored_in_redis = True
             except (ConnectionError, TimeoutError, OSError, RedisError) as e:
                 logger.warning(f"Failed to store DLQ entry in Redis: {e}")
 
-        # Fallback to memory
-        self._memory_queue.append(entry)
+        if not stored_in_redis:
+            # Fallback to memory
+            self._memory_queue.append(entry)
 
-        # Trim if too large
-        if len(self._memory_queue) > self.MAX_MEMORY_ENTRIES:
-            self._memory_queue = self._memory_queue[-self.MAX_MEMORY_ENTRIES :]
+            # Trim if too large
+            if len(self._memory_queue) > self.MAX_MEMORY_ENTRIES:
+                self._memory_queue = self._memory_queue[-self.MAX_MEMORY_ENTRIES :]
+
+        # Durable system of record — always attempted, best-effort so a DB
+        # outage never loses the Redis/memory copy or breaks the send path.
+        await self._persist_to_db(entry)
+
+    async def _persist_to_db(self, entry: DLQEntry) -> None:
+        """Upsert the entry into the ``capi_dead_letter_queue`` Postgres table.
+
+        Keyed on the entry UUID via ``session.merge`` so repeated stores (add,
+        retry, recover, discard) update the same durable row rather than
+        inserting duplicates.
+        """
+        try:
+            # Imported here to avoid a circular import at module load.
+            from app.models.capi_delivery import CAPIDeadLetterEntry
+
+            async with async_session_factory() as db:
+                await db.merge(
+                    CAPIDeadLetterEntry(
+                        id=entry.id,
+                        tenant_id=entry.tenant_id,
+                        platform=entry.platform,
+                        event_id=entry.event_id,
+                        event_name=entry.event_name,
+                        event_data=entry.event_data,
+                        failure_reason=entry.failure_reason,
+                        failure_category=entry.failure_category.value,
+                        error_message=entry.error_message,
+                        retry_count=entry.retry_count,
+                        max_retries=entry.max_retries,
+                        status=entry.status.value,
+                        platform_response=entry.platform_response,
+                        context=entry.context,
+                        first_failure_at=entry.first_failure_at,
+                        last_failure_at=entry.last_failure_at,
+                        recovered_at=entry.recovered_at,
+                    )
+                )
+                await db.commit()
+        except (SQLAlchemyError, ValueError, OSError) as e:
+            logger.error(f"DLQ: failed to persist entry {entry.id} to Postgres: {e}")
 
     async def get_entry(self, entry_id: str) -> Optional[DLQEntry]:
         """

@@ -339,6 +339,10 @@ class CAPIService:
         # trail. Best-effort: audit logging must never fail the actual send.
         if self.tenant_id is not None:
             await self._log_deliveries(events, results)
+            # Capture any platform failures in the Dead Letter Queue so they are
+            # durably retained for investigation and replay (CAPI-001).
+            if failed_platforms:
+                await self._dlq_failed_events(events, results)
 
         # Add to event buffer for analysis
         self._event_buffer.extend(events)
@@ -376,6 +380,40 @@ class CAPIService:
                     )
         except Exception as e:  # noqa: BLE001 - audit logging must not break sends
             logger.warning("capi_delivery_logging_failed", error=str(e))
+
+    async def _dlq_failed_events(self, events: List[Dict[str, Any]], results) -> None:
+        """Enqueue every event that failed delivery into the Dead Letter Queue.
+
+        Runs only for platforms whose ``CAPIResponse.success`` is False (after
+        the in-band tenacity retries in ``send_to_platform`` are exhausted).
+        Best-effort and fully isolated — a DLQ failure must never fail the send.
+        """
+        try:
+            from .dead_letter_queue import get_dlq
+
+            dlq = await get_dlq()
+            for platform, result, _latency in results:
+                if result.success:
+                    continue
+                errors = getattr(result, "errors", None) or []
+                error_message = (
+                    "; ".join(str(e.get("message", e)) for e in errors)
+                    or "delivery failed"
+                )[:500]
+                platform_response = {"errors": errors} if errors else None
+                for event in events:
+                    await dlq.add_failed_event(
+                        tenant_id=self.tenant_id,
+                        platform=platform,
+                        event_name=event.get("event_name", "unknown"),
+                        event_data=event,
+                        error_message=error_message,
+                        retry_count=0,  # synchronous send exhausted; DLQ owns replay
+                        max_retries=3,
+                        platform_response=platform_response,
+                    )
+        except Exception as e:  # noqa: BLE001 - DLQ capture must not break sends
+            logger.warning("capi_dlq_enqueue_failed", error=str(e))
 
     def analyze_data_quality(
         self, user_data: Dict[str, Any], platform: str = None
