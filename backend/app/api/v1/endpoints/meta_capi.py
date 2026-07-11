@@ -107,7 +107,10 @@ async def send_capi_events(
 
     from app.services.capi.capi_service import CAPIService
 
-    capi_service = CAPIService(db)
+    # tenant_id (not db) — CAPIService is session-less; passing the session here
+    # was a latent TypeError (old __init__ took no args). tenant_id also scopes
+    # delivery-log persistence.
+    capi_service = CAPIService(tenant_id)
 
     results = []
     quality_issues = []

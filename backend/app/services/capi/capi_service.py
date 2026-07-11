@@ -7,6 +7,7 @@ event streaming, and data quality analysis.
 """
 
 import asyncio
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Type
@@ -21,6 +22,7 @@ from tenacity import (
 from app.core.logging import get_logger
 
 from .data_quality import DataQualityAnalyzer, QualityReport
+from .delivery_logger import DeliveryStatus, get_delivery_logger
 from .event_mapper import AIEventMapper
 from .pii_hasher import PIIHasher
 from .platform_connectors import (
@@ -36,6 +38,46 @@ from .platform_connectors import (
 )
 
 logger = get_logger(__name__)
+
+
+def _build_delivery_kwargs(
+    *,
+    tenant_id: int,
+    platform: str,
+    event: Dict[str, Any],
+    result: "CAPIResponse",
+    latency_ms: float,
+) -> Dict[str, Any]:
+    """
+    Map one (event, platform-result) pair to ``DeliveryLogger.log_delivery`` kwargs.
+
+    Pure / DB-free so it is unit-testable. Errors are joined from the platform
+    response; the event's unix ``event_time`` is narrowed to a datetime.
+    """
+    params = event.get("parameters") or {}
+    error = None
+    if not result.success and getattr(result, "errors", None):
+        error = "; ".join(str(e.get("message", e)) for e in result.errors)[:500]
+
+    et = event.get("event_time")
+    event_time = (
+        datetime.fromtimestamp(et, tz=timezone.utc)
+        if isinstance(et, (int, float))
+        else None
+    )
+
+    return {
+        "tenant_id": tenant_id,
+        "platform": platform,
+        "event_name": event.get("event_name", "unknown"),
+        "status": DeliveryStatus.SUCCESS if result.success else DeliveryStatus.FAILED,
+        "latency_ms": latency_ms,
+        "event_id": event.get("event_id"),
+        "event_time": event_time,
+        "error_message": error,
+        "event_value": params.get("value"),
+        "currency": params.get("currency"),
+    }
 
 
 @dataclass
@@ -70,8 +112,14 @@ class CAPIService:
         "whatsapp": WhatsAppCAPIConnector,
     }
 
-    def __init__(self):
-        """Initialize the CAPI service."""
+    def __init__(self, tenant_id: Optional[int] = None):
+        """Initialize the CAPI service.
+
+        ``tenant_id`` scopes delivery-log persistence; when set, every send is
+        recorded to ``capi_delivery_logs`` for the audit trail. The endpoint
+        caches one service per tenant, so it passes the tenant here.
+        """
+        self.tenant_id = tenant_id
         self.connectors: Dict[str, BaseCAPIConnector] = {}
         self.hasher = PIIHasher()
         self.mapper = AIEventMapper()
@@ -230,16 +278,21 @@ class CAPIService:
         # Analyze data quality
         quality_report = self.analyzer.analyze_batch(events, platforms)
 
-        # Send to platforms concurrently
+        # Send to platforms concurrently, capturing per-platform latency.
         async def send_to_platform(platform: str) -> tuple:
             connector = self.connectors.get(platform)
+            start = time.perf_counter()
             if not connector:
-                return platform, CAPIResponse(
-                    success=False,
-                    events_received=len(events),
-                    events_processed=0,
-                    errors=[{"message": "Platform not connected"}],
-                    platform=platform,
+                return (
+                    platform,
+                    CAPIResponse(
+                        success=False,
+                        events_received=len(events),
+                        events_processed=0,
+                        errors=[{"message": "Platform not connected"}],
+                        platform=platform,
+                    ),
+                    0.0,
                 )
 
             @retry(
@@ -253,7 +306,7 @@ class CAPIService:
 
             try:
                 result = await _send_with_retry()
-                return platform, result
+                return platform, result, (time.perf_counter() - start) * 1000
             except (ConnectionError, TimeoutError, OSError) as e:
                 logger.error(
                     "capi_send_failed_after_retries",
@@ -261,12 +314,16 @@ class CAPIService:
                     error=str(e),
                     events_count=len(events),
                 )
-                return platform, CAPIResponse(
-                    success=False,
-                    events_received=len(events),
-                    events_processed=0,
-                    errors=[{"message": f"Failed after retries: {e}"}],
-                    platform=platform,
+                return (
+                    platform,
+                    CAPIResponse(
+                        success=False,
+                        events_received=len(events),
+                        events_processed=0,
+                        errors=[{"message": f"Failed after retries: {e}"}],
+                        platform=platform,
+                    ),
+                    (time.perf_counter() - start) * 1000,
                 )
 
         # Execute concurrently
@@ -274,9 +331,14 @@ class CAPIService:
         results = await asyncio.gather(*tasks)
 
         # Compile results
-        platform_results = {p: r for p, r in results}
-        failed_platforms = [p for p, r in results if not r.success]
+        platform_results = {p: r for p, r, _ in results}
+        failed_platforms = [p for p, r, _ in results if not r.success]
         successful_platforms = len(platforms) - len(failed_platforms)
+
+        # Persist a delivery-log record per (event, platform) for the audit
+        # trail. Best-effort: audit logging must never fail the actual send.
+        if self.tenant_id is not None:
+            await self._log_deliveries(events, results)
 
         # Add to event buffer for analysis
         self._event_buffer.extend(events)
@@ -290,6 +352,30 @@ class CAPIService:
             failed_platforms=failed_platforms,
             data_quality_score=quality_report.overall_score,
         )
+
+    async def _log_deliveries(self, events: List[Dict[str, Any]], results) -> None:
+        """
+        Record a ``CapiDelivery`` per (event, platform) result for the audit trail.
+
+        Best-effort — wrapped so an audit/logging failure never fails the send.
+        Uses the shared DeliveryLogger, which buffers and flushes on its own
+        session, so no DB session needs threading through this service.
+        """
+        try:
+            dl = get_delivery_logger()
+            for platform, result, latency in results:
+                for event in events:
+                    await dl.log_delivery(
+                        **_build_delivery_kwargs(
+                            tenant_id=self.tenant_id,
+                            platform=platform,
+                            event=event,
+                            result=result,
+                            latency_ms=latency,
+                        )
+                    )
+        except Exception as e:  # noqa: BLE001 - audit logging must not break sends
+            logger.warning("capi_delivery_logging_failed", error=str(e))
 
     def analyze_data_quality(
         self, user_data: Dict[str, Any], platform: str = None
