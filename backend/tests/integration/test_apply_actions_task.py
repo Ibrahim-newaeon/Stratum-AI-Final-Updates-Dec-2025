@@ -171,6 +171,12 @@ def seeded(sync_engine):
             row.autopilot_frozen = frozen
         session.commit()
 
+    # The signal-health gate now fails CLOSED on no recent data (P0 TRUST-001),
+    # so a tenant with no rollup would defer every action. Seed a HEALTHY rollup
+    # for today by default; tests that exercise the gate add their own
+    # DEGRADED/CRITICAL row, which wins on severity at the latest date.
+    add_health_row(SignalHealthStatus.HEALTHY)
+
     yield {
         "tenant_id": tenant.id,
         "user_id": operator.id,
