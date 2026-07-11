@@ -473,14 +473,17 @@ def create_application() -> FastAPI:
 
     from starlette.staticfiles import StaticFiles
 
-    # Uploads
-    uploads_dir = _Path(os.environ.get("ASSET_UPLOAD_DIR", "uploads/assets"))
-    uploads_dir.mkdir(parents=True, exist_ok=True)
-    app.mount(
-        "/uploads/assets",
-        StaticFiles(directory=str(uploads_dir)),
-        name="uploaded-assets",
-    )
+    # Uploads — only the "local" storage backend serves files from disk here.
+    # With the "s3" backend, assets live in the bucket and file_url points at
+    # S3/R2 directly, so no static mount is needed (INF-001).
+    if (settings.asset_storage_backend or "local").lower() != "s3":
+        uploads_dir = _Path(settings.asset_upload_dir)
+        uploads_dir.mkdir(parents=True, exist_ok=True)
+        app.mount(
+            "/uploads/assets",
+            StaticFiles(directory=str(uploads_dir)),
+            name="uploaded-assets",
+        )
 
     # Frontend SPA — serve built React app from /app/frontend/dist when present.
     # On Railway, frontend ships as a separate nginx service so this directory

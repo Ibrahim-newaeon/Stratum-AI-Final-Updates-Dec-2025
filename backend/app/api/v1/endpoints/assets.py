@@ -6,7 +6,6 @@ Creative asset management for DAM functionality.
 Implements Module B: Digital Asset Management.
 """
 
-import os
 import uuid
 from pathlib import Path
 from typing import List, Optional
@@ -35,13 +34,10 @@ from app.schemas import (
     CreativeAssetUpdate,
     PaginatedResponse,
 )
+from app.services.storage import StorageError, get_object_storage
 
 logger = get_logger(__name__)
 router = APIRouter()
-
-# Upload directory — configurable via env, defaults to ./uploads/assets
-UPLOAD_DIR = Path(os.environ.get("ASSET_UPLOAD_DIR", "uploads/assets"))
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 # Allowed MIME types and max size (20MB)
 ALLOWED_MIME_TYPES = {
@@ -159,31 +155,18 @@ async def upload_asset(
             detail="Invalid tenant identifier",
         )
 
-    tenant_dir = UPLOAD_DIR / tenant_id_safe
-    tenant_dir.mkdir(parents=True, exist_ok=True)
-    file_path = tenant_dir / unique_name
-
-    # Defense in depth: verify resolved path stays within UPLOAD_DIR
+    # Persist via the configured object storage backend (local volume or S3/R2).
+    # On Railway the container FS is ephemeral, so the 's3' backend is what keeps
+    # assets alive across redeploys; the storage layer owns durability + the URL.
+    object_key = f"{tenant_id_safe}/{unique_name}"
     try:
-        resolved_path = file_path.resolve()
-        resolved_upload_dir = UPLOAD_DIR.resolve()
-        if not str(resolved_path).startswith(str(resolved_upload_dir)):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid file path",
-            )
-    except (OSError, RuntimeError):
+        file_url = await get_object_storage().save(object_key, contents, content_type)
+    except StorageError as exc:
+        logger.error("asset_upload_storage_failed", key=object_key, error=str(exc))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Could not resolve file path",
+            detail="Failed to store uploaded file",
         )
-
-    # Write file
-    with open(file_path, "wb") as f:
-        f.write(contents)
-
-    # Build the URL (relative — served by nginx or a static route)
-    file_url = f"/uploads/assets/{tenant_id or 'default'}/{unique_name}"
 
     # Determine asset type from MIME
     asset_type_str = MIME_TO_ASSET_TYPE.get(content_type, "image")
