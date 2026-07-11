@@ -392,6 +392,11 @@ class Settings(BaseSettings):
     # Campaign-builder connector beat tasks (ad-account sync, token refresh,
     # health checks) hit live platform APIs — opt-in, default off (P1-2).
     enable_campaign_builder_beat: bool = Field(default=False)
+    # Newsletter scheduled-send sweep dispatches campaigns whose scheduled_at
+    # has arrived — it sends live email, so the beat is opt-in, default off.
+    # (The manual send endpoint works independently once the task module is
+    # registered in the Celery include.)
+    enable_newsletter_beat: bool = Field(default=False)
 
     @property
     def is_development(self) -> bool:
