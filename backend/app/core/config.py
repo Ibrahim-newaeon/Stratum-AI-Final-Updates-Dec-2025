@@ -397,6 +397,15 @@ class Settings(BaseSettings):
     # (The manual send endpoint works independently once the task module is
     # registered in the Celery include.)
     enable_newsletter_beat: bool = Field(default=False)
+    # Drip campaigns have no execution engine (no drip Celery task exists;
+    # activate flips a flag and manual_trigger writes a "simulated" record) —
+    # shelved off for launch; the whole /drip-campaigns router returns 503.
+    feature_drip_campaigns: bool = Field(default=False)
+    # Campaign publish marks a draft PUBLISHED with no platform call and no
+    # platform_campaign_id (hardcoded SUCCESS, dispatch commented out) — a
+    # data-integrity risk. Gated off until a real publish adapter lands; only
+    # the publish endpoint is 503'd, draft CRUD stays available.
+    enable_campaign_publish: bool = Field(default=False)
 
     @property
     def is_development(self) -> bool:

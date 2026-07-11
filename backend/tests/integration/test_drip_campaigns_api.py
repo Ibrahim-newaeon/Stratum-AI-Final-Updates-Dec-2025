@@ -16,7 +16,15 @@ The trigger -> execution-log -> analytics flow is covered separately in
 import pytest
 from httpx import AsyncClient
 
+from app.core.config import settings
+
 pytestmark = pytest.mark.integration
+
+
+@pytest.fixture(autouse=True)
+def _enable_drip(monkeypatch):
+    """Drip ships gated off; enable the flag so the API is reachable here."""
+    monkeypatch.setattr(settings, "feature_drip_campaigns", True)
 
 
 def _sequence(name="Welcome series", trigger_type="user_subscribed", **extra):

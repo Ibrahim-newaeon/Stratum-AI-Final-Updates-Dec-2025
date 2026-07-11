@@ -21,6 +21,7 @@ from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.config import settings
 from app.core.logging import get_logger
 from app.core.security import require_permission
 from app.db.session import get_async_session
@@ -38,6 +39,23 @@ from app.schemas.response import APIResponse, PaginatedResponse
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/tenant/{tenant_id}", tags=["campaign-builder"])
+
+
+async def require_campaign_publish_enabled() -> None:
+    """
+    Gate campaign publish behind a feature flag.
+
+    Publishing currently marks a draft PUBLISHED with no platform call and no
+    ``platform_campaign_id`` (hardcoded SUCCESS, dispatch commented out) — it
+    records campaigns as live that don't exist on-platform, a data-integrity
+    risk. Gated off until a real publish adapter lands. Only publish is 503'd;
+    draft CRUD stays available.
+    """
+    if not settings.enable_campaign_publish:
+        raise HTTPException(
+            status_code=503,
+            detail="Campaign publishing is not enabled on this deployment.",
+        )
 
 
 # =============================================================================
@@ -811,6 +829,7 @@ async def reject_campaign_draft(
 @router.post(
     "/campaign-drafts/{draft_id}/publish",
     response_model=APIResponse[CampaignDraftResponse],
+    dependencies=[Depends(require_campaign_publish_enabled)],
 )
 async def publish_campaign_draft(
     request: Request,
