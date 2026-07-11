@@ -385,8 +385,13 @@ class RetrainingPipeline:
         # Move staged model to production
         staged_files = [
             f"{model_name}.pkl",
+            # Integrity sidecars (ML-002) travel with their .pkl so the promoted
+            # model verifies against a matching checksum, never a stale one.
+            f"{model_name}.pkl.sha256",
             f"{model_name}_scaler.pkl",
+            f"{model_name}_scaler.pkl.sha256",
             f"{model_name}_imputer.pkl",
+            f"{model_name}_imputer.pkl.sha256",
             f"{model_name}_metadata.json",
         ]
 
@@ -441,8 +446,13 @@ class RetrainingPipeline:
 
         files_to_archive = [
             f"{model_name}.pkl",
+            # Archive the integrity sidecars too (ML-002) so a rollback restores
+            # a model together with its matching checksum.
+            f"{model_name}.pkl.sha256",
             f"{model_name}_scaler.pkl",
+            f"{model_name}_scaler.pkl.sha256",
             f"{model_name}_imputer.pkl",
+            f"{model_name}_imputer.pkl.sha256",
             f"{model_name}_metadata.json",
         ]
 

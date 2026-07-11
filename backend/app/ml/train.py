@@ -721,19 +721,24 @@ class ModelTrainer:
         imputer: Optional[SimpleImputer] = None,
     ) -> None:
         """Save model, preprocessors, and metadata to disk."""
-        # Save model
+        from app.ml.integrity import write_checksum
+
+        # Save model (+ sidecar SHA-256 for load-time integrity verification, ML-002)
         model_path = self.models_path / f"{name}.pkl"
         joblib.dump(model, model_path)
+        write_checksum(model_path)
 
         # Save scaler if present
         if scaler is not None:
             scaler_path = self.models_path / f"{name}_scaler.pkl"
             joblib.dump(scaler, scaler_path)
+            write_checksum(scaler_path)
 
         # Save imputer if present
         if imputer is not None:
             imputer_path = self.models_path / f"{name}_imputer.pkl"
             joblib.dump(imputer, imputer_path)
+            write_checksum(imputer_path)
 
         # Serialize best_params if present (convert numpy types)
         serializable_metrics = {}
