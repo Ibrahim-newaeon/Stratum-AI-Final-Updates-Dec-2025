@@ -76,6 +76,7 @@ from app.api.v1.endpoints import (  # Previously unregistered endpoints; Gap end
     webhooks,
     whatsapp,
 )
+from app.auth.permissions import require_super_admin
 from app.core.feature_gate import FeatureGate
 from app.core.tiers import Feature
 
@@ -161,10 +162,16 @@ api_router.include_router(
 )
 
 # ML Training & Data Upload
+# Model management operates on the GLOBAL, app-wide model registry (upload,
+# train, delete .pkl artifacts) — a platform operation, not tenant-scoped.
+# Gated to super admins (ML-003): previously every endpoint here was
+# unauthenticated, letting anyone upload a pickle (arbitrary-code-execution
+# risk on load) or delete production models.
 api_router.include_router(
     ml_training.router,
     prefix="/ml",
     tags=["ML Training"],
+    dependencies=[Depends(require_super_admin)],
 )
 
 # Live Predictions & ROAS Optimization
