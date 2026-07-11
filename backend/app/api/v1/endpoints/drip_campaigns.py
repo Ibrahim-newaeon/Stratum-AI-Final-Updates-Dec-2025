@@ -19,13 +19,36 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.models.drip import DripExecutionRecord, DripSequence
 from app.schemas.response import APIResponse
 
 logger = get_logger(__name__)
-router = APIRouter(prefix="/drip-campaigns", tags=["Drip Campaigns"])
+
+
+async def require_drip_enabled() -> None:
+    """
+    Gate Drip Campaigns behind a feature flag.
+
+    Drip has no execution engine — no drip Celery task exists, ``activate`` only
+    flips a flag, and ``manual_trigger`` writes a "simulated" record. Shelved
+    off for launch: every route returns 503 instead of shipping a builder whose
+    sequences never actually send.
+    """
+    if not settings.feature_drip_campaigns:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Drip Campaigns are not enabled on this deployment.",
+        )
+
+
+router = APIRouter(
+    prefix="/drip-campaigns",
+    tags=["Drip Campaigns"],
+    dependencies=[Depends(require_drip_enabled)],
+)
 
 
 # =============================================================================

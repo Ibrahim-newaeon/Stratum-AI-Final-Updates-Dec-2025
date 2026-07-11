@@ -12,7 +12,15 @@ endpoint. Complements ``test_drip_campaigns_api.py`` (CRUD + lifecycle).
 import pytest
 from httpx import AsyncClient
 
+from app.core.config import settings
+
 pytestmark = pytest.mark.integration
+
+
+@pytest.fixture(autouse=True)
+def _enable_drip(monkeypatch):
+    """Drip ships gated off; enable the flag so the API is reachable here."""
+    monkeypatch.setattr(settings, "feature_drip_campaigns", True)
 
 
 def _sequence(name="Persisted series", **extra):
