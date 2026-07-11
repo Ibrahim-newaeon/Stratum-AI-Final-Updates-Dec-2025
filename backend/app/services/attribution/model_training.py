@@ -20,6 +20,12 @@ from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
+from app.models.attribution import DataDrivenModelType as DDModelTypeEnum
+from app.models.attribution import (
+    ModelStatus,
+    ModelTrainingRun,
+    TrainedAttributionModel,
+)
 from app.services.attribution.markov_attribution import (
     MarkovAttributionService,
     MarkovChainModel,
@@ -37,6 +43,49 @@ class DataDrivenModelType:
 
     MARKOV_CHAIN = "markov_chain"
     SHAPLEY_VALUE = "shapley_value"
+
+
+def _build_trained_model(
+    *,
+    tenant_id: int,
+    model_type: str,
+    channel_type: str,
+    start_date: datetime,
+    end_date: datetime,
+    result: Dict[str, Any],
+    created_by_user_id: Optional[int] = None,
+) -> TrainedAttributionModel:
+    """
+    Map a successful training result dict onto an (unsaved) TrainedAttributionModel.
+
+    Pure / DB-free so it can be unit-tested without a session. ``status=ACTIVE``
+    means "trained & available"; the model actually used for attribution is
+    marked via the separate ``is_active`` flag (set by the activate endpoint).
+    """
+    weights = result.get("attribution_weights") or {}
+    return TrainedAttributionModel(
+        tenant_id=tenant_id,
+        model_name=result.get("model_name"),
+        model_type=DDModelTypeEnum(model_type),
+        channel_type=channel_type,
+        status=ModelStatus.ACTIVE,
+        is_active=False,
+        training_start=(
+            start_date.date() if isinstance(start_date, datetime) else start_date
+        ),
+        training_end=end_date.date() if isinstance(end_date, datetime) else end_date,
+        journey_count=result.get("journey_count"),
+        converting_journeys=result.get("converting_journeys"),
+        unique_channels=result.get("unique_channels") or (len(weights) or None),
+        attribution_weights=weights,
+        model_data=result.get("model_data"),
+        removal_effects=result.get("removal_effects"),
+        baseline_conversion_rate=(
+            result.get("baseline_conversion_rate") or result.get("baseline")
+        ),
+        shapley_values=result.get("shapley_values"),
+        created_by_user_id=created_by_user_id,
+    )
 
 
 class ModelTrainingService:
@@ -57,6 +106,7 @@ class ModelTrainingService:
         include_non_converting: bool = True,
         min_journeys: int = 100,
         model_name: Optional[str] = None,
+        created_by_user_id: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
         Train a data-driven attribution model.
@@ -69,9 +119,13 @@ class ModelTrainingService:
             include_non_converting: Include non-converting journeys
             min_journeys: Minimum journeys required
             model_name: Optional name for the model
+            created_by_user_id: User who triggered training (for the registry)
 
         Returns:
-            Training results with model data
+            Training results with model data. On success the model is persisted
+            to ``trained_attribution_models`` and its id is returned as
+            ``model_id`` (previously training was stateless — the frontend's
+            model-registry CRUD 404'd because nothing was ever stored).
         """
         if model_type == DataDrivenModelType.MARKOV_CHAIN:
             service = MarkovAttributionService(self.db, self.tenant_id)
@@ -95,8 +149,60 @@ class ModelTrainingService:
             result["model_name"] = (
                 model_name or f"{model_type}_{channel_type}_{end_date.date()}"
             )
+            model = await self._persist_trained_model(
+                model_type=model_type,
+                channel_type=channel_type,
+                start_date=start_date,
+                end_date=end_date,
+                result=result,
+                created_by_user_id=created_by_user_id,
+            )
+            result["model_id"] = str(model.id)
 
         return result
+
+    async def _persist_trained_model(
+        self,
+        *,
+        model_type: str,
+        channel_type: str,
+        start_date: datetime,
+        end_date: datetime,
+        result: Dict[str, Any],
+        created_by_user_id: Optional[int] = None,
+    ) -> TrainedAttributionModel:
+        """Persist a successful training result and its run history record."""
+        model = _build_trained_model(
+            tenant_id=self.tenant_id,
+            model_type=model_type,
+            channel_type=channel_type,
+            start_date=start_date,
+            end_date=end_date,
+            result=result,
+            created_by_user_id=created_by_user_id,
+        )
+        self.db.add(model)
+        # Flush so the client-side UUID default is populated before we FK to it.
+        await self.db.flush()
+
+        run = ModelTrainingRun(
+            tenant_id=self.tenant_id,
+            model_id=model.id,
+            model_type=DDModelTypeEnum(model_type),
+            channel_type=channel_type,
+            status=ModelStatus.ACTIVE,
+            training_start=model.training_start,
+            training_end=model.training_end,
+            journey_count=result.get("journey_count"),
+            converting_journeys=result.get("converting_journeys"),
+            unique_channels=model.unique_channels,
+            completed_at=datetime.now(timezone.utc),
+            triggered_by_user_id=created_by_user_id,
+        )
+        self.db.add(run)
+        await self.db.commit()
+        await self.db.refresh(model)
+        return model
 
     async def train_all_models(
         self,
