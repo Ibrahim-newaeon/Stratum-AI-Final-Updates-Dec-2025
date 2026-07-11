@@ -17,10 +17,16 @@ from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.models import User
+from app.models.attribution import (
+    ModelStatus,
+    ModelTrainingRun,
+    TrainedAttributionModel,
+)
 from app.services.attribution import (
     DataDrivenModelType,
     MarkovAttributionService,
@@ -107,6 +113,7 @@ class ModelTrainingResponse(BaseModel):
     """Response from model training."""
 
     success: bool
+    model_id: Optional[str] = None
     model_type: Optional[str] = None
     model_name: Optional[str] = None
     channel_type: Optional[str] = None
@@ -178,6 +185,7 @@ async def train_model(
         include_non_converting=request.include_non_converting,
         min_journeys=request.min_journeys,
         model_name=request.model_name,
+        created_by_user_id=current_user.id,
     )
 
     return ModelTrainingResponse(**result)
@@ -469,4 +477,171 @@ async def get_training_requirements(
         "recommendations": (
             recommendations if recommendations else ["Data sufficient for training"]
         ),
+    }
+
+
+# =============================================================================
+# Model Registry (persisted trained models)
+# =============================================================================
+
+
+def _serialize_model(m: TrainedAttributionModel, *, full: bool = False) -> dict:
+    """Serialize a TrainedAttributionModel to a JSON-safe dict."""
+    data = {
+        "id": str(m.id),
+        "model_name": m.model_name,
+        "model_type": getattr(m.model_type, "value", m.model_type),
+        "channel_type": m.channel_type,
+        "status": getattr(m.status, "value", m.status),
+        "is_active": m.is_active,
+        "training_start": m.training_start.isoformat() if m.training_start else None,
+        "training_end": m.training_end.isoformat() if m.training_end else None,
+        "journey_count": m.journey_count,
+        "converting_journeys": m.converting_journeys,
+        "unique_channels": m.unique_channels,
+        "validation_accuracy": m.validation_accuracy,
+        "created_at": m.created_at.isoformat() if m.created_at else None,
+    }
+    if full:
+        data.update(
+            {
+                "attribution_weights": m.attribution_weights,
+                "removal_effects": m.removal_effects,
+                "shapley_values": m.shapley_values,
+                "baseline_conversion_rate": m.baseline_conversion_rate,
+                "model_data": m.model_data,
+            }
+        )
+    return data
+
+
+async def _get_owned_model(
+    db: AsyncSession, tenant_id: int, model_id: UUID
+) -> TrainedAttributionModel:
+    result = await db.execute(
+        select(TrainedAttributionModel).where(
+            TrainedAttributionModel.id == model_id,
+            TrainedAttributionModel.tenant_id == tenant_id,
+        )
+    )
+    model = result.scalar_one_or_none()
+    if model is None:
+        raise HTTPException(status_code=404, detail="Trained model not found")
+    return model
+
+
+@router.get("/models")
+async def list_trained_models(
+    model_type: Optional[str] = Query(None),
+    is_active: Optional[bool] = Query(None),
+    status: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db),
+    tenant_id: int = Depends(get_tenant_id),
+):
+    """List trained attribution models for the tenant (newest first)."""
+    query = select(TrainedAttributionModel).where(
+        TrainedAttributionModel.tenant_id == tenant_id
+    )
+    if model_type:
+        query = query.where(TrainedAttributionModel.model_type == model_type)
+    if is_active is not None:
+        query = query.where(TrainedAttributionModel.is_active.is_(is_active))
+    if status:
+        query = query.where(TrainedAttributionModel.status == status)
+    query = query.order_by(TrainedAttributionModel.created_at.desc())
+
+    result = await db.execute(query)
+    models = result.scalars().all()
+    return {
+        "status": "success",
+        "count": len(models),
+        "models": [_serialize_model(m) for m in models],
+    }
+
+
+@router.get("/models/{model_id}")
+async def get_trained_model(
+    model_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    tenant_id: int = Depends(get_tenant_id),
+):
+    """Get a trained model with its full weights/effects (its 'results')."""
+    model = await _get_owned_model(db, tenant_id, model_id)
+    return {"status": "success", "model": _serialize_model(model, full=True)}
+
+
+@router.post("/models/{model_id}/activate")
+async def activate_trained_model(
+    model_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    tenant_id: int = Depends(get_tenant_id),
+):
+    """Mark a model as the active one for its (model_type, channel_type)."""
+    model = await _get_owned_model(db, tenant_id, model_id)
+
+    # Only one active model per (model_type, channel_type) — deactivate siblings.
+    siblings = await db.execute(
+        select(TrainedAttributionModel).where(
+            TrainedAttributionModel.tenant_id == tenant_id,
+            TrainedAttributionModel.model_type == model.model_type,
+            TrainedAttributionModel.channel_type == model.channel_type,
+            TrainedAttributionModel.is_active.is_(True),
+        )
+    )
+    for other in siblings.scalars().all():
+        other.is_active = False
+
+    model.is_active = True
+    model.status = ModelStatus.ACTIVE
+    await db.commit()
+    await db.refresh(model)
+    return {"status": "success", "model": _serialize_model(model)}
+
+
+@router.post("/models/{model_id}/archive")
+async def archive_trained_model(
+    model_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    tenant_id: int = Depends(get_tenant_id),
+):
+    """Archive a model, removing it from active use."""
+    model = await _get_owned_model(db, tenant_id, model_id)
+    model.is_active = False
+    model.status = ModelStatus.ARCHIVED
+    await db.commit()
+    await db.refresh(model)
+    return {"status": "success", "model": _serialize_model(model)}
+
+
+@router.get("/training-runs")
+async def list_training_runs(
+    limit: int = Query(50, ge=1, le=200),
+    db: AsyncSession = Depends(get_db),
+    tenant_id: int = Depends(get_tenant_id),
+):
+    """List model training-run history for the tenant (newest first)."""
+    result = await db.execute(
+        select(ModelTrainingRun)
+        .where(ModelTrainingRun.tenant_id == tenant_id)
+        .order_by(ModelTrainingRun.started_at.desc())
+        .limit(limit)
+    )
+    runs = result.scalars().all()
+    return {
+        "status": "success",
+        "count": len(runs),
+        "runs": [
+            {
+                "id": str(r.id),
+                "model_id": str(r.model_id) if r.model_id else None,
+                "model_type": getattr(r.model_type, "value", r.model_type),
+                "channel_type": r.channel_type,
+                "status": getattr(r.status, "value", r.status),
+                "started_at": r.started_at.isoformat() if r.started_at else None,
+                "completed_at": r.completed_at.isoformat() if r.completed_at else None,
+                "journey_count": r.journey_count,
+                "converting_journeys": r.converting_journeys,
+            }
+            for r in runs
+        ],
     }
