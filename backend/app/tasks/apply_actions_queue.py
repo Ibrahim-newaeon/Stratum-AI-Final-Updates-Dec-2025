@@ -13,7 +13,7 @@ tokens stored in the application settings.
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from celery import shared_task
@@ -1131,28 +1131,54 @@ async def _reset_async_engine() -> None:
     await dispose_stale_async_pool()
 
 
+# Autopilot must not execute on stale/absent signal data. The daily rollup
+# writes PRIOR-day rows (today has no rows during the live day), so we read the
+# most recent rollup within this freshness window and fail CLOSED if there is
+# none. Set SIGNAL_HEALTH_FRESHNESS_DAYS to tune.
+SIGNAL_HEALTH_FRESHNESS_DAYS = 2
+
+
 async def check_signal_health(db: AsyncSession, tenant_id: int) -> bool:
     """
-    Check if signal health allows action execution.
-    Returns True if OK/Risk, False if Degraded/Critical.
+    Check whether signal health allows autopilot execution.
+
+    Returns True only when the most recent signal-health rollup within the
+    freshness window is healthy (OK/Risk). **Fails CLOSED**: if there is no
+    rollup within the window, execution is blocked rather than proceeding on
+    missing data — the core trust-gate guarantee. (Previously this returned
+    True on no-data, so during the normal live day — when today has no rows
+    yet — the gate was a no-op and approved actions executed unverified.)
     """
+    cutoff = datetime.now(timezone.utc).date() - timedelta(
+        days=SIGNAL_HEALTH_FRESHNESS_DAYS
+    )
     result = await db.execute(
         select(FactSignalHealthDaily).where(
             and_(
                 FactSignalHealthDaily.tenant_id == tenant_id,
-                FactSignalHealthDaily.date == datetime.now(timezone.utc).date(),
+                FactSignalHealthDaily.date >= cutoff,
             )
         )
     )
     records = result.scalars().all()
 
     if not records:
-        # No data means we proceed cautiously
-        return True
+        # Fail closed — no recent signal data means we do NOT execute.
+        logger.warning(
+            "signal_health_no_recent_data_blocking",
+            extra={
+                "tenant_id": tenant_id,
+                "freshness_days": SIGNAL_HEALTH_FRESHNESS_DAYS,
+            },
+        )
+        return False
 
-    # Check if any platform has degraded/critical status
+    # Evaluate the most recent rollup date we have (per-platform rows share it).
+    latest_date = max(record.date for record in records)
     for record in records:
-        if record.status in [SignalHealthStatus.DEGRADED, SignalHealthStatus.CRITICAL]:
+        if record.date != latest_date:
+            continue
+        if record.status in (SignalHealthStatus.DEGRADED, SignalHealthStatus.CRITICAL):
             return False
 
     return True
