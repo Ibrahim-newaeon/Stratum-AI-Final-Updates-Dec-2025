@@ -394,10 +394,47 @@ def calculate_data_freshness(
 # =============================================================================
 
 
+# Default EMQ driver weights (sum to 1.0). A tenant may override these via a
+# per-driver weights map passed to calculate_emq_score (ML-06).
+DEFAULT_EMQ_WEIGHTS: Dict[str, float] = {
+    "Event Match Rate": 0.30,
+    "Pixel Coverage": 0.25,
+    "Conversion Latency": 0.20,
+    "Attribution Accuracy": 0.15,
+    "Data Freshness": 0.10,
+}
+
+
+def _apply_weight_overrides(
+    drivers: "List[EmqDriverResult]", weights: Optional[Dict[str, float]]
+) -> None:
+    """Override driver weights per-tenant (ML-06), renormalized to sum 1.0.
+
+    Only positive numeric overrides are honored (non-numeric/negative/bool keep
+    the default). Weights are renormalized afterwards so the score remains a
+    proper 0-100 weighted average even for partial or unnormalized input.
+    """
+    if not weights:
+        return
+    for d in drivers:
+        override = weights.get(d.name)
+        if (
+            isinstance(override, (int, float))
+            and not isinstance(override, bool)
+            and override >= 0
+        ):
+            d.weight = float(override)
+    total = sum(d.weight for d in drivers)
+    if total > 0:
+        for d in drivers:
+            d.weight = d.weight / total
+
+
 def calculate_emq_score(
     metrics: PlatformMetrics,
     previous_metrics: Optional[PlatformMetrics] = None,
     now: Optional[datetime] = None,
+    weights: Optional[Dict[str, float]] = None,
 ) -> EmqCalculationResult:
     """
     Calculate complete EMQ score from platform metrics.
@@ -422,6 +459,9 @@ def calculate_emq_score(
         calculate_data_freshness(metrics, now),
     ]
 
+    # Apply per-tenant weight overrides (ML-06), if any.
+    _apply_weight_overrides(drivers, weights)
+
     # Calculate weighted score
     score = sum(d.value * d.weight for d in drivers)
     score = round(score, 1)
@@ -436,6 +476,7 @@ def calculate_emq_score(
             calculate_attribution_accuracy(previous_metrics),
             calculate_data_freshness(previous_metrics, now - timedelta(days=1)),
         ]
+        _apply_weight_overrides(prev_drivers, weights)
         previous_score = round(sum(d.value * d.weight for d in prev_drivers), 1)
 
         # Calculate trends
