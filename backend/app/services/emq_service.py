@@ -195,6 +195,8 @@ class EmqService:
                         "name": driver_name,
                         "value": round(avg_value, 1),
                         "weight": weight,
+                        # Points this driver adds to the score (TRUST-005).
+                        "contribution": round(round(avg_value, 1) * weight, 2),
                         "status": status,
                         "trend": trend,
                     }

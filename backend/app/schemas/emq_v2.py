@@ -33,6 +33,9 @@ class EmqDriver(EMQBaseSchema):
     name: str
     value: float
     weight: float
+    contribution: float = Field(
+        default=0.0, description="Points added to the EMQ score (value * weight)"
+    )
     status: Literal["good", "warning", "critical"]
     trend: Literal["up", "down", "flat"]
 
