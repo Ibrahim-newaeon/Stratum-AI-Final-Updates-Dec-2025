@@ -138,6 +138,18 @@ class LocalInferenceStrategy(InferenceStrategy):
         ):
             return self._models[model_name]
 
+        # Integrity check before unpickling (ML-002). A present-but-mismatched
+        # checksum means a tampered/corrupt model — refuse rather than execute
+        # its pickle. A missing sidecar loads but is logged as unverified.
+        from app.ml.integrity import verify_checksum
+
+        verified = verify_checksum(model_file)
+        if verified is False:
+            logger.error("model_checksum_mismatch_refusing", model_name=model_name)
+            return None
+        if verified is None:
+            logger.warning("model_unverified_no_checksum", model_name=model_name)
+
         try:
             import joblib
 
