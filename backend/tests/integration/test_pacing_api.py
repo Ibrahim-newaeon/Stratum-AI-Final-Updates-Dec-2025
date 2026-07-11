@@ -126,20 +126,20 @@ class TestTargetCrud:
 
 class TestPacingReads:
     async def test_pacing_all_empty(self, authenticated_client: AsyncClient):
-        resp = await authenticated_client.get(_BASE + "/pacing/all")
+        resp = await authenticated_client.get(_BASE + "/all")
         assert resp.status_code == 200, resp.text
         assert isinstance(resp.json(), dict)
 
     async def test_pacing_target(self, authenticated_client: AsyncClient):
         target_id = await _create_target(authenticated_client)
-        resp = await authenticated_client.get(f"{_BASE}/pacing/target/{target_id}")
+        resp = await authenticated_client.get(f"{_BASE}/target/{target_id}")
         # With no KPI data the service returns a graceful pacing envelope (200);
         # an unknown/empty target may surface as 404.
         assert resp.status_code in {200, 404}, resp.text
 
     async def test_pacing_history_empty(self, authenticated_client: AsyncClient):
         target_id = await _create_target(authenticated_client)
-        resp = await authenticated_client.get(f"{_BASE}/pacing/history/{target_id}")
+        resp = await authenticated_client.get(f"{_BASE}/history/{target_id}")
         assert resp.status_code == 200, resp.text
         body = resp.json()
         assert body["status"] == "success"
