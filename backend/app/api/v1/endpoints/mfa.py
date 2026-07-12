@@ -220,7 +220,9 @@ async def initiate_mfa_setup(
                 detail="MFA is already enabled. Disable it first to reconfigure.",
             )
 
-        setup_data = await service.initiate_setup(current_user.id, current_user.email)
+        setup_data = await service.initiate_setup(
+            current_user.id, current_user.email, current_user.tenant_id
+        )
 
         logger.info("mfa_setup_initiated", user_id=current_user.id)
 

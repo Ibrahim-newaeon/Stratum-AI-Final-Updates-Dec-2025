@@ -1217,7 +1217,9 @@ class TestMFAServiceInitiateSetup:
         svc = MFAService(db)
 
         with patch("app.services.mfa_service.encrypt_pii", return_value="encrypted"):
-            result = await svc.initiate_setup(user_id=1, email="user@test.com")
+            result = await svc.initiate_setup(
+                user_id=1, email="user@test.com", tenant_id=1
+            )
 
         assert isinstance(result, TOTPSetupData)
         assert len(result.secret) > 0
@@ -1517,6 +1519,7 @@ class TestMFAServiceInternalVerifyCode:
         # _verify_code uses type(user).id, so we need a real class with an `id` attr
         class FakeUser:
             id = 1
+            tenant_id = 1
             totp_secret = "enc"
             backup_codes = {"codes": hashed.copy()}
 
