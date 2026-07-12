@@ -15,7 +15,6 @@ Permissions are granular and can be checked individually or in combination.
 """
 
 from enum import Enum
-from functools import wraps
 from typing import TYPE_CHECKING, Callable, List, Optional, Set
 
 from fastapi import HTTPException, Request, status
@@ -583,9 +582,40 @@ def has_all_permissions(role: str, permissions: List[Permission]) -> bool:
     return all(p in user_permissions for p in permissions)
 
 
+def is_superadmin_role(role: Optional[str]) -> bool:
+    """Canonical check for whether a role string denotes the platform superadmin.
+
+    Single source of truth for the ``role == "superadmin"`` comparison that the
+    request-state dependencies below (and callers) would otherwise inline
+    (AUTH-004). Distinct from the middleware-set ``request.state.is_superadmin``
+    flag — this classifies a role string.
+    """
+    return role is not None and role.lower() == "superadmin"
+
+
 # =============================================================================
 # FastAPI Dependency Decorators
 # =============================================================================
+
+
+def _authenticated_role(request: Request) -> str:
+    """Return the caller's role from ``request.state``, or raise 401.
+
+    Shared authentication guard for the request-state-based dependencies below
+    (AUTH-004) — previously each inlined this identical check. A principal is
+    authenticated only when the middleware has populated both ``role`` and
+    ``user_id``.
+    """
+    role = getattr(request.state, "role", None)
+    user_id = getattr(request.state, "user_id", None)
+
+    if not role or not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return role
 
 
 def require_permissions(
@@ -612,16 +642,7 @@ def require_permissions(
     """
 
     async def permission_checker(request: Request) -> None:
-        # Get user role from request state (set by middleware)
-        role = getattr(request.state, "role", None)
-        user_id = getattr(request.state, "user_id", None)
-
-        if not role or not user_id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Authentication required",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+        role = _authenticated_role(request)
 
         # Check permissions based on require_all flag
         if require_all:
@@ -658,15 +679,7 @@ def require_role(roles: List[str]) -> Callable:
     """
 
     async def role_checker(request: Request) -> None:
-        role = getattr(request.state, "role", None)
-        user_id = getattr(request.state, "user_id", None)
-
-        if not role or not user_id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Authentication required",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+        role = _authenticated_role(request)
 
         if role.lower() not in [r.lower() for r in roles]:
             raise HTTPException(
@@ -692,17 +705,9 @@ async def require_super_admin(request: Request) -> None:
         ):
             ...
     """
-    role = getattr(request.state, "role", None)
-    user_id = getattr(request.state, "user_id", None)
+    role = _authenticated_role(request)
 
-    if not role or not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    if role.lower() != "superadmin":
+    if not is_superadmin_role(role):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Super admin access required",
@@ -710,71 +715,28 @@ async def require_super_admin(request: Request) -> None:
 
 
 # =============================================================================
-# Permission Decorator for Service Functions
-# =============================================================================
-
-
-def check_permission(permission: Permission) -> Callable:
-    """
-    Decorator for service functions that need permission checking.
-
-    The decorated function must have 'role' as a keyword argument.
-
-    Usage:
-        @check_permission(Permission.CAMPAIGN_WRITE)
-        async def create_campaign(data: dict, role: str, tenant_id: int):
-            ...
-    """
-
-    def decorator(func: Callable) -> Callable:
-        @wraps(func)
-        async def wrapper(*args, **kwargs):
-            role = kwargs.get("role")
-            if not role:
-                raise ValueError(
-                    "Role argument required for permission-checked functions"
-                )
-
-            if not has_permission(role, permission):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"Permission denied: {permission.value}",
-                )
-
-            return await func(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
-
-
-# =============================================================================
 # Resource-Level Permission (PermLevel) Dependency
 # =============================================================================
 
 
-def require_permission(resource: str, level: PermLevel) -> Callable:
+def require_resource_level(resource: str, level: PermLevel) -> Callable:
     """
     FastAPI dependency that checks the user's role against a PermLevel.
+
+    Renamed from ``require_permission`` (AUTH-004) to end the name collision
+    with ``app.core.security.require_permission`` — importing the wrong one
+    silently applied a different authorization model.
 
     Args:
         resource: Resource name (e.g., "clients", "clients.portal_users")
         level: Required PermLevel (VIEW, EDIT, FULL)
 
     Usage:
-        @router.post("/clients", dependencies=[Depends(require_permission("clients", PermLevel.FULL))])
+        @router.post("/clients", dependencies=[Depends(require_resource_level("clients", PermLevel.FULL))])
     """
 
     async def _checker(request: Request) -> None:
-        role = getattr(request.state, "role", None)
-        user_id = getattr(request.state, "user_id", None)
-
-        if not role or not user_id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Authentication required",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+        role = _authenticated_role(request)
 
         allowed_roles = _PERM_LEVEL_ROLES.get(level, set())
         if role.lower() not in allowed_roles:

@@ -20,7 +20,7 @@ from app.auth.permissions import (
 )
 from app.auth.permissions import get_accessible_client_ids as perm_get_accessible
 from app.auth.permissions import (
-    require_permission,
+    require_resource_level,
 )
 from app.base_schemas import APIResponse, PaginatedResponse
 from app.core.logging import get_logger
@@ -157,7 +157,7 @@ async def list_clients(
     "",
     response_model=APIResponse[ClientResponse],
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(require_permission("clients", PermLevel.FULL))],
+    dependencies=[Depends(require_resource_level("clients", PermLevel.FULL))],
 )
 async def create_client(
     payload: ClientCreate,
@@ -297,7 +297,7 @@ async def get_client(
 @router.patch(
     "/{client_id}",
     response_model=APIResponse[ClientResponse],
-    dependencies=[Depends(require_permission("clients", PermLevel.EDIT))],
+    dependencies=[Depends(require_resource_level("clients", PermLevel.EDIT))],
 )
 async def update_client(
     client_id: int,
@@ -382,7 +382,7 @@ async def update_client(
 @router.delete(
     "/{client_id}",
     response_model=APIResponse,
-    dependencies=[Depends(require_permission("clients", PermLevel.FULL))],
+    dependencies=[Depends(require_resource_level("clients", PermLevel.FULL))],
 )
 async def delete_client(
     client_id: int,
@@ -542,7 +542,7 @@ async def get_client_summary(
 @router.get(
     "/{client_id}/assignments",
     response_model=APIResponse[list[ClientAssignmentResponse]],
-    dependencies=[Depends(require_permission("clients", PermLevel.VIEW))],
+    dependencies=[Depends(require_resource_level("clients", PermLevel.VIEW))],
 )
 async def list_assignments(
     client_id: int,
@@ -632,7 +632,7 @@ async def list_assignments(
     "/{client_id}/assignments",
     response_model=APIResponse[ClientAssignmentResponse],
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(require_permission("clients", PermLevel.FULL))],
+    dependencies=[Depends(require_resource_level("clients", PermLevel.FULL))],
 )
 async def create_assignment(
     client_id: int,
@@ -733,7 +733,7 @@ async def create_assignment(
 @router.delete(
     "/{client_id}/assignments/{user_id}",
     response_model=APIResponse,
-    dependencies=[Depends(require_permission("clients", PermLevel.FULL))],
+    dependencies=[Depends(require_resource_level("clients", PermLevel.FULL))],
 )
 async def delete_assignment(
     client_id: int,
@@ -802,7 +802,9 @@ async def delete_assignment(
     "/{client_id}/invite-portal",
     response_model=APIResponse,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(require_permission("clients.portal_users", PermLevel.EDIT))],
+    dependencies=[
+        Depends(require_resource_level("clients.portal_users", PermLevel.EDIT))
+    ],
 )
 async def invite_portal_user(
     client_id: int,
@@ -1001,7 +1003,7 @@ async def create_portal_request(
 @router.get(
     "/{client_id}/requests",
     response_model=APIResponse,
-    dependencies=[Depends(require_permission("clients.view", PermLevel.VIEW))],
+    dependencies=[Depends(require_resource_level("clients.view", PermLevel.VIEW))],
     tags=["Portal"],
 )
 async def list_client_requests(
@@ -1071,7 +1073,7 @@ async def list_client_requests(
 @router.post(
     "/{client_id}/requests/{request_id}/review",
     response_model=APIResponse,
-    dependencies=[Depends(require_permission("clients.edit", PermLevel.EDIT))],
+    dependencies=[Depends(require_resource_level("clients.edit", PermLevel.EDIT))],
     tags=["Portal"],
 )
 async def review_client_request(
