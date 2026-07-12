@@ -47,8 +47,8 @@ RUN apt-get purge -y --auto-remove build-essential libpq-dev \
 # Copy application code (.dockerignore excludes tests, cache, etc.)
 COPY --chown=appuser:appgroup . .
 
-# Ensure start.sh is executable
-RUN chmod +x /app/start.sh
+# Ensure entrypoint + release-phase bootstrap scripts are executable
+RUN chmod +x /app/start.sh /app/release.sh
 
 # Create directories for file uploads and ML data
 RUN mkdir -p /app/ml_service/training_data /app/uploads /app/temp && \
