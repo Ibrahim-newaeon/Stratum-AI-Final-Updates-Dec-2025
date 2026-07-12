@@ -103,3 +103,18 @@ def test_empty_string_passthrough():
 def test_corrupted_ciphertext_raises():
     with pytest.raises(ValueError):
         decrypt_pii("not-valid-ciphertext", tenant_id=5)
+
+
+def test_cross_tenant_dek_fails_closed():
+    """Ciphertext encrypted under tenant A's DEK must not decrypt under tenant B."""
+    pii_keys._clear_cache()
+    pii_keys._DEK_CACHE[101] = Fernet.generate_key()
+    pii_keys._DEK_CACHE[202] = Fernet.generate_key()
+
+    blob = encrypt_pii("secret@example.com", 101)
+    # Correct tenant round-trips
+    assert decrypt_pii(blob, 101) == "secret@example.com"
+    # Wrong tenant fails closed (never returns ciphertext)
+    with pytest.raises(ValueError):
+        decrypt_pii(blob, 202)
+    pii_keys._clear_cache()
