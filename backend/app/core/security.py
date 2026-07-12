@@ -261,6 +261,13 @@ def decrypt_pii(ciphertext: str, tenant_id: int | None = None) -> str:
         if dek is not None:
             keys.append(dek)
         keys.append(_get_fernet_key(tenant_id))
+        # Legacy data was written under the true-global key (tenant_id=None,
+        # base salt only). When a tenant is supplied, _get_fernet_key(tenant_id)
+        # is tenant-salted and will NOT match that data, so try the true-global
+        # key last. (When tenant_id is None the two are identical — no need to
+        # add a duplicate.)
+        if tenant_id is not None:
+            keys.append(_get_fernet_key(None))
 
         last_exc: Exception | None = None
         for key in keys:
