@@ -87,9 +87,11 @@ async def export_user_data(
         "export_date": datetime.now(timezone.utc).isoformat(),
         "user_id": user.id,
         "profile": {
-            "email": decrypt_pii(user.email),
-            "full_name": decrypt_pii(user.full_name) if user.full_name else None,
-            "phone": decrypt_pii(user.phone) if user.phone else None,
+            "email": decrypt_pii(user.email, user.tenant_id),
+            "full_name": (
+                decrypt_pii(user.full_name, user.tenant_id) if user.full_name else None
+            ),
+            "phone": decrypt_pii(user.phone, user.tenant_id) if user.phone else None,
             "role": user.role.value,
             "locale": user.locale,
             "timezone": user.timezone,
