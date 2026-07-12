@@ -1,0 +1,24 @@
+# Railway config for the Celery WORKER service [INF-009].
+#
+# Point a dedicated Railway service at this file via
+#   Service → Settings → Config-as-code → Config Path: backend/railway.worker.toml
+# (root directory = backend/, same as the API service).
+#
+# The image is the backend Dockerfile whose ENTRYPOINT is start.sh. start.sh
+# runs `exec "$@"` when a command is passed, so this startCommand runs the
+# worker directly and SKIPS migrations/casts/seeds — only the API service owns
+# schema changes (see start.sh:9-16). Do NOT add a healthcheckPath here: the
+# worker serves no HTTP; Railway treats the running container as healthy.
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+noCache = true
+
+[deploy]
+# --concurrency is deliberately conservative: the image bakes the ML models,
+# and each prefork child imports the full app, so memory scales with
+# concurrency. Raise it (or scale replicas) once you know the instance size.
+# --max-tasks-per-child recycles children to bound memory growth from ML tasks.
+startCommand = "celery -A app.workers.celery_app worker --loglevel=info --concurrency=2 --max-tasks-per-child=200"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
