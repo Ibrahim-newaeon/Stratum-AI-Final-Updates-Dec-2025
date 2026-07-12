@@ -215,7 +215,13 @@ def encrypt_pii(plaintext: str, tenant_id: int | None = None) -> str:
     if not plaintext:
         return ""
 
-    fernet = Fernet(_get_fernet_key(tenant_id))
+    # Prefer the tenant's own data-encryption key (AUTH-05); fall back to the
+    # legacy global-derived key when the tenant has no provisioned DEK cached
+    # (e.g. tenant_id is None, or key store not yet initialized).
+    from app.core.pii_keys import get_cached_dek
+
+    dek = get_cached_dek(tenant_id)
+    fernet = Fernet(dek) if dek is not None else Fernet(_get_fernet_key(tenant_id))
     encrypted = fernet.encrypt(plaintext.encode("utf-8"))
     return base64.urlsafe_b64encode(encrypted).decode("utf-8")
 
@@ -242,11 +248,28 @@ def decrypt_pii(ciphertext: str, tenant_id: int | None = None) -> str:
     if not ciphertext:
         return ""
 
+    from app.core.pii_keys import get_cached_dek
+
     try:
-        fernet = Fernet(_get_fernet_key(tenant_id))
-        decrypted = fernet.decrypt(base64.urlsafe_b64decode(ciphertext.encode("utf-8")))
-        return decrypted.decode("utf-8")
-    except (InvalidToken, Exception) as exc:
+        raw = base64.urlsafe_b64decode(ciphertext.encode("utf-8"))
+
+        # Dual-read (AUTH-05): try the tenant's own DEK first, then fall back to
+        # the legacy global-derived key so data written before the tenant was
+        # provisioned still decrypts. No mass re-encryption required.
+        dek = get_cached_dek(tenant_id)
+        keys = []
+        if dek is not None:
+            keys.append(dek)
+        keys.append(_get_fernet_key(tenant_id))
+
+        last_exc: Exception | None = None
+        for key in keys:
+            try:
+                return Fernet(key).decrypt(raw).decode("utf-8")
+            except InvalidToken as exc:
+                last_exc = exc
+        raise last_exc if last_exc is not None else InvalidToken()
+    except Exception as exc:
         # Never silently return ciphertext as plaintext — that leaks encrypted
         # data into contexts that expect decrypted values (logs, API responses).
         raise ValueError(

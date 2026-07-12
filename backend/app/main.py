@@ -238,6 +238,19 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     except Exception as e:
         logger.warning("superadmin_seed_failed", error=str(e))
 
+    # Load per-tenant PII encryption keys into the in-memory cache, provisioning
+    # any tenant that lacks one (AUTH-05). Non-fatal: on failure, encrypt/decrypt
+    # fall back to the legacy global-derived key (dual-read).
+    try:
+        from app.core.pii_keys import initialize_pii_keys
+        from app.db.session import async_session_factory
+
+        async with async_session_factory() as db:
+            result = await initialize_pii_keys(db)
+        logger.info("pii_keys_ready", **result)
+    except Exception as e:
+        logger.warning("pii_keys_init_failed", error=str(e))
+
     yield
 
     # Shutdown
