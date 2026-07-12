@@ -262,6 +262,18 @@ async def create_tenant(
     await db.commit()
     await db.refresh(tenant)
 
+    # Provision this tenant's PII data-encryption key (AUTH-05). Non-fatal: if it
+    # fails, the startup key-store init backfills it and PII falls back to the
+    # legacy global-derived key (dual-read) in the meantime.
+    try:
+        from app.core.pii_keys import ensure_tenant_dek
+
+        await ensure_tenant_dek(tenant.id, db)
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        logger.warning("tenant_dek_provision_failed", tenant_id=tenant.id, error=str(e))
+
     logger.info(f"Tenant created: {tenant.slug} (ID: {tenant.id})")
 
     return APIResponse(

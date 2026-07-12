@@ -175,6 +175,7 @@ from app.models import (  # noqa: F401  isort: skip
     cdp,
     cms,
     embed_widgets,
+    encryption,
     newsletter,
     onboarding,
     settings,
