@@ -229,9 +229,15 @@ class TestBudgetEnforcement:
     @pytest.mark.asyncio
     async def test_budget_increase_within_limit(self, enforcer):
         """Test budget increase within percentage limit."""
+        # ADVISORY isolates the percentage-limit check from the high-risk
+        # confirmation gate: budget_increase is a high-risk action that would
+        # otherwise require confirmation under the default SOFT_BLOCK (TRUST-004).
         await enforcer.update_settings(
             tenant_id=1,
-            updates={"budget_increase_limit_pct": 30.0},
+            updates={
+                "budget_increase_limit_pct": 30.0,
+                "default_mode": EnforcementMode.ADVISORY,
+            },
         )
 
         # 20% increase should be allowed
@@ -910,9 +916,15 @@ class TestEdgeCases:
     @pytest.mark.asyncio
     async def test_zero_budget_handling(self, enforcer):
         """Test handling of zero budget values."""
+        # ADVISORY so the high-risk confirmation gate (TRUST-004) doesn't mask
+        # what this test checks: that a zero current budget doesn't raise a
+        # division error.
         await enforcer.update_settings(
             tenant_id=1,
-            updates={"budget_increase_limit_pct": 30.0},
+            updates={
+                "budget_increase_limit_pct": 30.0,
+                "default_mode": EnforcementMode.ADVISORY,
+            },
         )
 
         # Increasing from zero should not cause division error
