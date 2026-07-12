@@ -12,7 +12,7 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from sqlalchemy import and_, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.analytics.logic.recommend import (
@@ -42,13 +42,21 @@ async def get_entity_metrics(
     """
     from app.models import Campaign
 
+    # The recommendations engine needs per-campaign rows, but this must not scan
+    # an unbounded number of them [API-002]. Cap at the 1000 highest-spend
+    # campaigns — the ones that actually drive recommendations — so a tenant with
+    # a very large campaign count can't load its whole table into memory. No
+    # effect for the vast majority of tenants (< 1000 campaigns).
     result = await db.execute(
-        select(Campaign).where(
+        select(Campaign)
+        .where(
             and_(
                 Campaign.tenant_id == tenant_id,
                 Campaign.is_deleted == False,
             )
         )
+        .order_by(Campaign.total_spend_cents.desc().nullslast())
+        .limit(1000)
     )
     campaigns = result.scalars().all()
 
@@ -89,42 +97,61 @@ async def get_baseline_metrics(
     """
     from app.models import Campaign
 
-    result = await db.execute(
-        select(Campaign).where(
-            and_(
-                Campaign.tenant_id == tenant_id,
-                Campaign.is_deleted == False,
-            )
-        )
+    tenant_campaigns = and_(
+        Campaign.tenant_id == tenant_id,
+        Campaign.is_deleted == False,
     )
-    campaigns = result.scalars().all()
 
-    if not campaigns:
+    # Portfolio-level baseline is a single set of aggregates over all the
+    # tenant's campaigns — compute it in SQL rather than loading every row to
+    # sum in Python [API-002].
+    agg = (
+        await db.execute(
+            select(
+                func.count(Campaign.id),
+                func.coalesce(func.sum(Campaign.total_spend_cents), 0),
+                func.coalesce(func.sum(Campaign.revenue_cents), 0),
+                func.coalesce(func.sum(Campaign.conversions), 0),
+                func.coalesce(func.sum(Campaign.impressions), 0),
+                func.coalesce(func.sum(Campaign.clicks), 0),
+            ).where(tenant_campaigns)
+        )
+    ).one()
+
+    (
+        n,
+        spend_cents,
+        revenue_cents,
+        total_conversions,
+        total_impressions,
+        total_clicks,
+    ) = agg
+    if n == 0:
         return {}
 
-    # Calculate portfolio-level baselines from campaign history
-    total_spend = sum((c.total_spend_cents or 0) / 100 for c in campaigns)
-    total_revenue = sum((c.revenue_cents or 0) / 100 for c in campaigns)
-    total_conversions = sum(c.conversions or 0 for c in campaigns)
-    total_impressions = sum(c.impressions or 0 for c in campaigns)
-    total_clicks = sum(c.clicks or 0 for c in campaigns)
-    n = len(campaigns)
+    total_spend = spend_cents / 100
+    total_revenue = revenue_cents / 100
 
     avg_spend = total_spend / n if n > 0 else 0
     avg_roas = total_revenue / total_spend if total_spend > 0 else 0
     avg_cpa = total_spend / total_conversions if total_conversions > 0 else 0
     avg_ctr = total_clicks / total_impressions * 100 if total_impressions > 0 else 0
 
-    baselines = {}
-    for c in campaigns:
-        baselines[str(c.id)] = BaselineMetrics(
+    # Every campaign shares the same portfolio baseline; fetch just the ids
+    # (not full rows) to key the map.
+    ids = (
+        (await db.execute(select(Campaign.id).where(tenant_campaigns))).scalars().all()
+    )
+
+    return {
+        str(campaign_id): BaselineMetrics(
             avg_spend=avg_spend,
             avg_roas=avg_roas,
             avg_cpa=avg_cpa,
             avg_ctr=avg_ctr,
         )
-
-    return baselines
+        for campaign_id in ids
+    }
 
 
 async def check_signal_health_for_autopilot(
@@ -161,13 +188,19 @@ async def detect_campaign_anomalies(
     """
     from app.models import Campaign
 
+    # Bounded scan [API-002]: check the 1000 highest-spend campaigns rather than
+    # the tenant's entire table. Anomalies on top-spend campaigns are the ones
+    # that matter; no effect for tenants with < 1000 campaigns.
     result = await db.execute(
-        select(Campaign).where(
+        select(Campaign)
+        .where(
             and_(
                 Campaign.tenant_id == tenant_id,
                 Campaign.is_deleted == False,
             )
         )
+        .order_by(Campaign.total_spend_cents.desc().nullslast())
+        .limit(1000)
     )
     campaigns = result.scalars().all()
 
@@ -556,22 +589,30 @@ async def get_kpis(
     # Query campaign data for KPIs
     from app.models import Campaign
 
-    result = await db.execute(
-        select(Campaign).where(
-            and_(
-                Campaign.tenant_id == tenant_id,
-                Campaign.is_deleted == False,
-            )
-        )
+    tenant_campaigns = and_(
+        Campaign.tenant_id == tenant_id,
+        Campaign.is_deleted == False,
     )
-    campaigns = result.scalars().all()
 
-    # Calculate current metrics
-    total_spend = sum((c.total_spend_cents or 0) / 100 for c in campaigns)
-    total_revenue = sum((c.revenue_cents or 0) / 100 for c in campaigns)
-    total_conversions = sum(c.conversions or 0 for c in campaigns)
-    total_impressions = sum(c.impressions or 0 for c in campaigns)
-    total_clicks = sum(c.clicks or 0 for c in campaigns)
+    # KPIs are pure aggregates — sum in SQL instead of loading every campaign
+    # row into memory [API-002].
+    totals = (
+        await db.execute(
+            select(
+                func.coalesce(func.sum(Campaign.total_spend_cents), 0),
+                func.coalesce(func.sum(Campaign.revenue_cents), 0),
+                func.coalesce(func.sum(Campaign.conversions), 0),
+                func.coalesce(func.sum(Campaign.impressions), 0),
+                func.coalesce(func.sum(Campaign.clicks), 0),
+            ).where(tenant_campaigns)
+        )
+    ).one()
+
+    total_spend = totals[0] / 100
+    total_revenue = totals[1] / 100
+    total_conversions = totals[2]
+    total_impressions = totals[3]
+    total_clicks = totals[4]
 
     roas = total_revenue / total_spend if total_spend > 0 else 0
     cpa = total_spend / total_conversions if total_conversions > 0 else 0
@@ -587,15 +628,28 @@ async def get_kpis(
             "trend": trend,
         }
 
-    # Platform breakdown
+    # Platform breakdown — aggregate per platform in SQL.
+    platform_rows = (
+        await db.execute(
+            select(
+                Campaign.platform,
+                func.coalesce(func.sum(Campaign.total_spend_cents), 0),
+                func.coalesce(func.sum(Campaign.revenue_cents), 0),
+                func.coalesce(func.sum(Campaign.conversions), 0),
+            )
+            .where(tenant_campaigns)
+            .group_by(Campaign.platform)
+        )
+    ).all()
+
     by_platform: Dict[str, Any] = {}
-    for c in campaigns:
-        plat = c.platform.value if c.platform else "unknown"
-        if plat not in by_platform:
-            by_platform[plat] = {"spend": 0, "revenue": 0, "conversions": 0}
-        by_platform[plat]["spend"] += (c.total_spend_cents or 0) / 100
-        by_platform[plat]["revenue"] += (c.revenue_cents or 0) / 100
-        by_platform[plat]["conversions"] += c.conversions or 0
+    for platform, spend_cents, revenue_cents, conversions in platform_rows:
+        plat = platform.value if platform else "unknown"
+        by_platform[plat] = {
+            "spend": spend_cents / 100,
+            "revenue": revenue_cents / 100,
+            "conversions": conversions,
+        }
 
     kpis = {
         "date": target_date.isoformat(),
