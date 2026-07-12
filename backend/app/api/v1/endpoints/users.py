@@ -36,12 +36,12 @@ class InviteUserRequest(BaseModel):
     department: Optional[str] = Field(None, max_length=100)
 
 
-def _safe_decrypt(value: Optional[str]) -> Optional[str]:
+def _safe_decrypt(value: Optional[str], tenant_id: Optional[int]) -> Optional[str]:
     """Decrypt PII, returning the raw value if decryption fails."""
     if not value:
         return None
     try:
-        return decrypt_pii(value)
+        return decrypt_pii(value, tenant_id)
     except (ValueError, TypeError, KeyError, OSError):
         # Value may be stored in plaintext or encrypted with a different key
         return value
@@ -89,9 +89,9 @@ async def get_current_user(
         data=UserProfileResponse(
             id=user.id,
             tenant_id=user.tenant_id,
-            email=_safe_decrypt(user.email) or "",
-            full_name=_safe_decrypt(user.full_name),
-            phone=_safe_decrypt(user.phone),
+            email=_safe_decrypt(user.email, user.tenant_id) or "",
+            full_name=_safe_decrypt(user.full_name, user.tenant_id),
+            phone=_safe_decrypt(user.phone, user.tenant_id),
             role=user.role,
             locale=user.locale,
             timezone=user.timezone,
@@ -145,9 +145,9 @@ async def update_current_user(
 
     # Encrypt PII fields
     if "full_name" in update_dict and update_dict["full_name"]:
-        update_dict["full_name"] = encrypt_pii(update_dict["full_name"])
+        update_dict["full_name"] = encrypt_pii(update_dict["full_name"], user.tenant_id)
     if "phone" in update_dict and update_dict["phone"]:
-        update_dict["phone"] = encrypt_pii(update_dict["phone"])
+        update_dict["phone"] = encrypt_pii(update_dict["phone"], user.tenant_id)
 
     for field, value in update_dict.items():
         if hasattr(user, field):
@@ -160,9 +160,9 @@ async def update_current_user(
         data=UserProfileResponse(
             id=user.id,
             tenant_id=user.tenant_id,
-            email=_safe_decrypt(user.email) or "",
-            full_name=_safe_decrypt(user.full_name),
-            phone=_safe_decrypt(user.phone),
+            email=_safe_decrypt(user.email, user.tenant_id) or "",
+            full_name=_safe_decrypt(user.full_name, user.tenant_id),
+            phone=_safe_decrypt(user.phone, user.tenant_id),
             role=user.role,
             locale=user.locale,
             timezone=user.timezone,
@@ -217,8 +217,10 @@ async def list_users(
             UserResponse(
                 id=u.id,
                 tenant_id=u.tenant_id,
-                email=_safe_decrypt(u.email) or "",
-                full_name=_safe_decrypt(u.full_name) if u.full_name else None,
+                email=_safe_decrypt(u.email, u.tenant_id) or "",
+                full_name=(
+                    _safe_decrypt(u.full_name, u.tenant_id) if u.full_name else None
+                ),
                 role=u.role,
                 locale=u.locale,
                 timezone=u.timezone,
@@ -304,15 +306,17 @@ async def invite_user(
         if "department" in invite_data.model_fields_set:
             user.department = invite_data.department
         if invite_data.full_name:
-            user.full_name = encrypt_pii(invite_data.full_name)
+            user.full_name = encrypt_pii(invite_data.full_name, user.tenant_id)
     else:
         user = User(
             tenant_id=tenant_id,
-            email=encrypt_pii(invite_data.email.lower()),
+            email=encrypt_pii(invite_data.email.lower(), tenant_id),
             email_hash=email_hash,
             password_hash=get_password_hash(temp_password),
             full_name=(
-                encrypt_pii(invite_data.full_name) if invite_data.full_name else None
+                encrypt_pii(invite_data.full_name, tenant_id)
+                if invite_data.full_name
+                else None
             ),
             role=user_role,
             department=invite_data.department,
@@ -367,7 +371,10 @@ async def invite_user(
             )
             inviter = inviter_result.scalar_one_or_none()
             if inviter and inviter.full_name:
-                inviter_name = _safe_decrypt(inviter.full_name) or "An administrator"
+                inviter_name = (
+                    _safe_decrypt(inviter.full_name, inviter.tenant_id)
+                    or "An administrator"
+                )
 
         # Get tenant name
         if tenant_id:
@@ -462,7 +469,9 @@ async def update_user(
     # Update fields
     if update_data.full_name is not None:
         user.full_name = (
-            encrypt_pii(update_data.full_name) if update_data.full_name else None
+            encrypt_pii(update_data.full_name, user.tenant_id)
+            if update_data.full_name
+            else None
         )
 
     if update_data.role is not None:
@@ -491,8 +500,12 @@ async def update_user(
         data=UserResponse(
             id=user.id,
             tenant_id=user.tenant_id,
-            email=_safe_decrypt(user.email) or "",
-            full_name=_safe_decrypt(user.full_name) if user.full_name else None,
+            email=_safe_decrypt(user.email, user.tenant_id) or "",
+            full_name=(
+                _safe_decrypt(user.full_name, user.tenant_id)
+                if user.full_name
+                else None
+            ),
             role=user.role,
             locale=user.locale,
             timezone=user.timezone,
