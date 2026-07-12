@@ -23,7 +23,6 @@ from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
 from app.core.logging import get_logger
-from app.core.security import require_permission
 from app.db.session import get_async_session
 from app.models.campaign_builder import (
     AdPlatform,

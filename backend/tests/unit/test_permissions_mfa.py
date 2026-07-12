@@ -13,7 +13,7 @@ Comprehensive tests for the two untested Authentication sub-systems:
    - Resource scope per role
    - Sidebar visibility per role
    - FastAPI dependencies: require_permissions, require_role, require_super_admin
-   - check_permission decorator, require_permission (PermLevel-based)
+   - require_resource_level (PermLevel-based), is_superadmin_role predicate
    - Client-scope helpers: enforce_client_access, get_accessible_client_ids
 
 2. MFA / TOTP (app/services/mfa_service.py)
@@ -46,15 +46,15 @@ from app.auth.permissions import (
     Permission,
     PermLevel,
     can_manage_role,
-    check_permission,
     get_permission_level,
     get_resource_scope,
     get_user_permissions,
     has_all_permissions,
     has_any_permission,
     has_permission,
-    require_permission,
+    is_superadmin_role,
     require_permissions,
+    require_resource_level,
     require_role,
     require_super_admin,
 )
@@ -660,55 +660,37 @@ class TestRequireSuperAdmin:
 
 
 # =============================================================================
-# check_permission Decorator
+# is_superadmin_role predicate
 # =============================================================================
 
 
 @pytest.mark.unit
-class TestCheckPermissionDecorator:
+class TestIsSuperadminRole:
 
-    @pytest.mark.asyncio
-    async def test_authorized_call_succeeds(self) -> None:
-        @check_permission(Permission.CAMPAIGN_WRITE)
-        async def create_campaign(data, *, role):
-            return "created"
+    def test_superadmin_true_case_insensitive(self) -> None:
+        assert is_superadmin_role("superadmin") is True
+        assert is_superadmin_role("SuperAdmin") is True
 
-        result = await create_campaign({}, role="admin")
-        assert result == "created"
+    def test_other_roles_false(self) -> None:
+        assert is_superadmin_role("admin") is False
+        assert is_superadmin_role("viewer") is False
 
-    @pytest.mark.asyncio
-    async def test_unauthorized_raises_403(self) -> None:
-        from fastapi import HTTPException
-
-        @check_permission(Permission.SYSTEM_ADMIN)
-        async def nuke(*, role):
-            return "boom"
-
-        with pytest.raises(HTTPException) as exc:
-            await nuke(role="viewer")
-        assert exc.value.status_code == 403
-
-    @pytest.mark.asyncio
-    async def test_missing_role_raises_value_error(self) -> None:
-        @check_permission(Permission.CAMPAIGN_READ)
-        async def read_camp():
-            return "data"
-
-        with pytest.raises(ValueError, match="Role argument required"):
-            await read_camp()
+    def test_empty_or_none_false(self) -> None:
+        assert is_superadmin_role(None) is False
+        assert is_superadmin_role("") is False
 
 
 # =============================================================================
-# require_permission (PermLevel-based)
+# require_resource_level (PermLevel-based)
 # =============================================================================
 
 
 @pytest.mark.unit
-class TestRequirePermissionPermLevel:
+class TestRequireResourceLevel:
 
     @pytest.mark.asyncio
     async def test_allowed_role_passes(self) -> None:
-        checker = require_permission("clients", PermLevel.VIEW)
+        checker = require_resource_level("clients", PermLevel.VIEW)
         req = _make_request(role="admin", user_id=1)
         await checker(req)
 
@@ -717,7 +699,7 @@ class TestRequirePermissionPermLevel:
         from fastapi import HTTPException
 
         # PermLevel.FULL requires superadmin or admin per _PERM_LEVEL_ROLES
-        checker = require_permission("clients", PermLevel.FULL)
+        checker = require_resource_level("clients", PermLevel.FULL)
         req = _make_request(role="viewer", user_id=1)
         with pytest.raises(HTTPException) as exc:
             await checker(req)
@@ -727,7 +709,7 @@ class TestRequirePermissionPermLevel:
     async def test_no_auth_raises_401(self) -> None:
         from fastapi import HTTPException
 
-        checker = require_permission("clients", PermLevel.VIEW)
+        checker = require_resource_level("clients", PermLevel.VIEW)
         req = _make_request()
         with pytest.raises(HTTPException) as exc:
             await checker(req)
