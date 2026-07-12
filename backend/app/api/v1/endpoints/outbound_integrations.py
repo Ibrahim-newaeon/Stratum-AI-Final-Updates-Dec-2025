@@ -14,6 +14,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -328,8 +329,11 @@ async def sync_to_warehouse(
             {"t": tenant_id},
         )
         campaign_count = result.mappings().first()["c"]
-    except Exception:
-        pass
+    except SQLAlchemyError as exc:
+        logger.warning(
+            "outbound_integrations.campaign_count_query_failed", error=str(exc)
+        )
+        await db.rollback()
 
     try:
         result = await db.execute(
@@ -339,8 +343,11 @@ async def sync_to_warehouse(
             {"t": tenant_id},
         )
         metric_count = result.mappings().first()["c"]
-    except Exception:
-        pass
+    except SQLAlchemyError as exc:
+        logger.warning(
+            "outbound_integrations.metric_count_query_failed", error=str(exc)
+        )
+        await db.rollback()
 
     total_rows = campaign_count + metric_count + event_count
     duration = time.perf_counter() - start
