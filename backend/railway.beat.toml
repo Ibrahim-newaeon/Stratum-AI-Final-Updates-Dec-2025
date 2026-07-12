@@ -1,0 +1,24 @@
+# Railway config for the Celery BEAT (scheduler) service [INF-009].
+#
+# Point a dedicated Railway service at this file via
+#   Service → Settings → Config-as-code → Config Path: backend/railway.beat.toml
+# (root directory = backend/, same as the API service).
+#
+# Like the worker, start.sh runs this command directly and SKIPS migrations
+# (see start.sh:9-16). Beat serves no HTTP, so there is no healthcheckPath.
+#
+# CRITICAL: beat MUST run as exactly ONE replica. Two schedulers would each
+# fire every entry in celery_app.conf.beat_schedule, double-dispatching signal
+# rollups, ROAS alerts, audience/attribution syncs, etc. numReplicas is pinned
+# to 1 below — do not scale this service, and do not embed beat in the worker
+# via `worker --beat` if the worker is ever scaled past 1.
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+noCache = true
+
+[deploy]
+startCommand = "celery -A app.workers.celery_app beat --loglevel=info"
+numReplicas = 1
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
