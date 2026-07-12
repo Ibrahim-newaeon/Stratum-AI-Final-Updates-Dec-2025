@@ -594,8 +594,8 @@ async def execute_sql_query(
                     if result.cursor.description
                     else []
                 )
-            except Exception:
-                pass
+            except (AttributeError, TypeError) as exc:
+                logger.debug("sql_query_column_extraction_failed", error=str(exc))
 
         # Convert rows to lists
         data_rows = []

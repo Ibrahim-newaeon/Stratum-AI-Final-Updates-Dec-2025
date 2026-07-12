@@ -14,6 +14,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select, text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -120,8 +121,9 @@ async def get_developer_portal(
             {"t": tenant_id},
         )
         requests_24h = result.mappings().first()["c"]
-    except Exception:
-        pass
+    except SQLAlchemyError as exc:
+        logger.warning("developer_portal.requests_24h_query_failed", error=str(exc))
+        await db.rollback()
 
     try:
         result = await db.execute(
@@ -132,8 +134,9 @@ async def get_developer_portal(
             {"t": tenant_id},
         )
         requests_30d = result.mappings().first()["c"]
-    except Exception:
-        pass
+    except SQLAlchemyError as exc:
+        logger.warning("developer_portal.requests_30d_query_failed", error=str(exc))
+        await db.rollback()
 
     sdk_examples = [
         {
@@ -291,8 +294,9 @@ async def get_usage_analytics(
             }
             for r in result.mappings().all()
         ]
-    except Exception:
-        pass
+    except SQLAlchemyError as exc:
+        logger.warning("developer_portal.endpoint_stats_query_failed", error=str(exc))
+        await db.rollback()
 
     # Daily trend
     daily_stats = []
@@ -312,8 +316,9 @@ async def get_usage_analytics(
             {"date": str(r["day"]), "requests": r["requests"], "errors": r["errors"]}
             for r in result.mappings().all()
         ]
-    except Exception:
-        pass
+    except SQLAlchemyError as exc:
+        logger.warning("developer_portal.daily_stats_query_failed", error=str(exc))
+        await db.rollback()
 
     return APIResponse(
         success=True,
