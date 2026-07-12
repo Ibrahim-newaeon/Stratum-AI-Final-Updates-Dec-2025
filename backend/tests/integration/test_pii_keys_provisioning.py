@@ -22,9 +22,7 @@ def _clean_cache():
 
 class TestProvisioning:
     @pytest.mark.asyncio
-    async def test_ensure_provisions_persists_and_caches(
-        self, db_session, test_tenant
-    ):
+    async def test_ensure_provisions_persists_and_caches(self, db_session, test_tenant):
         tid = test_tenant["id"]
         dek = await pii_keys.ensure_tenant_dek(tid, db_session)
         await db_session.commit()
@@ -34,9 +32,7 @@ class TestProvisioning:
         # Persisted (wrapped, not plaintext) and unwraps back to the same DEK
         row = (
             await db_session.execute(
-                select(TenantEncryptionKey).where(
-                    TenantEncryptionKey.tenant_id == tid
-                )
+                select(TenantEncryptionKey).where(TenantEncryptionKey.tenant_id == tid)
             )
         ).scalar_one()
         assert row.wrapped_dek and dek.decode() not in row.wrapped_dek
@@ -76,9 +72,7 @@ class TestProvisioning:
         assert pii_keys.get_cached_dek(tid) == dek
 
     @pytest.mark.asyncio
-    async def test_initialize_provisions_missing_tenant(
-        self, db_session, test_tenant
-    ):
+    async def test_initialize_provisions_missing_tenant(self, db_session, test_tenant):
         tid = test_tenant["id"]
         result = await pii_keys.initialize_pii_keys(db_session)
         assert result["loaded"] >= 0 and result["provisioned"] >= 0
