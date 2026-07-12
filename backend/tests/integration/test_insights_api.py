@@ -85,3 +85,65 @@ class TestInsightReads:
         resp = await authenticated_client.get(_url("kpis", test_tenant["id"]))
         assert resp.status_code == 200
         assert resp.json()["success"] is True
+
+
+class TestKpiAggregation:
+    """The KPI endpoint sums campaigns in SQL [API-002] — verify the aggregate
+    values and per-platform breakdown match seeded data exactly."""
+
+    @pytest.mark.asyncio
+    async def test_kpis_aggregate_seeded_campaigns(
+        self,
+        authenticated_client: AsyncClient,
+        test_tenant: dict,
+        insights_enabled,
+        db_session,
+    ):
+        from app.models import Campaign
+
+        # meta: $500 + $300 spend, $1500 + $600 revenue; google: $200 / $800.
+        seed = [
+            ("meta", 50000, 150000, 10, 2000, 100),
+            ("meta", 30000, 60000, 5, 1000, 50),
+            ("google", 20000, 80000, 8, 500, 40),
+        ]
+        for i, (platform, spend_c, rev_c, conv, impr, clk) in enumerate(seed):
+            db_session.add(
+                Campaign(
+                    tenant_id=test_tenant["id"],
+                    platform=platform,
+                    external_id=f"kpi_ext_{i}",
+                    account_id="acct_kpi",
+                    name=f"KPI Campaign {i}",
+                    status="active",
+                    total_spend_cents=spend_c,
+                    revenue_cents=rev_c,
+                    conversions=conv,
+                    impressions=impr,
+                    clicks=clk,
+                )
+            )
+        await db_session.flush()
+
+        resp = await authenticated_client.get(_url("kpis", test_tenant["id"]))
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+
+        m = data["metrics"]
+        # Totals: spend $1000, revenue $2900, conversions 23, roas 2.9.
+        assert m["spend"]["value"] == 1000.0
+        assert m["revenue"]["value"] == 2900.0
+        assert m["conversions"]["value"] == 23
+        assert m["roas"]["value"] == 2.9
+
+        by_platform = data["by_platform"]
+        assert by_platform["meta"] == {
+            "spend": 800.0,
+            "revenue": 2100.0,
+            "conversions": 15,
+        }
+        assert by_platform["google"] == {
+            "spend": 200.0,
+            "revenue": 800.0,
+            "conversions": 8,
+        }
