@@ -11,9 +11,10 @@ Unit tests for the DB-free logic in ``app.services.capi.delivery_logger``:
 - ``get_delivery_logger`` singleton
 
 The database persistence paths (flush write, get_delivery_history, get_metrics,
-cleanup_old_logs) need a live session and are out of scope here — same split as
-``test_dlq_pure.py``. delivery_logger.py stays in the .coveragerc omit until a
-live-env run can confirm those paths don't drop the coverage floor.
+cleanup_old_logs) are covered separately in
+``test_delivery_logger_persistence.py`` by mocking the session factory
+boundary (the ``test_capi_dlq_postgres.py`` technique). delivery_logger.py is
+no longer in the .coveragerc omit now that capi_service wires it [CAPI-04].
 """
 
 from datetime import datetime, timedelta, timezone
