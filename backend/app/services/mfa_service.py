@@ -263,7 +263,7 @@ class MFAService:
         )
 
     async def initiate_setup(
-        self, user_id: int, email: str, tenant_id: int
+        self, user_id: int, email: str, tenant_id: int | None
     ) -> TOTPSetupData:
         """
         Start MFA setup process.
@@ -274,7 +274,9 @@ class MFAService:
         Args:
             user_id: User ID
             email: User's email for authenticator app
-            tenant_id: Tenant ID for per-tenant PII encryption
+            tenant_id: Tenant ID for per-tenant PII encryption. Optional — a
+                tenant-less principal (e.g. superadmin) passes None, which
+                falls back to the global encryption key.
 
         Returns:
             TOTPSetupData with secret, URI, and QR code

@@ -141,3 +141,16 @@ def test_cross_tenant_dek_fails_closed():
     with pytest.raises(ValueError):
         decrypt_pii(blob, 202)
     pii_keys._clear_cache()
+
+
+def test_cross_tenant_salted_fails_closed_without_dek():
+    """No-DEK regime: tenant-salted ciphertext for A must not decrypt under B."""
+    from app.core import pii_keys
+    from app.core.security import decrypt_pii, encrypt_pii
+
+    pii_keys._clear_cache()  # neither tenant has a DEK -> tenant-salted key path
+    blob = encrypt_pii("secret@example.com", 101)
+    assert decrypt_pii(blob, 101) == "secret@example.com"
+    with pytest.raises(ValueError):
+        decrypt_pii(blob, 202)
+    pii_keys._clear_cache()
