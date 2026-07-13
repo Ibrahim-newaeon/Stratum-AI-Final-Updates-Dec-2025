@@ -608,9 +608,11 @@ async def list_assignments(
             )
             assigned_user = user_map.get(a.user_id)
             if assigned_user:
-                item.user_email = decrypt_pii(assigned_user.email)
+                item.user_email = decrypt_pii(
+                    assigned_user.email, assigned_user.tenant_id
+                )
                 item.user_name = (
-                    decrypt_pii(assigned_user.full_name)
+                    decrypt_pii(assigned_user.full_name, assigned_user.tenant_id)
                     if assigned_user.full_name
                     else None
                 )
@@ -861,10 +863,10 @@ async def invite_portal_user(
 
         portal_user = User(
             tenant_id=tenant_id,
-            email=encrypt_pii(payload.email),
+            email=encrypt_pii(payload.email, tenant_id),
             email_hash=email_h,
             password_hash=get_password_hash(temp_password),
-            full_name=encrypt_pii(payload.full_name),
+            full_name=encrypt_pii(payload.full_name, tenant_id),
             role=UserRole.VIEWER,
             client_id=client_id,
             user_type="portal",

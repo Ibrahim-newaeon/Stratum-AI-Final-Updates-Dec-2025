@@ -903,11 +903,13 @@ async def register(
     # 4. Create user with encrypted PII (verified = True since they passed OTP)
     user = User(
         tenant_id=tenant.id,
-        email=encrypt_pii(email_lower),
+        email=encrypt_pii(email_lower, tenant.id),
         email_hash=email_hash,
         password_hash=get_password_hash(request_data.password),
         full_name=(
-            encrypt_pii(request_data.full_name) if request_data.full_name else None
+            encrypt_pii(request_data.full_name, tenant.id)
+            if request_data.full_name
+            else None
         ),
         role=UserRole.ADMIN,
         is_verified=True,
@@ -1354,7 +1356,7 @@ async def forgot_password(
     user_name = ""
     if user.full_name:
         try:
-            user_name = decrypt_pii(user.full_name)
+            user_name = decrypt_pii(user.full_name, user.tenant_id)
         except (ValueError, TypeError, UnicodeDecodeError):
             user_name = "there"
 
@@ -1560,7 +1562,7 @@ async def accept_invite(
 
     # Activate: set the chosen password + name, mark verified
     user.password_hash = get_password_hash(request_data.password)
-    user.full_name = encrypt_pii(request_data.full_name.strip())
+    user.full_name = encrypt_pii(request_data.full_name.strip(), user.tenant_id)
     user.is_active = True
     user.is_verified = True
     user.updated_at = datetime.now(timezone.utc)
@@ -1655,13 +1657,13 @@ async def verify_email(
     user_name = ""
     if user.full_name:
         try:
-            user_name = decrypt_pii(user.full_name)
+            user_name = decrypt_pii(user.full_name, user.tenant_id)
         except (ValueError, TypeError, UnicodeDecodeError):
             user_name = "there"
 
     try:
         # Decrypt the original email for sending the welcome message
-        original_email = decrypt_pii(user.email) if user.email else None
+        original_email = decrypt_pii(user.email, user.tenant_id) if user.email else None
         if original_email:
             email_service = get_email_service()
             email_service.send_welcome_email(
@@ -1763,7 +1765,7 @@ async def resend_verification(
     user_name = ""
     if user.full_name:
         try:
-            user_name = decrypt_pii(user.full_name)
+            user_name = decrypt_pii(user.full_name, user.tenant_id)
         except (ValueError, TypeError, UnicodeDecodeError):
             user_name = "there"
 

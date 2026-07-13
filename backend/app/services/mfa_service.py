@@ -262,7 +262,9 @@ class MFAService:
             lockout_until=lockout_until,
         )
 
-    async def initiate_setup(self, user_id: int, email: str) -> TOTPSetupData:
+    async def initiate_setup(
+        self, user_id: int, email: str, tenant_id: int | None
+    ) -> TOTPSetupData:
         """
         Start MFA setup process.
 
@@ -272,6 +274,9 @@ class MFAService:
         Args:
             user_id: User ID
             email: User's email for authenticator app
+            tenant_id: Tenant ID for per-tenant PII encryption. Optional — a
+                tenant-less principal (e.g. superadmin) passes None, which
+                falls back to the global encryption key.
 
         Returns:
             TOTPSetupData with secret, URI, and QR code
@@ -284,7 +289,7 @@ class MFAService:
         qr_base64 = generate_qr_code(uri)
 
         # Encrypt and store secret (but don't enable yet)
-        encrypted_secret = encrypt_pii(secret)
+        encrypted_secret = encrypt_pii(secret, tenant_id)
 
         await self.db.execute(
             update(User)
@@ -335,7 +340,7 @@ class MFAService:
             raise ValueError("MFA is already enabled")
 
         # Decrypt and verify
-        secret = decrypt_pii(user.totp_secret)
+        secret = decrypt_pii(user.totp_secret, user.tenant_id)
 
         if not verify_totp(secret, code):
             logger.warning("mfa_verification_failed", user_id=user_id)
@@ -511,7 +516,7 @@ class MFAService:
             raise ValueError("MFA is not enabled")
 
         # Verify TOTP code (not backup code)
-        secret = decrypt_pii(user.totp_secret)
+        secret = decrypt_pii(user.totp_secret, user.tenant_id)
         if not verify_totp(secret, code):
             return False, []
 
@@ -543,7 +548,7 @@ class MFAService:
         """
         # Try TOTP first
         if user.totp_secret:
-            secret = decrypt_pii(user.totp_secret)
+            secret = decrypt_pii(user.totp_secret, user.tenant_id)
             if verify_totp(secret, code):
                 return True
 

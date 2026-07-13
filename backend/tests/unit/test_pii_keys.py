@@ -75,11 +75,34 @@ def test_encryption_actually_uses_the_tenant_dek():
 
 
 def test_dual_read_decrypts_legacy_global_ciphertext():
-    # Written before the tenant had a DEK (cache empty -> global key)...
-    ct = encrypt_pii("legacy@example.com", tenant_id=7)
-    # ...then the tenant gets provisioned a DEK. Existing data must still decrypt.
+    # Real legacy data: written by encrypt_pii(x) with NO tenant_id, i.e. the
+    # true-global key (base salt only) — the way every call site wrote PII
+    # before per-tenant threading existed.
+    ct = encrypt_pii("legacy@example.com")  # tenant_id=None -> true-global key
     _seed_dek(7)
+    # Threading tenant 7 on read must still decrypt the true-global ciphertext.
     assert decrypt_pii(ct, tenant_id=7) == "legacy@example.com"
+
+
+def test_dual_read_decrypts_tenant_salted_ciphertext():
+    # Data written with a tenant_id but before that tenant had a DEK provisioned
+    # (cache empty -> _get_fernet_key(tenant_id), the tenant-salted key).
+    from app.core import pii_keys
+
+    pii_keys._clear_cache()
+    ct = encrypt_pii("salted@example.com", tenant_id=7)  # tenant-salted, no DEK
+    _seed_dek(7)  # DEK provisioned afterward
+    assert decrypt_pii(ct, tenant_id=7) == "salted@example.com"
+
+
+def test_decrypt_with_tenant_reads_true_global_legacy():
+    from app.core import pii_keys
+
+    pii_keys._clear_cache()
+    ct = encrypt_pii("only-global@example.com")  # true-global, no tenant, no DEK
+    # A tenant with no DEK cached must still read it via the true-global fallback.
+    assert decrypt_pii(ct, tenant_id=999) == "only-global@example.com"
+    pii_keys._clear_cache()
 
 
 def test_dual_read_decrypts_dek_ciphertext_when_dek_present():
@@ -103,3 +126,31 @@ def test_empty_string_passthrough():
 def test_corrupted_ciphertext_raises():
     with pytest.raises(ValueError):
         decrypt_pii("not-valid-ciphertext", tenant_id=5)
+
+
+def test_cross_tenant_dek_fails_closed():
+    """Ciphertext encrypted under tenant A's DEK must not decrypt under tenant B."""
+    pii_keys._clear_cache()
+    pii_keys._DEK_CACHE[101] = Fernet.generate_key()
+    pii_keys._DEK_CACHE[202] = Fernet.generate_key()
+
+    blob = encrypt_pii("secret@example.com", 101)
+    # Correct tenant round-trips
+    assert decrypt_pii(blob, 101) == "secret@example.com"
+    # Wrong tenant fails closed (never returns ciphertext)
+    with pytest.raises(ValueError):
+        decrypt_pii(blob, 202)
+    pii_keys._clear_cache()
+
+
+def test_cross_tenant_salted_fails_closed_without_dek():
+    """No-DEK regime: tenant-salted ciphertext for A must not decrypt under B."""
+    from app.core import pii_keys
+    from app.core.security import decrypt_pii, encrypt_pii
+
+    pii_keys._clear_cache()  # neither tenant has a DEK -> tenant-salted key path
+    blob = encrypt_pii("secret@example.com", 101)
+    assert decrypt_pii(blob, 101) == "secret@example.com"
+    with pytest.raises(ValueError):
+        decrypt_pii(blob, 202)
+    pii_keys._clear_cache()
