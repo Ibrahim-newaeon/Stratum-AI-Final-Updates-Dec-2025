@@ -8,6 +8,7 @@ Includes beat schedule for periodic tasks.
 
 from celery import Celery
 from celery.schedules import crontab
+from celery.signals import worker_process_init
 
 from app.core.config import settings
 
@@ -291,6 +292,57 @@ def _on_task_failure(self, exc, task_id, args, kwargs, einfo):
         )
     except Exception:
         dl_logger.exception("Could not publish to dead_letter queue")
+
+
+# ---------------------------------------------------------------------------
+# Per-tenant PII DEK-cache bootstrap [AUTH-05]
+# ---------------------------------------------------------------------------
+@worker_process_init.connect
+def _init_worker_pii_dek_cache(**_kwargs):
+    """Preload the per-tenant DEK cache in each prefork worker child.
+
+    The API preloads DEKs in its FastAPI lifespan (``app.main``); worker
+    processes get the same bootstrap here, or any task that decrypts
+    DEK-encrypted PII would fail with an empty cache. Never raises — on a
+    key-store hiccup the worker starts anyway and affected tenants fall
+    back to the legacy global-derived key (dual-read).
+
+    The cache is a point-in-time snapshot per child: tenants provisioned
+    after this fires are missing until the child is recycled
+    (``--max-tasks-per-child`` bounds that window). Acceptable today — no
+    worker code decrypts user PII yet; refresh-on-miss is future work.
+    """
+    import asyncio
+    import logging
+
+    logger = logging.getLogger("celery.pii_keys")
+
+    async def _bootstrap() -> dict:
+        from app.core import pii_keys
+        from app.db import session as db_session
+
+        # Fresh event loop: drop any pooled connections bound to another
+        # loop (same guard every task coroutine uses), and dispose again on
+        # the way out so task loops start clean.
+        await db_session.dispose_stale_async_pool()
+        try:
+            async with db_session.async_session_factory() as db:
+                return await pii_keys.initialize_pii_keys(db)
+        finally:
+            await db_session.async_engine.dispose()
+
+    try:
+        result = asyncio.run(_bootstrap())
+        logger.info(
+            "worker_pii_keys_ready loaded=%s provisioned=%s",
+            result.get("loaded"),
+            result.get("provisioned"),
+        )
+    except Exception as exc:
+        # Include the type: e.g. fernet.InvalidToken has an EMPTY str(), which
+        # would otherwise log a blank reason (bit us: a worker missing
+        # PII_ENCRYPTION_KEY logged nothing actionable).
+        logger.warning("worker_pii_keys_init_failed: %s: %s", type(exc).__name__, exc)
 
 
 # ---------------------------------------------------------------------------
