@@ -285,6 +285,23 @@ def decrypt_pii(ciphertext: str, tenant_id: int | None = None) -> str:
         ) from exc
 
 
+def looks_like_pii_ciphertext(value: str) -> bool:
+    """Heuristic: does ``value`` have the shape of ``encrypt_pii`` output?
+
+    ``encrypt_pii`` returns urlsafe-base64 of a Fernet token, and every
+    Fernet token starts with the version byte 0x80 — base64 ``gAAAA``. A
+    real name/email cannot match this accidentally, so callers can
+    distinguish undecryptable *ciphertext* (must never be echoed into API
+    responses) from genuine pre-encryption *plaintext* rows (safe to show).
+    """
+    if not value:
+        return False
+    try:
+        return base64.urlsafe_b64decode(value.encode("utf-8")).startswith(b"gAAAA")
+    except (ValueError, TypeError):
+        return False
+
+
 def hash_pii_for_lookup(value: str) -> str:
     """
     Create a deterministic hash of PII for lookup purposes.

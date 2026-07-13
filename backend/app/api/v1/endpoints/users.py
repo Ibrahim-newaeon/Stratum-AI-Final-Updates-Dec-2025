@@ -20,6 +20,7 @@ from app.core.security import (
     encrypt_pii,
     get_password_hash,
     hash_pii_for_lookup,
+    looks_like_pii_ciphertext,
 )
 from app.db.session import get_async_session
 from app.models import Tenant, User, UserRole
@@ -37,14 +38,19 @@ class InviteUserRequest(BaseModel):
 
 
 def _safe_decrypt(value: Optional[str], tenant_id: Optional[int]) -> Optional[str]:
-    """Decrypt PII, returning the raw value if decryption fails."""
+    """Decrypt PII; fail CLOSED for ciphertext, echo only legacy plaintext.
+
+    Undecryptable *ciphertext* (key drift, corruption) returns ``None`` —
+    encrypted blobs must never leak into API responses. A value that does
+    not look like ``encrypt_pii`` output is a genuine pre-encryption
+    plaintext row and is returned as-is so it still displays.
+    """
     if not value:
         return None
     try:
         return decrypt_pii(value, tenant_id)
     except (ValueError, TypeError, KeyError, OSError):
-        # Value may be stored in plaintext or encrypted with a different key
-        return value
+        return None if looks_like_pii_ciphertext(value) else value
 
 
 class UpdateUserRequest(BaseModel):
