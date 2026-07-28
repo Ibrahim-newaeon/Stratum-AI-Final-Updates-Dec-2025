@@ -47,7 +47,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "date-fns": "^4.4.0",
-    "dompurify": "^3.4.11",
+    "dompurify": "^3.4.12",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.42.2",
     "html2canvas": "^1.4.1",
