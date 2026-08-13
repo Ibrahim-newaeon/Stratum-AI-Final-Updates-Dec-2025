@@ -32,6 +32,7 @@ celery==5.6.3
 flower==2.0.1
 celery-redbeat==2.3.3
 tzlocal==5.4.4  # required by celery.utils.time; pin explicitly so fresh installs don't drop it
+msgpack>=1.2.1  # transitive via celery/kombu; <1.2.1 has GHSA-6v7p-g79w-8964 (OOB read on Unpacker reuse)
 
 # Authentication & Security
 PyJWT==2.13.0

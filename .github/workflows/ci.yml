@@ -483,6 +483,20 @@ jobs:
       - name: Build Docker image for scanning
         run: docker build -t stratum-api:scan ./backend
 
+      # Trivy reports a setuptools well below the one pip installs, filed under
+      # the generic "Python" target with no path, so the table cannot say where
+      # it lives. List every copy in the image so the next fix targets the real
+      # file instead of guessing.
+      - name: Locate stray setuptools/msgpack copies in the image
+        run: |
+          docker run --rm --entrypoint sh stratum-api:scan -c '
+            echo "--- dist-info / egg-info ---"
+            find / -maxdepth 12 \( -iname "setuptools*" -o -iname "msgpack*" \) \
+              \( -name "*.dist-info" -o -name "*.egg-info" -o -name "*.whl" \) 2>/dev/null
+            echo "--- pip report ---"
+            pip show setuptools msgpack 2>/dev/null | grep -E "^(Name|Version|Location)" || true
+          '
+
       - name: Trivy container image scan (report)
         uses: aquasecurity/trivy-action@master
         with:
