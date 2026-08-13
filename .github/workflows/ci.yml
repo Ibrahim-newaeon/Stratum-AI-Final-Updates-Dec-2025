@@ -450,6 +450,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
+      # Print findings before the gating scan. The gate below writes SARIF to a
+      # file, so when it failed the log showed only "exit code 1" with no
+      # indication of which package or advisory tripped it. This step never
+      # fails; it exists purely so the log names the finding.
+      - name: Trivy filesystem scan (report)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "table"
+          severity: "CRITICAL,HIGH"
+          ignore-unfixed: true
+          exit-code: "0"
+
       - name: Run Trivy filesystem scan
         uses: aquasecurity/trivy-action@master
         with:
