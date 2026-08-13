@@ -25,6 +25,9 @@ export default tseslint.config(
       'e2e/**',
       'playwright.config.ts',
       'public/**',
+      // Node-side build/CI tooling, not app code: it runs under node with no
+      // browser globals and is outside the type-aware `src/**` project.
+      'scripts/**',
     ],
   },
 

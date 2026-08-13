@@ -46,7 +46,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
+          # setuptools/wheel are upgraded alongside pip to match backend/Dockerfile:
+          # the runner's bundled setuptools is old enough to carry fixable
+          # advisories that pip-audit reports against the installed environment.
+          python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
 
       - name: Lint with Ruff
@@ -154,7 +157,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
+          # setuptools/wheel are upgraded alongside pip to match backend/Dockerfile:
+          # the runner's bundled setuptools is old enough to carry fixable
+          # advisories that pip-audit reports against the installed environment.
+          python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
 
       - name: Run unit tests
@@ -286,7 +292,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
+          # setuptools/wheel are upgraded alongside pip to match backend/Dockerfile:
+          # the runner's bundled setuptools is old enough to carry fixable
+          # advisories that pip-audit reports against the installed environment.
+          python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
 
       - name: Security scan with Bandit
@@ -343,8 +352,13 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
+      # Wrapper around `npm audit --json` that fails on unwaived findings only.
+      # Plain `npm audit` is all-or-nothing, so a single advisory with no
+      # published fix turned every PR red — including the dependency PRs that
+      # existed to fix other advisories. Waivers live in
+      # frontend/.audit-allowlist.json and expire.
       - name: Dependency audit (npm)
-        run: npm audit --audit-level=high --omit=dev
+        run: node scripts/audit-gate.mjs --audit-level=high --omit=dev
 
       - name: Lint
         run: npm run lint
@@ -480,7 +494,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Dependabot-triggered runs receive a read-only GITHUB_TOKEN that cannot
+      # be elevated via `permissions:`. gitleaks-action calls the workflow-runs
+      # API before it scans, so on those runs it dies with HTTP 403 "Resource
+      # not accessible by integration" and the job fails without ever having
+      # looked at the diff — a false red, not a finding. Dependabot PRs only
+      # touch dependency manifests and lockfiles, and the push-to-main run
+      # re-scans the merged result with a full-permission token.
       - name: Run gitleaks
+        if: github.actor != 'dependabot[bot]'
         uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -564,7 +586,10 @@ jobs:
       - name: Install backend dependencies
         working-directory: backend
         run: |
-          python -m pip install --upgrade pip
+          # setuptools/wheel are upgraded alongside pip to match backend/Dockerfile:
+          # the runner's bundled setuptools is old enough to carry fixable
+          # advisories that pip-audit reports against the installed environment.
+          python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
 
       - name: Start API server

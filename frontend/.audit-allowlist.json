@@ -1,0 +1,17 @@
+{
+  "$comment": [
+    "Advisories consciously waived for the frontend dependency-audit gate.",
+    "Every waiver needs a reason that argues why THIS codebase is not exposed,",
+    "and an expiry so it gets re-reviewed instead of living forever.",
+    "Enforced by scripts/audit-gate.mjs — an expired waiver fails CI."
+  ],
+  "waivers": [
+    {
+      "id": "GHSA-qwww-vcr4-c8h2",
+      "package": "react-router",
+      "severity": "high",
+      "expires": "2026-11-30",
+      "reason": "RSC Mode CSRF bypass: a request to an RSC server action runs before the 400 response is returned. This app is a Vite SPA that renders entirely client-side via react-router-dom's BrowserRouter — it does not use RSC mode, server actions, or any react-router server runtime, so the vulnerable path is not reachable. No patched release exists on the react-router-dom line (7.18.2 is the last, and it pins react-router 7.18.2); the fix ships in react-router 8.3.0, which requires migrating off the react-router-dom package. Tracked as a separate migration."
+    }
+  ]
+}
