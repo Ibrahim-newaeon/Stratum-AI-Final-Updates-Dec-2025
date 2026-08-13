@@ -490,6 +490,17 @@ jobs:
       - name: Build Docker image for scanning
         run: docker build -t stratum-api:${{ github.sha }} ./backend
 
+      # Trivy logs "Third-party SBOM may lead to inaccurate vulnerability
+      # detection" and then reports Python packages at versions the image does
+      # not contain, under a pathless "Python" target — it is trusting an SBOM
+      # shipped inside the image instead of reading site-packages. Find it.
+      - name: Locate embedded SBOM files
+        run: |
+          docker run --rm --entrypoint sh stratum-api:${{ github.sha }} -c '
+            find / -xdev \( -iname "*.spdx*" -o -iname "*.cdx*" -o -iname "*bom*.json" \
+              -o -iname "*sbom*" \) 2>/dev/null | head -50
+          '
+
       - name: Trivy container image scan (report)
         uses: aquasecurity/trivy-action@master
         with:
