@@ -480,27 +480,20 @@ jobs:
           ignore-unfixed: true
           exit-code: "1"
 
+      # Tagged with the commit SHA, not a fixed `:scan`. A locally built image
+      # has no registry digest, so Trivy's per-artifact cache key falls back to
+      # the tag — a constant tag made every run collide with the previous one's
+      # cached analysis. That cache went stale long ago and kept reporting
+      # package versions the image had not contained for months (msgpack 1.1.2
+      # against an image holding 1.2.1, setuptools 70.3.0 against 84.0.0),
+      # which is why the scan could not be fixed by changing dependencies.
       - name: Build Docker image for scanning
-        run: docker build -t stratum-api:scan ./backend
-
-      # Trivy reports a setuptools well below the one pip installs, filed under
-      # the generic "Python" target with no path, so the table cannot say where
-      # it lives. List every copy in the image so the next fix targets the real
-      # file instead of guessing.
-      - name: Locate stray setuptools/msgpack copies in the image
-        run: |
-          docker run --rm --entrypoint sh stratum-api:scan -c '
-            echo "--- dist-info / egg-info ---"
-            find / -maxdepth 12 \( -iname "setuptools*" -o -iname "msgpack*" \) \
-              \( -name "*.dist-info" -o -name "*.egg-info" -o -name "*.whl" \) 2>/dev/null
-            echo "--- pip report ---"
-            pip show setuptools msgpack 2>/dev/null | grep -E "^(Name|Version|Location)" || true
-          '
+        run: docker build -t stratum-api:${{ github.sha }} ./backend
 
       - name: Trivy container image scan (report)
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: "stratum-api:scan"
+          image-ref: "stratum-api:${{ github.sha }}"
           format: "table"
           severity: "CRITICAL,HIGH"
           ignore-unfixed: true
@@ -509,7 +502,7 @@ jobs:
       - name: Trivy container image scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: "stratum-api:scan"
+          image-ref: "stratum-api:${{ github.sha }}"
           format: "sarif"
           output: "trivy-image-results.sarif"
           severity: "CRITICAL,HIGH"
