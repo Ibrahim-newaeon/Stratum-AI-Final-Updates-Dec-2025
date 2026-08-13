@@ -487,6 +487,15 @@ jobs:
   secrets:
     name: Secret Scanning
     runs-on: ubuntu-latest
+    # gitleaks-action's pull_request path reads the PR's commits and writes a
+    # summary comment, so it needs more than the repository's default
+    # read-only GITHUB_TOKEN — without this it fails with HTTP 403 "Resource
+    # not accessible by integration" before scanning anything. Push runs took a
+    # different code path and so kept passing, which is why this only ever
+    # showed up on PRs.
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - name: Checkout code
@@ -494,11 +503,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Dependabot-triggered runs receive a read-only GITHUB_TOKEN that cannot
-      # be elevated via `permissions:`. gitleaks-action calls the workflow-runs
-      # API before it scans, so on those runs it dies with HTTP 403 "Resource
-      # not accessible by integration" and the job fails without ever having
-      # looked at the diff — a false red, not a finding. Dependabot PRs only
+      # Dependabot PRs are the one case the `permissions:` block above cannot
+      # rescue: those runs get a read-only token that job-level permissions are
+      # not allowed to elevate, so gitleaks would still 403. They only ever
       # touch dependency manifests and lockfiles, and the push-to-main run
       # re-scans the merged result with a full-permission token.
       - name: Run gitleaks
