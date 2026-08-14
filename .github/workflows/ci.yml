@@ -403,7 +403,10 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
     needs: [frontend]
-    if: github.event_name == 'pull_request'
+    # Also runs on push. A PR being green does not prove the merged result is,
+    # and this previously ran on pull_request only — so the artifact actually
+    # deployed from main was never end-to-end tested.
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     defaults:
       run:
         working-directory: frontend
