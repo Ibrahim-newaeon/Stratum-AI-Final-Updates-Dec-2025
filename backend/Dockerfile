@@ -5,7 +5,7 @@
 # `backend/docs/` (moved there from the repo root so it ships inside this
 # image without needing a wider build context).
 # =============================================================================
-FROM python:3.11-slim-bookworm
+FROM python:3.12-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
