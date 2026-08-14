@@ -20,15 +20,14 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
-    /* Paths */
-    "baseUrl": ".",
+    /* Paths — deliberately no baseUrl. TypeScript 5.4+ resolves "paths"
+       relative to this file when baseUrl is absent, 6.0 deprecated baseUrl,
+       and 7.0 removes it outright (error TS5102). Dropping it also retires
+       the "ignoreDeprecations" escape hatch that existed only to silence that
+       warning. Vite resolves the same alias independently in vite.config.ts. */
     "paths": {
       "@/*": ["./src/*"]
-    },
-
-    /* TypeScript 6.0 deprecated baseUrl with a warning treated as error by
-       the build. Silence until we migrate away from baseUrl. */
-    "ignoreDeprecations": "6.0"
+    }
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
