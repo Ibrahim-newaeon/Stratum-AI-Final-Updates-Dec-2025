@@ -83,7 +83,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional, Union
 
-import requests
+import httpx
 
 logger = logging.getLogger("app.stratum.events")
 
@@ -482,7 +482,12 @@ class MetaEventsSender:
 
         url = f"{self.BASE_URL}/{self.pixel_id}/events"
 
-        response = requests.post(url, json=payload, timeout=30)
+        # httpx, not requests: this is an async method, and a synchronous client
+        # holds the event loop for the whole request. On the CAPI path that
+        # means one slow platform endpoint stalls every other tenant sharing
+        # this worker.
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.post(url, json=payload)
         response.raise_for_status()
         result = response.json()
 
@@ -574,7 +579,8 @@ class MetaEventsSender:
         url = f"{self.BASE_URL}/{self.pixel_id}/server_events_quality"
         params = {"access_token": self.access_token}
 
-        response = requests.get(url, params=params, timeout=30)
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.get(url, params=params)
         response.raise_for_status()
         return response.json()
 
@@ -602,14 +608,18 @@ class GoogleEventsSender:
         """Send events via GA4 Measurement Protocol."""
         url = f"{self.MP_URL}?measurement_id={self.measurement_id}&api_secret={self.api_secret}"
 
-        for event in events:
-            payload = self._format_event(event)
-            response = requests.post(url, json=payload, timeout=30)
+        async with httpx.AsyncClient(timeout=30) as client:
+            for event in events:
+                payload = self._format_event(event)
+                response = await client.post(url, json=payload)
 
-            if response.status_code != 204:
-                logger.warning(
-                    f"Google MP: Event may not have been recorded: {response.status_code}"
-                )
+                if response.status_code != 204:
+                    # %s rather than an f-string: at this nesting depth the
+                    # interpolated form exceeds black's 88-column limit.
+                    logger.warning(
+                        "Google MP: Event may not have been recorded: %s",
+                        response.status_code,
+                    )
 
         logger.info(f"Google MP: Sent {len(events)} events")
         return {"sent": len(events)}
@@ -698,9 +708,8 @@ class TikTokEventsSender:
             "Content-Type": "application/json",
         }
 
-        response = requests.post(
-            self.BASE_URL, json=payload, headers=headers, timeout=30
-        )
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.post(self.BASE_URL, json=payload, headers=headers)
         response.raise_for_status()
         result = response.json()
 
@@ -785,9 +794,10 @@ class SnapchatEventsSender:
                 "Content-Type": "application/json",
             }
 
-            response = requests.post(
-                self.BASE_URL, json=payload, headers=headers, timeout=30
-            )
+            async with httpx.AsyncClient(timeout=30) as client:
+                response = await client.post(
+                    self.BASE_URL, json=payload, headers=headers
+                )
             response.raise_for_status()
             results.append(response.json())
 
@@ -910,7 +920,7 @@ class UnifiedEventsAPI:
                 result = await sender.send(events)
                 results[platform] = result
             except (
-                requests.RequestException,
+                httpx.HTTPError,
                 ConnectionError,
                 TimeoutError,
                 OSError,

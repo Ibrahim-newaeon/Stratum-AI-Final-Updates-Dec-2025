@@ -51,7 +51,7 @@ import logging
 from datetime import UTC, datetime, timedelta
 from typing import Any, Optional
 
-import requests
+import httpx
 
 from app.stratum.adapters.base import (
     AdapterError,
@@ -151,7 +151,7 @@ class SnapchatAdapter(BaseAdapter):
         self.token_expires_at: Optional[datetime] = None
 
         # HTTP session
-        self.session: Optional[requests.Session] = None
+        self.session: Optional[httpx.AsyncClient] = None
 
         # Rate limiter for Snapchat's limits (1000/5min = ~3.3/sec)
         self.rate_limiter = RateLimiter(
@@ -179,14 +179,14 @@ class SnapchatAdapter(BaseAdapter):
 
         try:
             # Create session
-            self.session = requests.Session()
+            self.session = httpx.AsyncClient(timeout=30)
 
             # Get initial access token
             await self._refresh_access_token()
 
             # Verify authentication
             await self.rate_limiter.acquire()
-            response = self._make_request("GET", "/me")
+            response = await self._make_request("GET", "/me")
 
             if "me" not in response:
                 raise AuthenticationError("Failed to verify Snapchat authentication")
@@ -199,13 +199,13 @@ class SnapchatAdapter(BaseAdapter):
             logger.info("Successfully authenticated with Snapchat API")
             self._initialized = True
 
-        except requests.RequestException as e:
+        except httpx.HTTPError as e:
             raise AdapterError(f"Failed to connect to Snapchat API: {e}")
 
     async def cleanup(self) -> None:
         """Clean up adapter resources."""
         if self.session:
-            self.session.close()
+            await self.session.aclose()
             self.session = None
         self._initialized = False
         self.access_token = None
@@ -225,7 +225,8 @@ class SnapchatAdapter(BaseAdapter):
             "refresh_token": self.refresh_token,
         }
 
-        response = requests.post(self.AUTH_URL, data=data, timeout=30)
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.post(self.AUTH_URL, data=data)
         response.raise_for_status()
 
         token_data = response.json()
@@ -265,7 +266,7 @@ class SnapchatAdapter(BaseAdapter):
         try:
             # First get organizations if we don't have one
             if not self.organization_id:
-                response = self._make_request("GET", "/me/organizations")
+                response = await self._make_request("GET", "/me/organizations")
                 orgs = response.get("organizations", [])
                 if orgs:
                     self.organization_id = orgs[0].get("organization", {}).get("id")
@@ -276,7 +277,7 @@ class SnapchatAdapter(BaseAdapter):
 
             # Get ad accounts for the organization
             await self.rate_limiter.acquire()
-            response = self._make_request(
+            response = await self._make_request(
                 "GET", f"/organizations/{self.organization_id}/adaccounts"
             )
 
@@ -297,7 +298,7 @@ class SnapchatAdapter(BaseAdapter):
 
             return accounts
 
-        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             raise PlatformError(f"Failed to fetch accounts: {e}")
         except (ValueError, KeyError, TypeError) as e:
             raise PlatformError(f"Failed to parse account data: {e}")
@@ -316,7 +317,9 @@ class SnapchatAdapter(BaseAdapter):
         await self.rate_limiter.acquire()
 
         try:
-            response = self._make_request("GET", f"/adaccounts/{account_id}/campaigns")
+            response = await self._make_request(
+                "GET", f"/adaccounts/{account_id}/campaigns"
+            )
 
             campaigns = []
             for item in response.get("campaigns", []):
@@ -351,7 +354,7 @@ class SnapchatAdapter(BaseAdapter):
             )
             return campaigns
 
-        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             raise PlatformError(f"Failed to fetch campaigns: {e}")
         except (ValueError, KeyError, TypeError) as e:
             raise PlatformError(f"Failed to parse campaign data: {e}")
@@ -372,7 +375,7 @@ class SnapchatAdapter(BaseAdapter):
             # If campaign_id provided, fetch directly
             if campaign_id:
                 await self.rate_limiter.acquire()
-                response = self._make_request(
+                response = await self._make_request(
                     "GET", f"/campaigns/{campaign_id}/adsquads"
                 )
                 return self._parse_adsquads(response, account_id, campaign_id)
@@ -383,7 +386,7 @@ class SnapchatAdapter(BaseAdapter):
 
             for campaign in campaigns:
                 await self.rate_limiter.acquire()
-                response = self._make_request(
+                response = await self._make_request(
                     "GET", f"/campaigns/{campaign.campaign_id}/adsquads"
                 )
                 adsets = self._parse_adsquads(
@@ -393,7 +396,7 @@ class SnapchatAdapter(BaseAdapter):
 
             return all_adsets
 
-        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             raise PlatformError(f"Failed to fetch ad squads: {e}")
         except (ValueError, KeyError, TypeError) as e:
             raise PlatformError(f"Failed to parse ad squad data: {e}")
@@ -441,7 +444,7 @@ class SnapchatAdapter(BaseAdapter):
         try:
             if adset_id:
                 await self.rate_limiter.acquire()
-                response = self._make_request("GET", f"/adsquads/{adset_id}/ads")
+                response = await self._make_request("GET", f"/adsquads/{adset_id}/ads")
                 return self._parse_ads(response, account_id, "", adset_id)
 
             # Get all ad squads and their ads
@@ -450,7 +453,9 @@ class SnapchatAdapter(BaseAdapter):
 
             for adset in adsets:
                 await self.rate_limiter.acquire()
-                response = self._make_request("GET", f"/adsquads/{adset.adset_id}/ads")
+                response = await self._make_request(
+                    "GET", f"/adsquads/{adset.adset_id}/ads"
+                )
                 ads = self._parse_ads(
                     response, account_id, adset.campaign_id, adset.adset_id
                 )
@@ -458,7 +463,7 @@ class SnapchatAdapter(BaseAdapter):
 
             return all_ads
 
-        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             raise PlatformError(f"Failed to fetch ads: {e}")
         except (ValueError, KeyError, TypeError) as e:
             raise PlatformError(f"Failed to parse ad data: {e}")
@@ -533,7 +538,7 @@ class SnapchatAdapter(BaseAdapter):
                 else:
                     params["ad_id"] = entity_ids
 
-            response = self._make_request(
+            response = await self._make_request(
                 "GET",
                 endpoint_map.get(entity_type, f"/adaccounts/{account_id}/stats"),
                 params=params,
@@ -615,7 +620,7 @@ class SnapchatAdapter(BaseAdapter):
 
             return metrics_map
 
-        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             raise PlatformError(f"Failed to fetch metrics: {e}")
         except (ValueError, KeyError, TypeError) as e:
             raise PlatformError(f"Failed to parse metrics data: {e}")
@@ -637,7 +642,9 @@ class SnapchatAdapter(BaseAdapter):
             await self.rate_limiter.acquire()
 
             # Try to get pixel info
-            response = self._make_request("GET", f"/adaccounts/{account_id}/pixels")
+            response = await self._make_request(
+                "GET", f"/adaccounts/{account_id}/pixels"
+            )
 
             emq_scores = []
             for item in response.get("pixels", []):
@@ -659,7 +666,7 @@ class SnapchatAdapter(BaseAdapter):
             return emq_scores
 
         except (
-            requests.RequestException,
+            httpx.HTTPError,
             ConnectionError,
             TimeoutError,
             OSError,
@@ -704,7 +711,7 @@ class SnapchatAdapter(BaseAdapter):
             logger.info(f"Successfully executed {action.action_type} on Snapchat")
             return action
 
-        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             action.status = "failed"
             action.error_message = str(e)
             logger.error(f"Action failed due to network error: {e}")
@@ -761,7 +768,7 @@ class SnapchatAdapter(BaseAdapter):
         wrapper_key = "campaigns" if action.entity_type == "campaign" else "adsquads"
         body = {wrapper_key: [data]}
 
-        response = self._make_request("PUT", endpoint, data=body)
+        response = await self._make_request("PUT", endpoint, data=body)
 
         return {"updated": True}
 
@@ -786,7 +793,7 @@ class SnapchatAdapter(BaseAdapter):
 
         body = {wrapper_key: [{"id": action.entity_id, "status": snap_status}]}
 
-        response = self._make_request("PUT", endpoint, data=body)
+        response = await self._make_request("PUT", endpoint, data=body)
 
         return {"new_status": snap_status}
 
@@ -811,7 +818,7 @@ class SnapchatAdapter(BaseAdapter):
 
         body = {"campaigns": [data]}
 
-        response = self._make_request(
+        response = await self._make_request(
             "POST", f"/adaccounts/{action.account_id}/campaigns", data=body
         )
 
@@ -849,7 +856,7 @@ class SnapchatAdapter(BaseAdapter):
             ]
         }
 
-        response = self._make_request(
+        response = await self._make_request(
             "POST", f"/adaccounts/{account_id}/media", data=data
         )
 
@@ -884,7 +891,7 @@ class SnapchatAdapter(BaseAdapter):
             ]
         }
 
-        response = self._make_request(
+        response = await self._make_request(
             "POST", f"/adaccounts/{account_id}/media", data=data
         )
 
@@ -902,7 +909,7 @@ class SnapchatAdapter(BaseAdapter):
         if not self._initialized or not self.session:
             raise AdapterError("Adapter not initialized. Call initialize() first.")
 
-    def _make_request(
+    async def _make_request(
         self,
         method: str,
         endpoint: str,
@@ -923,13 +930,15 @@ class SnapchatAdapter(BaseAdapter):
 
         try:
             if method == "GET":
-                response = self.session.get(url, headers=headers, params=params)
+                response = await self.session.get(url, headers=headers, params=params)
             elif method == "POST":
-                response = self.session.post(url, headers=headers, json=data)
+                response = await self.session.post(url, headers=headers, json=data)
             elif method == "PUT":
-                response = self.session.put(url, headers=headers, json=data)
+                response = await self.session.put(url, headers=headers, json=data)
             else:
-                response = self.session.request(method, url, headers=headers, json=data)
+                response = await self.session.request(
+                    method, url, headers=headers, json=data
+                )
 
             # Check for rate limiting
             if response.status_code == 429:
@@ -939,7 +948,7 @@ class SnapchatAdapter(BaseAdapter):
             response.raise_for_status()
             return response.json()
 
-        except requests.RequestException as e:
+        except httpx.HTTPError as e:
             logger.error(f"Request failed: {e}")
             raise PlatformError(f"Snapchat API request failed: {e}")
 

@@ -58,7 +58,7 @@ import logging
 from datetime import UTC, datetime
 from typing import Any, Optional
 
-import requests
+import httpx
 
 from app.stratum.adapters.base import (
     AdapterError,
@@ -166,7 +166,7 @@ class TikTokAdapter(BaseAdapter):
         self.default_advertiser_id = credentials.get("advertiser_id")
 
         # Session for connection pooling
-        self.session: Optional[requests.Session] = None
+        self.session: Optional[httpx.AsyncClient] = None
 
         # Rate limiter configured for TikTok's limits
         self.rate_limiter = RateLimiter(
@@ -195,7 +195,7 @@ class TikTokAdapter(BaseAdapter):
 
         try:
             # Create session with default headers
-            self.session = requests.Session()
+            self.session = httpx.AsyncClient(timeout=30)
             self.session.headers.update(
                 {"Access-Token": self.access_token, "Content-Type": "application/json"}
             )
@@ -205,7 +205,7 @@ class TikTokAdapter(BaseAdapter):
 
             if self.default_advertiser_id:
                 # Test with a simple info request
-                response = self._make_request(
+                response = await self._make_request(
                     "GET",
                     "/advertiser/info/",
                     params={"advertiser_ids": json.dumps([self.default_advertiser_id])},
@@ -222,13 +222,13 @@ class TikTokAdapter(BaseAdapter):
 
             self._initialized = True
 
-        except requests.RequestException as e:
+        except httpx.HTTPError as e:
             raise AdapterError(f"Failed to connect to TikTok API: {e}")
 
     async def cleanup(self) -> None:
         """Clean up adapter resources."""
         if self.session:
-            self.session.close()
+            await self.session.aclose()
             self.session = None
         self._initialized = False
         logger.info("TikTok adapter cleanup complete")
@@ -254,7 +254,7 @@ class TikTokAdapter(BaseAdapter):
         try:
             await self.rate_limiter.acquire()
 
-            response = self._make_request(
+            response = await self._make_request(
                 "GET",
                 "/advertiser/info/",
                 params={"advertiser_ids": json.dumps([self.default_advertiser_id])},
@@ -278,7 +278,7 @@ class TikTokAdapter(BaseAdapter):
 
             return accounts
 
-        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             raise PlatformError(f"Failed to fetch accounts: {e}")
         except (ValueError, KeyError, TypeError) as e:
             raise PlatformError(f"Failed to parse account data: {e}")
@@ -313,7 +313,7 @@ class TikTokAdapter(BaseAdapter):
                 # for multi-status requests.
                 params["filtering"] = json.dumps({"primary_status": tiktok_statuses[0]})
 
-            response = self._make_request("GET", "/campaign/get/", params=params)
+            response = await self._make_request("GET", "/campaign/get/", params=params)
 
             if response.get("code") != 0:
                 raise PlatformError(f"TikTok API error: {response.get('message')}")
@@ -328,7 +328,7 @@ class TikTokAdapter(BaseAdapter):
             )
             return campaigns
 
-        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             raise PlatformError(f"Failed to fetch campaigns: {e}")
         except (ValueError, KeyError, TypeError) as e:
             raise PlatformError(f"Failed to parse campaign data: {e}")
@@ -352,7 +352,7 @@ class TikTokAdapter(BaseAdapter):
             if campaign_id:
                 params["filtering"] = json.dumps({"campaign_ids": [campaign_id]})
 
-            response = self._make_request("GET", "/adgroup/get/", params=params)
+            response = await self._make_request("GET", "/adgroup/get/", params=params)
 
             if response.get("code") != 0:
                 raise PlatformError(f"TikTok API error: {response.get('message')}")
@@ -364,7 +364,7 @@ class TikTokAdapter(BaseAdapter):
 
             return adsets
 
-        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             raise PlatformError(f"Failed to fetch ad groups: {e}")
         except (ValueError, KeyError, TypeError) as e:
             raise PlatformError(f"Failed to parse ad group data: {e}")
@@ -387,7 +387,7 @@ class TikTokAdapter(BaseAdapter):
             if adset_id:
                 params["filtering"] = json.dumps({"adgroup_ids": [adset_id]})
 
-            response = self._make_request("GET", "/ad/get/", params=params)
+            response = await self._make_request("GET", "/ad/get/", params=params)
 
             if response.get("code") != 0:
                 raise PlatformError(f"TikTok API error: {response.get('message')}")
@@ -399,7 +399,7 @@ class TikTokAdapter(BaseAdapter):
 
             return ads
 
-        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             raise PlatformError(f"Failed to fetch ads: {e}")
         except (ValueError, KeyError, TypeError) as e:
             raise PlatformError(f"Failed to parse ad data: {e}")
@@ -478,7 +478,7 @@ class TikTokAdapter(BaseAdapter):
                 }.get(entity_type, "campaign_ids")
                 params["filtering"] = json.dumps({filter_key: entity_ids})
 
-            response = self._make_request(
+            response = await self._make_request(
                 "GET", "/report/integrated/get/", params=params
             )
 
@@ -526,7 +526,7 @@ class TikTokAdapter(BaseAdapter):
 
             return metrics_map
 
-        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             raise PlatformError(f"Failed to fetch metrics: {e}")
         except (ValueError, KeyError, TypeError) as e:
             raise PlatformError(f"Failed to parse metrics data: {e}")
@@ -545,7 +545,7 @@ class TikTokAdapter(BaseAdapter):
         try:
             # Query pixel/event data to estimate match quality
             # TikTok's endpoint for this is /pixel/get/ for web events
-            response = self._make_request(
+            response = await self._make_request(
                 "GET", "/pixel/list/", params={"advertiser_id": account_id}
             )
 
@@ -571,7 +571,7 @@ class TikTokAdapter(BaseAdapter):
 
             return emq_scores
 
-        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             logger.warning(f"Failed to fetch EMQ scores: {e}")
             return []
         except (ValueError, KeyError, TypeError) as e:
@@ -611,7 +611,7 @@ class TikTokAdapter(BaseAdapter):
             logger.info(f"Successfully executed {action.action_type} on TikTok")
             return action
 
-        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             action.status = "failed"
             action.error_message = str(e)
             logger.error(f"Action failed due to network error: {e}")
@@ -655,7 +655,7 @@ class TikTokAdapter(BaseAdapter):
             data["budget"] = int(params["daily_budget"] * 100)
             data["budget_mode"] = "BUDGET_MODE_DAY"
 
-        response = self._make_request("POST", endpoint, data=data)
+        response = await self._make_request("POST", endpoint, data=data)
 
         if response.get("code") != 0:
             raise PlatformError(f"TikTok API error: {response.get('message')}")
@@ -688,7 +688,7 @@ class TikTokAdapter(BaseAdapter):
             "operation_status": tiktok_status,
         }
 
-        response = self._make_request("POST", endpoint, data=data)
+        response = await self._make_request("POST", endpoint, data=data)
 
         if response.get("code") != 0:
             raise PlatformError(f"TikTok API error: {response.get('message')}")
@@ -710,7 +710,7 @@ class TikTokAdapter(BaseAdapter):
         if "daily_budget" in params:
             data["budget"] = int(params["daily_budget"] * 100)
 
-        response = self._make_request("POST", "/campaign/create/", data=data)
+        response = await self._make_request("POST", "/campaign/create/", data=data)
 
         if response.get("code") != 0:
             raise PlatformError(f"TikTok API error: {response.get('message')}")
@@ -742,7 +742,7 @@ class TikTokAdapter(BaseAdapter):
             "image_data": base64.b64encode(image_data).decode("utf-8"),
         }
 
-        response = self._make_request("POST", "/file/image/ad/upload/", data=data)
+        response = await self._make_request("POST", "/file/image/ad/upload/", data=data)
 
         if response.get("code") != 0:
             raise PlatformError(f"Image upload failed: {response.get('message')}")
@@ -771,7 +771,7 @@ class TikTokAdapter(BaseAdapter):
             "video_data": base64.b64encode(video_data).decode("utf-8"),
         }
 
-        response = self._make_request("POST", "/file/video/ad/upload/", data=data)
+        response = await self._make_request("POST", "/file/video/ad/upload/", data=data)
 
         if response.get("code") != 0:
             raise PlatformError(f"Video upload failed: {response.get('message')}")
@@ -787,7 +787,7 @@ class TikTokAdapter(BaseAdapter):
         if not self._initialized or not self.session:
             raise AdapterError("Adapter not initialized. Call initialize() first.")
 
-    def _make_request(
+    async def _make_request(
         self,
         method: str,
         endpoint: str,
@@ -804,14 +804,14 @@ class TikTokAdapter(BaseAdapter):
 
         try:
             if method == "GET":
-                response = self.session.get(url, params=params)
+                response = await self.session.get(url, params=params)
             else:
-                response = self.session.post(url, json=data)
+                response = await self.session.post(url, json=data)
 
             response.raise_for_status()
             return response.json()
 
-        except requests.RequestException as e:
+        except httpx.HTTPError as e:
             logger.error(f"Request failed: {e}")
             return {"code": -1, "message": str(e)}
 

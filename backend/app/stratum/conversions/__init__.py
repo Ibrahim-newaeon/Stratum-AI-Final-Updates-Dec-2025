@@ -45,7 +45,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional
 
-import requests
+import httpx
 
 logger = logging.getLogger("stratum.conversions")
 
@@ -263,7 +263,10 @@ class MetaConversionsAPI:
         url = f"{self.BASE_URL}/{self.pixel_id}/events"
 
         try:
-            response = requests.post(url, json=payload, timeout=30)
+            # httpx, not requests: this is an async method, and a synchronous
+            # client holds the event loop for the whole request.
+            async with httpx.AsyncClient(timeout=30) as client:
+                response = await client.post(url, json=payload)
             response.raise_for_status()
             result = response.json()
 
@@ -272,7 +275,7 @@ class MetaConversionsAPI:
             )
             return result
 
-        except requests.RequestException as e:
+        except httpx.HTTPError as e:
             logger.error(f"Meta CAPI error: {e}")
             raise
 
@@ -344,7 +347,8 @@ class MetaConversionsAPI:
         url = f"{self.BASE_URL}/{self.pixel_id}/server_events_quality"
         params = {"access_token": self.access_token}
 
-        response = requests.get(url, params=params, timeout=30)
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.get(url, params=params)
         response.raise_for_status()
 
         return response.json()
@@ -530,16 +534,17 @@ class TikTokEventsAPI:
         }
 
         try:
-            response = requests.post(
-                self.BASE_URL, json=payload, headers=headers, timeout=30
-            )
+            async with httpx.AsyncClient(timeout=30) as client:
+                response = await client.post(
+                    self.BASE_URL, json=payload, headers=headers
+                )
             response.raise_for_status()
             result = response.json()
 
             logger.info(f"TikTok Events API: {len(events)} events sent")
             return result
 
-        except requests.RequestException as e:
+        except httpx.HTTPError as e:
             logger.error(f"TikTok Events API error: {e}")
             raise
 
@@ -638,15 +643,16 @@ class SnapchatConversionsAPI:
         }
 
         try:
-            response = requests.post(
-                self.BASE_URL, json=payload, headers=headers, timeout=30
-            )
+            async with httpx.AsyncClient(timeout=30) as client:
+                response = await client.post(
+                    self.BASE_URL, json=payload, headers=headers
+                )
             response.raise_for_status()
 
             logger.info("Snapchat CAPI: Event sent successfully")
             return {"status": "success"}
 
-        except requests.RequestException as e:
+        except httpx.HTTPError as e:
             logger.error(f"Snapchat CAPI error: {e}")
             raise
 
@@ -702,7 +708,7 @@ class UnifiedConversionsAPI:
                 result = await client.send_event(event)
                 results[platform_name] = result
             except (
-                requests.RequestException,
+                httpx.HTTPError,
                 ConnectionError,
                 TimeoutError,
                 OSError,
@@ -739,7 +745,7 @@ class UnifiedConversionsAPI:
                             await client.send_event(event)
                             result["sent"] += 1
                         except (
-                            requests.RequestException,
+                            httpx.HTTPError,
                             ConnectionError,
                             TimeoutError,
                             OSError,
@@ -751,7 +757,7 @@ class UnifiedConversionsAPI:
 
                 results[platform_name] = result
             except (
-                requests.RequestException,
+                httpx.HTTPError,
                 ConnectionError,
                 TimeoutError,
                 OSError,
