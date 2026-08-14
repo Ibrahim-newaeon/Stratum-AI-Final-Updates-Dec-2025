@@ -3,11 +3,18 @@
 # =============================================================================
 """Deep coverage tests for ``app.stratum.adapters.meta_adapter`` (#342 Batch 5+6).
 
-The adapter wraps Meta's ``facebook_business`` SDK (not httpx), so all tests
-mock at the SDK boundary: ``AdAccount`` / ``Campaign`` / ``AdSet`` / ``Ad`` /
+The adapter wraps Meta's ``facebook_business`` SDK, so most tests mock at the
+SDK boundary: ``AdAccount`` / ``Campaign`` / ``AdSet`` / ``Ad`` /
 ``FacebookAdsApi`` and the server-side CAPI objects are patched in the
 ``meta_adapter`` namespace, and error paths raise *real*
 ``FacebookRequestError`` instances so the adapter's except clauses match.
+The one exception is ``get_emq_scores``, which calls the Graph API directly
+over ``httpx`` because the SDK has no wrapper for that endpoint.
+
+Two invariants get explicit coverage because they are silent when broken:
+every SDK entity is constructed with ``api=<this adapter's api>`` so tenants
+cannot leak into each other through the SDK's global default (#546), and the
+EMQ requests are issued concurrently rather than serialized (#547).
 
 Covered surface:
 - credential validation, ``initialize`` (success / empty accounts / auth
@@ -28,10 +35,13 @@ Covered surface:
 No database fixtures are used: the adapter never persists rows.
 """
 
+import asyncio
 import hashlib
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import httpx
 import pytest
 from facebook_business.exceptions import FacebookRequestError
 
@@ -80,11 +90,20 @@ def make_fb_error(code: int = 100, message: str = "boom") -> FacebookRequestErro
     )
 
 
+# Distinct per-adapter API sentinels. Every SDK entity must be constructed with
+# api=<its own adapter's api> — passing no api at all would silently fall back
+# to the SDK's process-wide default and leak across tenants (#546), so these
+# sentinels are what the constructor assertions below actually check.
+API_FULL = "api-instance-full-creds"
+API_MIN = "api-instance-min-creds"
+
+
 @pytest.fixture
 def adapter() -> MetaAdapter:
     """Adapter with full credentials, marked initialized (SDK is mocked)."""
     a = MetaAdapter(FULL_CREDS)
     a._initialized = True
+    a.api = API_FULL
     return a
 
 
@@ -92,6 +111,7 @@ def adapter() -> MetaAdapter:
 def adapter_no_pixel() -> MetaAdapter:
     a = MetaAdapter(MIN_CREDS)
     a._initialized = True
+    a.api = API_MIN
     return a
 
 
@@ -150,25 +170,81 @@ class TestInit:
 
 
 class TestInitialize:
-    async def test_initialize_success(self):
+    async def test_initialize_builds_private_api(self):
         a = MetaAdapter(FULL_CREDS)
-        with patch(f"{MODULE}.FacebookAdsApi") as mock_api:
-            mock_api.get_default_api.return_value = "the-api"
-            with patch.object(
-                a, "_fetch_ad_accounts", new_callable=AsyncMock
-            ) as mock_fetch:
-                mock_fetch.return_value = [{"id": "act_1"}]
-                await a.initialize()
+        with (
+            patch(f"{MODULE}.FacebookSession") as mock_session,
+            patch(f"{MODULE}.FacebookAdsApi") as mock_api,
+            patch.object(
+                a,
+                "_fetch_ad_accounts",
+                new_callable=AsyncMock,
+                return_value=[{"id": "act_1"}],
+            ),
+        ):
+            mock_api.return_value = "the-api"
+            await a.initialize()
 
-        mock_api.init.assert_called_once_with(
-            app_id="123456", app_secret="shh-secret", access_token="EAAB-token"
-        )
+        mock_session.assert_called_once_with("123456", "shh-secret", "EAAB-token")
+        mock_api.assert_called_once_with(mock_session.return_value)
         assert a.api == "the-api"
         assert a._initialized is True
 
+    async def test_initialize_never_touches_the_sdk_global_default(self):
+        """#546: the process-wide default API must be left alone.
+
+        FacebookAdsApi.init() would install these credentials as the SDK
+        default, and every entity built without an explicit api= would then
+        route through them — so a second tenant initializing would hijack the
+        first tenant's in-flight calls.
+        """
+        a = MetaAdapter(FULL_CREDS)
+        with (
+            patch(f"{MODULE}.FacebookSession"),
+            patch(f"{MODULE}.FacebookAdsApi") as mock_api,
+            patch.object(
+                a, "_fetch_ad_accounts", new_callable=AsyncMock, return_value=[]
+            ),
+        ):
+            await a.initialize()
+
+        mock_api.init.assert_not_called()
+        mock_api.set_default_api.assert_not_called()
+        mock_api.get_default_api.assert_not_called()
+
+    async def test_two_tenants_keep_independent_api_instances(self):
+        """#546: concurrent adapters must not share or overwrite credentials."""
+        tenant_a = MetaAdapter(
+            {"app_id": "app-a", "app_secret": "sec-a", "access_token": "tok-a"}
+        )
+        tenant_b = MetaAdapter(
+            {"app_id": "app-b", "app_secret": "sec-b", "access_token": "tok-b"}
+        )
+
+        with (
+            patch(f"{MODULE}.FacebookSession") as mock_session,
+            patch(f"{MODULE}.FacebookAdsApi") as mock_api,
+            patch.object(
+                tenant_a, "_fetch_ad_accounts", new_callable=AsyncMock, return_value=[]
+            ),
+            patch.object(
+                tenant_b, "_fetch_ad_accounts", new_callable=AsyncMock, return_value=[]
+            ),
+        ):
+            mock_api.side_effect = ["api-a", "api-b"]
+            await tenant_a.initialize()
+            await tenant_b.initialize()
+
+        # Each session was built from its own tenant's credentials...
+        assert mock_session.call_args_list[0].args == ("app-a", "sec-a", "tok-a")
+        assert mock_session.call_args_list[1].args == ("app-b", "sec-b", "tok-b")
+        # ...and B initializing did not rebind A.
+        assert tenant_a.api == "api-a"
+        assert tenant_b.api == "api-b"
+
     async def test_initialize_no_accounts_still_succeeds(self):
         a = MetaAdapter(FULL_CREDS)
-        with patch(f"{MODULE}.FacebookAdsApi"):
+        with patch(f"{MODULE}.FacebookSession"), patch(f"{MODULE}.FacebookAdsApi"):
             with patch.object(
                 a, "_fetch_ad_accounts", new_callable=AsyncMock, return_value=[]
             ):
@@ -177,7 +253,7 @@ class TestInitialize:
 
     async def test_initialize_auth_error_190(self):
         a = MetaAdapter(FULL_CREDS)
-        with patch(f"{MODULE}.FacebookAdsApi"):
+        with patch(f"{MODULE}.FacebookSession"), patch(f"{MODULE}.FacebookAdsApi"):
             with patch.object(
                 a,
                 "_fetch_ad_accounts",
@@ -190,7 +266,7 @@ class TestInitialize:
 
     async def test_initialize_generic_api_error(self):
         a = MetaAdapter(FULL_CREDS)
-        with patch(f"{MODULE}.FacebookAdsApi"):
+        with patch(f"{MODULE}.FacebookSession"), patch(f"{MODULE}.FacebookAdsApi"):
             with patch.object(
                 a,
                 "_fetch_ad_accounts",
@@ -224,7 +300,7 @@ class TestFetchAdAccounts:
         with patch("facebook_business.adobjects.business.Business") as mock_biz:
             mock_biz.return_value.get_owned_ad_accounts.return_value = raw
             result = await adapter._fetch_ad_accounts()
-        mock_biz.assert_called_once_with("biz-987")
+        mock_biz.assert_called_once_with("biz-987", api=API_FULL)
         fields = mock_biz.return_value.get_owned_ad_accounts.call_args.kwargs["fields"]
         assert "spend_cap" in fields and "currency" in fields
         assert result == raw
@@ -234,7 +310,7 @@ class TestFetchAdAccounts:
         with patch("facebook_business.adobjects.user.User") as mock_user:
             mock_user.return_value.get_ad_accounts.return_value = raw
             result = await adapter_no_pixel._fetch_ad_accounts()
-        mock_user.assert_called_once_with(fbid="me")
+        mock_user.assert_called_once_with(fbid="me", api=API_MIN)
         assert result == raw
 
 
@@ -312,7 +388,7 @@ class TestGetCampaigns:
             mock_acct.get_campaigns.return_value = [RAW_CAMPAIGN]
             campaigns = await adapter.get_campaigns("111")  # no act_ prefix
 
-        mock_acct_cls.assert_called_once_with("act_111")
+        mock_acct_cls.assert_called_once_with("act_111", api=API_FULL)
         assert len(campaigns) == 1
         c = campaigns[0]
         assert c.campaign_id == "camp-1"
@@ -377,7 +453,7 @@ class TestGetAdsets:
             mock_acct.get_ad_sets.return_value = [raw]
             adsets = await adapter.get_adsets("222")
 
-        mock_acct_cls.assert_called_once_with("act_222")
+        mock_acct_cls.assert_called_once_with("act_222", api=API_FULL)
         a = adsets[0]
         assert a.adset_id == "as-1"
         assert a.campaign_id == "camp-1"
@@ -431,7 +507,7 @@ class TestGetAds:
             mock_acct_cls.return_value.get_ads.return_value = [raw]
             ads = await adapter.get_ads("333")
 
-        mock_acct_cls.assert_called_once_with("act_333")
+        mock_acct_cls.assert_called_once_with("act_333", api=API_FULL)
         ad = ads[0]
         assert ad.ad_id == "ad-1"
         assert ad.adset_id == "as-1"
@@ -504,7 +580,7 @@ class TestGetMetrics:
                 "444", "campaign", ["camp-1"], DATE_START, DATE_END
             )
 
-        mock_acct_cls.assert_called_once_with("act_444")
+        mock_acct_cls.assert_called_once_with("act_444", api=API_FULL)
         params = mock_acct.get_insights.call_args.kwargs["params"]
         assert params["level"] == "campaign"
         assert params["time_range"] == {"since": "2026-06-01", "until": "2026-06-30"}
@@ -596,24 +672,48 @@ class TestGetMetrics:
 # =============================================================================
 
 
+def _emq_response(status_code: int = 200, payload: dict | None = None) -> MagicMock:
+    response = MagicMock()
+    response.status_code = status_code
+    response.json.return_value = payload if payload is not None else {"data": []}
+    return response
+
+
+@contextmanager
+def _patch_httpx(get: AsyncMock):
+    """Patch httpx.AsyncClient so `async with ... as client` yields a mock.
+
+    get_emq_scores now uses httpx rather than requests (#547) — a synchronous
+    client in an async method blocks the event loop. MagicMock supplies the
+    async context-manager protocol, so __aenter__ is already an AsyncMock.
+    """
+    with patch(f"{MODULE}.httpx.AsyncClient") as mock_cls:
+        mock_cls.return_value.__aenter__.return_value.get = get
+        # Pinned explicitly: a truthy __aexit__ would swallow the transport
+        # errors the failure-path tests below rely on propagating.
+        mock_cls.return_value.__aexit__.return_value = False
+        yield mock_cls
+
+
+SCORED_PAYLOAD = {
+    "data": [
+        {
+            "event_match_quality": 8.2,
+            "match_rate": 75.0,
+            "em_match_rate": 80.0,
+            "ph_match_rate": 60.0,
+        }
+    ]
+}
+
+
 class TestGetEmqScores:
     async def test_no_pixel_returns_empty(self, adapter_no_pixel):
         assert await adapter_no_pixel.get_emq_scores("act_1") == []
 
     async def test_parses_scores_for_each_event_type(self, adapter):
-        response = MagicMock()
-        response.status_code = 200
-        response.json.return_value = {
-            "data": [
-                {
-                    "event_match_quality": 8.2,
-                    "match_rate": 75.0,
-                    "em_match_rate": 80.0,
-                    "ph_match_rate": 60.0,
-                }
-            ]
-        }
-        with patch("requests.get", return_value=response) as mock_get:
+        mock_get = AsyncMock(return_value=_emq_response(200, SCORED_PAYLOAD))
+        with _patch_httpx(mock_get):
             scores = await adapter.get_emq_scores("act_1")
 
         assert mock_get.call_count == 5  # Purchase, AddToCart, ViewContent, ...
@@ -631,30 +731,66 @@ class TestGetEmqScores:
         assert s.email_match_rate == 80.0
         assert s.phone_match_rate == 60.0
 
+    async def test_event_types_are_requested_concurrently(self, adapter):
+        """#547: the five requests must be in flight together, not serialized.
+
+        Each stubbed request parks until all five have started. Sequential
+        execution can never satisfy that, so the first call would block until
+        the timeout fires and the adapter would return [] — the assertions
+        below only hold if the requests genuinely overlap.
+        """
+        started = 0
+        all_started = asyncio.Event()
+
+        async def fake_get(url, params=None):
+            nonlocal started
+            started += 1
+            if started == 5:
+                all_started.set()
+            await asyncio.wait_for(all_started.wait(), timeout=5)
+            return _emq_response(200, SCORED_PAYLOAD)
+
+        with _patch_httpx(AsyncMock(side_effect=fake_get)):
+            scores = await adapter.get_emq_scores("act_1")
+
+        assert started == 5
+        assert len(scores) == 5
+
+    async def test_scores_stay_aligned_with_their_event_type(self, adapter):
+        """Only ViewContent returns data; it must not be labelled Purchase."""
+
+        async def fake_get(url, params=None):
+            if params["event_name"] == "ViewContent":
+                return _emq_response(200, SCORED_PAYLOAD)
+            return _emq_response(200, {"data": []})
+
+        with _patch_httpx(AsyncMock(side_effect=fake_get)):
+            scores = await adapter.get_emq_scores("act_1")
+
+        assert len(scores) == 1
+        assert scores[0].event_name == "ViewContent"
+
     async def test_non_200_responses_skipped(self, adapter):
-        response = MagicMock()
-        response.status_code = 500
-        with patch("requests.get", return_value=response):
+        with _patch_httpx(AsyncMock(return_value=_emq_response(500))):
             assert await adapter.get_emq_scores("act_1") == []
 
     async def test_empty_data_skipped(self, adapter):
-        response = MagicMock()
-        response.status_code = 200
-        response.json.return_value = {"data": []}
-        with patch("requests.get", return_value=response):
+        with _patch_httpx(AsyncMock(return_value=_emq_response(200, {"data": []}))):
             assert await adapter.get_emq_scores("act_1") == []
 
     async def test_network_error_returns_empty(self, adapter):
-        with patch("requests.get", side_effect=ConnectionError("dns fail")):
+        with _patch_httpx(AsyncMock(side_effect=httpx.ConnectError("dns fail"))):
+            assert await adapter.get_emq_scores("act_1") == []
+
+    async def test_timeout_returns_empty(self, adapter):
+        with _patch_httpx(AsyncMock(side_effect=httpx.ReadTimeout("too slow"))):
             assert await adapter.get_emq_scores("act_1") == []
 
     async def test_parse_error_returns_empty(self, adapter):
         # EMQScore validates score <= 10; an out-of-range value raises
         # pydantic ValidationError (a ValueError) -> caught -> []
-        response = MagicMock()
-        response.status_code = 200
-        response.json.return_value = {"data": [{"event_match_quality": 55}]}
-        with patch("requests.get", return_value=response):
+        payload = {"data": [{"event_match_quality": 55}]}
+        with _patch_httpx(AsyncMock(return_value=_emq_response(200, payload))):
             assert await adapter.get_emq_scores("act_1") == []
 
 
@@ -673,7 +809,7 @@ class TestExecuteAction:
         with patch(f"{MODULE}.Campaign") as mock_campaign_cls:
             result = await adapter.execute_action(action)
 
-        mock_campaign_cls.assert_called_once_with("c-1")
+        mock_campaign_cls.assert_called_once_with("c-1", api=API_FULL)
         update_params = mock_campaign_cls.return_value.api_update.call_args.kwargs[
             "params"
         ]
@@ -695,7 +831,7 @@ class TestExecuteAction:
         )
         with patch(f"{MODULE}.AdSet") as mock_adset_cls:
             result = await adapter.execute_action(action)
-        mock_adset_cls.assert_called_once_with("as-9")
+        mock_adset_cls.assert_called_once_with("as-9", api=API_FULL)
         update_params = mock_adset_cls.return_value.api_update.call_args.kwargs[
             "params"
         ]
@@ -745,7 +881,7 @@ class TestExecuteAction:
         )
         with patch(f"{MODULE}.{patched}") as mock_cls:
             result = await adapter.execute_action(action)
-        mock_cls.assert_called_once_with("e-1")
+        mock_cls.assert_called_once_with("e-1", api=API_FULL)
         mock_cls.return_value.api_update.assert_called_once_with(
             params={"status": "PAUSED"}
         )
@@ -788,7 +924,7 @@ class TestExecuteAction:
             mock_acct.create_campaign.return_value = {"id": "camp-new"}
             result = await adapter.execute_action(action)
 
-        mock_acct_cls.assert_called_once_with("act_555")
+        mock_acct_cls.assert_called_once_with("act_555", api=API_FULL)
         params = mock_acct.create_campaign.call_args.kwargs["params"]
         assert params["name"] == "New Campaign"
         assert params["objective"] == "OUTCOME_LEADS"
@@ -831,7 +967,7 @@ class TestExecuteAction:
             mock_acct.create_ad_set.return_value = {"id": "as-new"}
             result = await adapter.execute_action(action)
 
-        mock_acct_cls.assert_called_once_with("act_666")
+        mock_acct_cls.assert_called_once_with("act_666", api=API_FULL)
         params = mock_acct.create_ad_set.call_args.kwargs["params"]
         assert params["name"] == "New AdSet"
         assert params["campaign_id"] == "camp-1"
@@ -889,7 +1025,7 @@ class TestCreativeOperations:
             }
             result = await adapter.upload_image("777", b"\x89PNG-bytes", "banner.png")
 
-        mock_acct_cls.assert_called_once_with("act_777")
+        mock_acct_cls.assert_called_once_with("act_777", api=API_FULL)
         params = mock_acct.create_ad_image.call_args.kwargs["params"]
         assert params["name"] == "banner.png"
         assert base64.b64decode(params["bytes"]) == b"\x89PNG-bytes"
@@ -907,7 +1043,7 @@ class TestCreativeOperations:
             mock_acct.create_ad_video.return_value = {"id": "vid-42"}
             result = await adapter.upload_video("888", b"video-bytes", "promo.mp4")
 
-        mock_acct_cls.assert_called_once_with("act_888")
+        mock_acct_cls.assert_called_once_with("act_888", api=API_FULL)
         params = mock_acct.create_ad_video.call_args.kwargs["params"]
         assert params["name"] == "promo.mp4"
         assert params["source_file"].endswith(".mp4")
@@ -951,8 +1087,9 @@ class TestSendConversionEvent:
             patch(f"{MODULE}.CustomData") as mock_custom_data,
             patch(f"{MODULE}.Event") as mock_event,
             patch(f"{MODULE}.EventRequest") as mock_request,
+            patch(f"{MODULE}.AdsPixel") as mock_pixel,
         ):
-            mock_request.return_value.execute.return_value = {"events_received": 1}
+            mock_pixel.return_value.create_event.return_value = {"events_received": 1}
             ok = await adapter.send_conversion_event(
                 "Purchase",
                 event_time,
@@ -962,6 +1099,14 @@ class TestSendConversionEvent:
             )
 
         assert ok is True
+
+        # #546: CAPI must go through this adapter's api, not the SDK global.
+        # EventRequest.execute() would build AdsPixel(pixel_id) with no api=.
+        mock_pixel.assert_called_once_with("px-555", api=API_FULL)
+        mock_request.return_value.execute.assert_not_called()
+        expected_params = mock_request.return_value.get_params.return_value
+        create_kwargs = mock_pixel.return_value.create_event.call_args.kwargs
+        assert create_kwargs["params"] is expected_params
 
         expected_em = hashlib.sha256(b"user@example.com").hexdigest()
         expected_ph = hashlib.sha256(b"15551234567").hexdigest()
@@ -994,9 +1139,10 @@ class TestSendConversionEvent:
             patch(f"{MODULE}.UserData"),
             patch(f"{MODULE}.CustomData") as mock_custom_data,
             patch(f"{MODULE}.Event") as mock_event,
-            patch(f"{MODULE}.EventRequest") as mock_request,
+            patch(f"{MODULE}.EventRequest"),
+            patch(f"{MODULE}.AdsPixel") as mock_pixel,
         ):
-            mock_request.return_value.execute.return_value = {"events_received": 0}
+            mock_pixel.return_value.create_event.return_value = {"events_received": 0}
             ok = await adapter.send_conversion_event(
                 "Lead", datetime.now(UTC), {"email": "a@b.com"}
             )

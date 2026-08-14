@@ -47,16 +47,19 @@ This adapter implements exponential backoff when rate limits are hit, automatica
 retrying failed requests after progressively longer delays.
 """
 
+import asyncio
 import hashlib
 import logging
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Optional
 
+import httpx
 from facebook_business.adobjects.ad import Ad
 from facebook_business.adobjects.adaccount import AdAccount
 from facebook_business.adobjects.adset import AdSet
 from facebook_business.adobjects.adsinsights import AdsInsights
+from facebook_business.adobjects.adspixel import AdsPixel
 from facebook_business.adobjects.campaign import Campaign
 from facebook_business.adobjects.serverside.custom_data import CustomData
 from facebook_business.adobjects.serverside.event import Event
@@ -66,6 +69,7 @@ from facebook_business.adobjects.serverside.user_data import UserData
 # Meta's official Python SDK
 from facebook_business.api import FacebookAdsApi
 from facebook_business.exceptions import FacebookRequestError
+from facebook_business.session import FacebookSession
 
 from app.stratum.adapters.base import (
     AdapterError,
@@ -208,24 +212,30 @@ class MetaAdapter(BaseAdapter):
         """
         Initialize the Meta Marketing API client and verify authentication.
 
-        This method configures the facebook-business SDK with our credentials
-        and makes a test API call to verify everything is working. The SDK
-        maintains a global default API instance, which we configure here.
+        This method builds an API instance scoped to *this* adapter and makes a
+        test API call to verify the credentials work.
 
-        After calling this method, all subsequent API calls will use the
-        configured credentials automatically.
+        The instance is deliberately private. ``FacebookAdsApi.init()`` would
+        install these credentials as the SDK's process-wide default, and every
+        SDK entity constructed without an explicit ``api=`` binds to that
+        default. Stratum runs one adapter per tenant in a shared process, so
+        the last tenant to initialize would silently take over in-flight calls
+        belonging to every other tenant. Constructing FacebookAdsApi directly
+        leaves the global default untouched, and every SDK entity in this
+        module is built with an explicit ``api=self.api`` so it routes through
+        these credentials and no others.
         """
         logger.info("Initializing Meta Marketing API adapter")
 
         try:
-            # Initialize the SDK with our credentials
-            # The init() method sets up a default API instance used by all objects
-            FacebookAdsApi.init(
-                app_id=self.app_id,
-                app_secret=self.app_secret,
-                access_token=self.access_token,
+            # Same construction FacebookAdsApi.init() performs internally,
+            # minus the set_default_api() call that makes it global.
+            session = FacebookSession(
+                self.app_id,
+                self.app_secret,
+                self.access_token,
             )
-            self.api = FacebookAdsApi.get_default_api()
+            self.api = FacebookAdsApi(session)
 
             # Verify authentication by fetching accessible ad accounts
             # This also warms up any connection pools
@@ -331,7 +341,7 @@ class MetaAdapter(BaseAdapter):
             if not account_id.startswith("act_"):
                 account_id = f"act_{account_id}"
 
-            ad_account = AdAccount(account_id)
+            ad_account = AdAccount(account_id, api=self.api)
 
             # Define which fields we need from the API
             # We request everything needed for unified model plus budget/bidding
@@ -397,7 +407,7 @@ class MetaAdapter(BaseAdapter):
             if not account_id.startswith("act_"):
                 account_id = f"act_{account_id}"
 
-            ad_account = AdAccount(account_id)
+            ad_account = AdAccount(account_id, api=self.api)
 
             fields = [
                 AdSet.Field.id,
@@ -453,7 +463,7 @@ class MetaAdapter(BaseAdapter):
             if not account_id.startswith("act_"):
                 account_id = f"act_{account_id}"
 
-            ad_account = AdAccount(account_id)
+            ad_account = AdAccount(account_id, api=self.api)
 
             fields = [
                 Ad.Field.id,
@@ -521,7 +531,7 @@ class MetaAdapter(BaseAdapter):
 
             level = level_map.get(entity_type, "campaign")
 
-            ad_account = AdAccount(account_id)
+            ad_account = AdAccount(account_id, api=self.api)
 
             fields = [
                 AdsInsights.Field.impressions,
@@ -605,55 +615,70 @@ class MetaAdapter(BaseAdapter):
             logger.warning("No pixel_id configured, cannot fetch EMQ scores")
             return []
 
+        # The server events quality endpoint provides aggregate EMQ data.
+        # It has no SDK wrapper, so this is a direct Graph API call.
+        event_types = [
+            "Purchase",
+            "AddToCart",
+            "ViewContent",
+            "Lead",
+            "InitiateCheckout",
+        ]
+        url = f"https://graph.facebook.com/v18.0/{self.pixel_id}/server_events_quality"
+
         try:
-            # The server events quality endpoint provides aggregate EMQ data
-            # We need to call it for each event type we're tracking
-            event_types = [
-                "Purchase",
-                "AddToCart",
-                "ViewContent",
-                "Lead",
-                "InitiateCheckout",
-            ]
+            # httpx, not requests: this is an async method, and a synchronous
+            # client here blocks the event loop for the whole request. With five
+            # event types issued sequentially against a 30s timeout, one slow
+            # Meta endpoint could stall every other coroutine on this worker for
+            # up to ~150s. The five requests now run concurrently, so the worst
+            # case is one timeout and the loop stays free throughout.
+            async with httpx.AsyncClient(timeout=30) as client:
+                pending = [
+                    client.get(
+                        url,
+                        params={
+                            "event_name": event_type,
+                            "access_token": self.access_token,
+                        },
+                    )
+                    for event_type in event_types
+                ]
+                responses = await asyncio.gather(*pending)
 
             emq_scores = []
 
-            for event_type in event_types:
-                # Meta's EMQ endpoint path
-                # Note: This uses the direct Graph API call since the SDK
-                # doesn't have a wrapper for this specific endpoint
-                path = f"/{self.pixel_id}/server_events_quality"
-                params = {"event_name": event_type, "access_token": self.access_token}
+            # gather() preserves input order, so response i belongs to
+            # event_types[i].
+            for event_type, response in zip(event_types, responses, strict=True):
+                if response.status_code != 200:
+                    continue
 
-                # Make the API call
-                # We're using a simplified approach here; production code
-                # would handle pagination and more complex responses
-                import requests
+                data = response.json()
 
-                response = requests.get(
-                    f"https://graph.facebook.com/v18.0{path}", params=params, timeout=30
-                )
+                # Parse the EMQ data into our model
+                if "data" in data and len(data["data"]) > 0:
+                    emq_data = data["data"][0]
 
-                if response.status_code == 200:
-                    data = response.json()
-
-                    # Parse the EMQ data into our model
-                    if "data" in data and len(data["data"]) > 0:
-                        emq_data = data["data"][0]
-
-                        emq = EMQScore(
-                            platform=Platform.META,
-                            event_name=event_type,
-                            score=emq_data.get("event_match_quality", 0),
-                            match_rate=emq_data.get("match_rate", 0),
-                            email_match_rate=emq_data.get("em_match_rate"),
-                            phone_match_rate=emq_data.get("ph_match_rate"),
-                        )
-                        emq_scores.append(emq)
+                    emq = EMQScore(
+                        platform=Platform.META,
+                        event_name=event_type,
+                        score=emq_data.get("event_match_quality", 0),
+                        match_rate=emq_data.get("match_rate", 0),
+                        email_match_rate=emq_data.get("em_match_rate"),
+                        phone_match_rate=emq_data.get("ph_match_rate"),
+                    )
+                    emq_scores.append(emq)
 
             return emq_scores
 
-        except (FacebookRequestError, ConnectionError, TimeoutError, OSError) as e:
+        except (
+            FacebookRequestError,
+            httpx.HTTPError,
+            ConnectionError,
+            TimeoutError,
+            OSError,
+        ) as e:
             logger.error(f"Failed to fetch EMQ scores: {e}")
             return []
         except (ValueError, KeyError, TypeError) as e:
@@ -745,9 +770,9 @@ class MetaAdapter(BaseAdapter):
             update_params["lifetime_budget"] = int(params["lifetime_budget"] * 100)
 
         if action.entity_type == "campaign":
-            entity = Campaign(action.entity_id)
+            entity = Campaign(action.entity_id, api=self.api)
         else:
-            entity = AdSet(action.entity_id)
+            entity = AdSet(action.entity_id, api=self.api)
 
         entity.api_update(params=update_params)
 
@@ -775,9 +800,9 @@ class MetaAdapter(BaseAdapter):
                 update_params["bid_strategy"] = meta_strategy
 
         if action.entity_type == "campaign":
-            entity = Campaign(action.entity_id)
+            entity = Campaign(action.entity_id, api=self.api)
         else:
-            entity = AdSet(action.entity_id)
+            entity = AdSet(action.entity_id, api=self.api)
 
         entity.api_update(params=update_params)
 
@@ -804,11 +829,11 @@ class MetaAdapter(BaseAdapter):
             )
 
         if action.entity_type == "campaign":
-            entity = Campaign(action.entity_id)
+            entity = Campaign(action.entity_id, api=self.api)
         elif action.entity_type == "adset":
-            entity = AdSet(action.entity_id)
+            entity = AdSet(action.entity_id, api=self.api)
         else:
-            entity = Ad(action.entity_id)
+            entity = Ad(action.entity_id, api=self.api)
 
         entity.api_update(params={"status": meta_status})
 
@@ -828,7 +853,7 @@ class MetaAdapter(BaseAdapter):
         if not account_id.startswith("act_"):
             account_id = f"act_{account_id}"
 
-        ad_account = AdAccount(account_id)
+        ad_account = AdAccount(account_id, api=self.api)
 
         campaign_params = {
             "name": params["name"],
@@ -868,7 +893,7 @@ class MetaAdapter(BaseAdapter):
         if not account_id.startswith("act_"):
             account_id = f"act_{account_id}"
 
-        ad_account = AdAccount(account_id)
+        ad_account = AdAccount(account_id, api=self.api)
 
         adset_params = {
             "name": params["name"],
@@ -908,7 +933,7 @@ class MetaAdapter(BaseAdapter):
         if not account_id.startswith("act_"):
             account_id = f"act_{account_id}"
 
-        ad_account = AdAccount(account_id)
+        ad_account = AdAccount(account_id, api=self.api)
 
         # Meta requires the image data as base64 or a file
         import base64
@@ -942,7 +967,7 @@ class MetaAdapter(BaseAdapter):
         if not account_id.startswith("act_"):
             account_id = f"act_{account_id}"
 
-        ad_account = AdAccount(account_id)
+        ad_account = AdAccount(account_id, api=self.api)
 
         # For videos, we use the resumable upload endpoint
         # This is a simplified version; production would handle chunked upload
@@ -1041,13 +1066,22 @@ class MetaAdapter(BaseAdapter):
             action_source="website",
         )
 
-        # Send the event
+        # Send the event.
+        #
+        # EventRequest is used only to normalize the payload, not to send it.
+        # Its execute() builds AdsPixel(pixel_id) with no api= argument, which
+        # would route the call through the SDK's global default and reintroduce
+        # the cross-tenant leak this adapter avoids everywhere else. Issue the
+        # same create_event call against this adapter's own api instead.
         request = EventRequest(
             pixel_id=self.pixel_id,
             events=[event],
         )
 
-        response = request.execute()
+        response = AdsPixel(self.pixel_id, api=self.api).create_event(
+            fields=[],
+            params=request.get_params(),
+        )
 
         return response.get("events_received", 0) > 0
 
@@ -1073,10 +1107,10 @@ class MetaAdapter(BaseAdapter):
         fields = ["id", "name", "currency", "timezone_name", "spend_cap", "business"]
 
         if self.business_id:
-            business = Business(self.business_id)
+            business = Business(self.business_id, api=self.api)
             accounts = business.get_owned_ad_accounts(fields=fields)
         else:
-            me = User(fbid="me")
+            me = User(fbid="me", api=self.api)
             accounts = me.get_ad_accounts(fields=fields)
 
         return [dict(acc) for acc in accounts]
