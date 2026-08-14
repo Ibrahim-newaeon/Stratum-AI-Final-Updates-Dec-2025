@@ -32,10 +32,9 @@ behavior — do not revert):
 
 import hashlib
 import hmac
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
-
-from contextlib import contextmanager
 
 import httpx
 import pytest
@@ -221,7 +220,8 @@ class TestLifecycle:
         message.
         """
         a = WhatsAppAdapter(dict(BASE_CREDS))
-        with patch_http("get",
+        with patch_http(
+            "get",
             side_effect=httpx.ConnectError("connection refused"),
         ):
             with pytest.raises(
@@ -605,7 +605,8 @@ class TestTemplates:
 
     async def test_create_template(self, adapter):
         components = [{"type": "BODY", "text": "Hello {{1}}"}]
-        with patch_http("post",
+        with patch_http(
+            "post",
             return_value=_resp({"id": "tpl-new", "status": "PENDING"}),
         ) as mock_post:
             result = await adapter.create_template(
@@ -1052,7 +1053,8 @@ class TestMarkConversion:
         assert event["user_data"]["fbc"] == "fb.1.ad-777"
 
     async def test_capi_failure_returns_error(self, capi_adapter):
-        with patch_http("post",
+        with patch_http(
+            "post",
             side_effect=httpx.ConnectError("capi down"),
         ):
             result = await capi_adapter.mark_conversion("15550007777", 5.0)
@@ -1143,7 +1145,8 @@ class TestHelpers:
                 adapter._make_request("GET", "/me")
 
     def test_make_request_connection_error_no_response(self, adapter):
-        with patch_http("post",
+        with patch_http(
+            "post",
             side_effect=httpx.ConnectError("dns failure"),
         ):
             with pytest.raises(PlatformError, match="dns failure"):
