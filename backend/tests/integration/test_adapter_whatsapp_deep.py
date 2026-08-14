@@ -456,8 +456,7 @@ class TestUploadMedia:
     async def test_upload_media_success(self, adapter, tmp_path):
         f = tmp_path / "photo.jpg"
         f.write_bytes(b"\xff\xd8fakejpeg")
-        with patch_http("post", return_value=_resp({"id": "MEDIA-42"})
-        ) as mock_post:
+        with patch_http("post", return_value=_resp({"id": "MEDIA-42"})) as mock_post:
             media_id = await adapter.upload_media(str(f), "image")
 
         assert media_id == "MEDIA-42"
@@ -472,8 +471,7 @@ class TestUploadMedia:
     async def test_upload_media_unknown_type_falls_back(self, adapter, tmp_path):
         f = tmp_path / "blob.bin"
         f.write_bytes(b"data")
-        with patch_http("post", return_value=_resp({"id": "MEDIA-43"})
-        ) as mock_post:
+        with patch_http("post", return_value=_resp({"id": "MEDIA-43"})) as mock_post:
             media_id = await adapter.upload_media(str(f), "weird")
         assert media_id == "MEDIA-43"
         kwargs = mock_post.call_args.kwargs
@@ -494,8 +492,7 @@ class TestUploadMedia:
 class TestUploadCreative:
     async def test_upload_image_posts_bytes_and_returns_id(self, adapter):
         """BUG #1 FIXED: upload_image hits the Cloud API /media endpoint."""
-        with patch_http("post", return_value=_resp({"id": "IMG-1"})
-        ) as mock_post:
+        with patch_http("post", return_value=_resp({"id": "IMG-1"})) as mock_post:
             media_id = await adapter.upload_image("acct", b"\xff\xd8jpeg", "logo.png")
 
         assert media_id == "IMG-1"
@@ -511,15 +508,13 @@ class TestUploadCreative:
 
     async def test_upload_image_unknown_extension_uses_default_mime(self, adapter):
         """Unguessable extension falls back to the image/jpeg default."""
-        with patch_http("post", return_value=_resp({"id": "IMG-2"})
-        ) as mock_post:
+        with patch_http("post", return_value=_resp({"id": "IMG-2"})) as mock_post:
             media_id = await adapter.upload_image("acct", b"data", "blob")
         assert media_id == "IMG-2"
         assert mock_post.call_args.kwargs["data"]["type"] == "image/jpeg"
 
     async def test_upload_video_posts_bytes_and_returns_id(self, adapter):
-        with patch_http("post", return_value=_resp({"id": "VID-1"})
-        ) as mock_post:
+        with patch_http("post", return_value=_resp({"id": "VID-1"})) as mock_post:
             media_id = await adapter.upload_video("acct", b"movie", "promo.mp4")
         assert media_id == "VID-1"
         assert mock_post.call_args.kwargs["data"]["type"] == "video/mp4"
@@ -1021,7 +1016,8 @@ class TestMarkConversion:
         assert conv.conversion_time is not None
 
     async def test_capi_success(self, capi_adapter):
-        with patch_http("post", return_value=_resp({"events_received": 1})
+        with patch_http(
+            "post", return_value=_resp({"events_received": 1})
         ) as mock_post:
             result = await capi_adapter.mark_conversion("15550005555", 42.0)
 
@@ -1046,7 +1042,8 @@ class TestMarkConversion:
         capi_adapter._conversations["15550006666"] = Conversation(
             conversation_id="c1", wa_id="15550006666", ad_id="ad-777"
         )
-        with patch_http("post", return_value=_resp({"events_received": 1})
+        with patch_http(
+            "post", return_value=_resp({"events_received": 1})
         ) as mock_post:
             await capi_adapter.mark_conversion("15550006666", 10.0)
         event = mock_post.call_args.kwargs["json"]["data"][0]
@@ -1072,7 +1069,8 @@ class TestAnalytics:
     async def test_get_analytics(self, adapter):
         start = datetime(2026, 6, 1, tzinfo=timezone.utc)
         end = datetime(2026, 6, 30, tzinfo=timezone.utc)
-        with patch_http("get", return_value=_resp({"analytics": {"sent": 5}})
+        with patch_http(
+            "get", return_value=_resp({"analytics": {"sent": 5}})
         ) as mock_get:
             result = await adapter.get_analytics(start, end, granularity="MONTH")
         assert result == {"analytics": {"sent": 5}}
@@ -1087,7 +1085,8 @@ class TestAnalytics:
     async def test_get_conversation_analytics(self, adapter):
         start = datetime(2026, 6, 1, tzinfo=timezone.utc)
         end = datetime(2026, 6, 2, tzinfo=timezone.utc)
-        with patch_http("get", return_value=_resp({"conversation_analytics": {}})
+        with patch_http(
+            "get", return_value=_resp({"conversation_analytics": {}})
         ) as mock_get:
             result = await adapter.get_conversation_analytics(start, end)
         assert result == {"conversation_analytics": {}}
@@ -1117,15 +1116,13 @@ class TestHelpers:
         assert adapter._normalize_phone(raw) == expected
 
     def test_make_request_delete(self, adapter):
-        with patch_http("delete", return_value=_resp({"success": True})
-        ) as mock_delete:
+        with patch_http("delete", return_value=_resp({"success": True})) as mock_delete:
             result = adapter._make_request("DELETE", "/thing/1")
         assert result == {"success": True}
         assert mock_delete.call_args.args[0].endswith("/thing/1")
 
     def test_make_request_other_method(self, adapter):
-        with patch_http("request", return_value=_resp({"patched": True})
-        ) as mock_req:
+        with patch_http("request", return_value=_resp({"patched": True})) as mock_req:
             result = adapter._make_request("PATCH", "/thing/2", data={"a": 1})
         assert result == {"patched": True}
         assert mock_req.call_args.args[:2] == ("PATCH",) + (
@@ -1168,8 +1165,7 @@ class TestBaseInterface:
     async def test_get_metrics_delegates_to_analytics(self, adapter):
         start = datetime(2026, 6, 1, tzinfo=timezone.utc)
         end = datetime(2026, 6, 7, tzinfo=timezone.utc)
-        with patch_http("get", return_value=_resp({"metrics": True})
-        ) as mock_get:
+        with patch_http("get", return_value=_resp({"metrics": True})) as mock_get:
             result = await adapter.get_metrics("acct", "campaign", ["c1"], start, end)
         assert result == {"metrics": True}
         assert mock_get.call_args.args[0].endswith("/analytics")
