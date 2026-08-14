@@ -65,6 +65,52 @@ Serves the built files at `http://localhost:4173`.
 
 ---
 
+## TypeScript: why two compilers are installed
+
+`npm ls typescript` reports **6.0.3** while `npx tsc --version` reports
+**7.0.2**. That is deliberate, not drift.
+
+TypeScript 7.0 is the native (Go) port and **ships without a programmatic
+API** — 7.1 is expected to add a new one. Tools that import `typescript`
+directly, most importantly `typescript-eslint`, therefore cannot run against
+it. `typescript-eslint` fails closed with:
+
+```
+typescript-eslint does not support TS 7.0.
+```
+
+Microsoft's documented answer is to run the two side by side, which is what
+`frontend/package.json` does via npm aliases:
+
+```jsonc
+"devDependencies": {
+  "@typescript/native": "npm:typescript@^7.0.2",          // provides `tsc`
+  "typescript": "npm:@typescript/typescript6@^6.0.2"      // provides the 6.0 API
+}
+```
+
+So:
+
+| Consumer | Resolves to | Version |
+| --- | --- | --- |
+| `npm run build`, `npx tsc` | `@typescript/native` bin | 7.0.2 |
+| `eslint` / anything doing `require('typescript')` | `@typescript/typescript6` | 6.0.3 API |
+
+Type checking and the build run on **7.0**; lint parses with the **6.0** API.
+The two are compatible for this codebase — `tsc --noEmit` is clean under 7.0
+and lint is clean under 6.0.
+
+**When to undo this:** once `typescript-eslint` supports TS >= 7.1
+([typescript-eslint#10940](https://github.com/typescript-eslint/typescript-eslint/issues/10940)),
+drop the `@typescript/native` alias and set `typescript` back to a plain
+`^7.x`. Tracked in issue #639.
+
+Related: `tsconfig.json` deliberately sets no `baseUrl` — TypeScript 7
+removed it (`error TS5102`). `paths` resolves relative to the tsconfig on
+5.4+, and Vite resolves the same alias independently.
+
+---
+
 ## Vite Configuration
 
 ```ts
