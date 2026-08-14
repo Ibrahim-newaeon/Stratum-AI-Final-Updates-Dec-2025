@@ -1,0 +1,17 @@
+# Advisories waived for the Trivy scans in .github/workflows/ci.yml.
+#
+# Keep this in sync with frontend/.audit-allowlist.json — the npm audit gate
+# and Trivy scan the same dependency tree, so an advisory waived in one and
+# not the other just moves the red from one job to another.
+#
+# Trivy has no expiry mechanism, so the expiry lives with the npm waiver and
+# is repeated here as a comment. Re-review both together.
+
+# react-router — RSC Mode CSRF Bypass Allows Action Execution Before 400
+# Response. Not reachable: this is a client-only Vite SPA using BrowserRouter
+# with no RSC mode, server actions, or react-router server runtime. No patched
+# react-router-dom exists (7.18.2 is the last release and pins the vulnerable
+# react-router 7.18.2); the fix ships in react-router 8.3.0, which requires
+# migrating off react-router-dom. Tracked as a separate migration.
+# Re-review by: 2026-11-30
+GHSA-qwww-vcr4-c8h2

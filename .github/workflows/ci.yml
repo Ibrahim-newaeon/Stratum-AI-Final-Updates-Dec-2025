@@ -46,7 +46,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
+          # setuptools/wheel are upgraded alongside pip to match backend/Dockerfile:
+          # the runner's bundled setuptools is old enough to carry fixable
+          # advisories that pip-audit reports against the installed environment.
+          python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
 
       - name: Lint with Ruff
@@ -154,7 +157,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
+          # setuptools/wheel are upgraded alongside pip to match backend/Dockerfile:
+          # the runner's bundled setuptools is old enough to carry fixable
+          # advisories that pip-audit reports against the installed environment.
+          python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
 
       - name: Run unit tests
@@ -286,7 +292,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
+          # setuptools/wheel are upgraded alongside pip to match backend/Dockerfile:
+          # the runner's bundled setuptools is old enough to carry fixable
+          # advisories that pip-audit reports against the installed environment.
+          python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
 
       - name: Security scan with Bandit
@@ -343,8 +352,13 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
+      # Wrapper around `npm audit --json` that fails on unwaived findings only.
+      # Plain `npm audit` is all-or-nothing, so a single advisory with no
+      # published fix turned every PR red — including the dependency PRs that
+      # existed to fix other advisories. Waivers live in
+      # frontend/.audit-allowlist.json and expire.
       - name: Dependency audit (npm)
-        run: npm audit --audit-level=high --omit=dev
+        run: node scripts/audit-gate.mjs --audit-level=high --omit=dev
 
       - name: Lint
         run: npm run lint
@@ -436,6 +450,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
+      # Print findings before the gating scan. The gate below writes SARIF to a
+      # file, so when it failed the log showed only "exit code 1" with no
+      # indication of which package or advisory tripped it. This step never
+      # fails; it exists purely so the log names the finding.
+      - name: Trivy filesystem scan (report)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "table"
+          severity: "CRITICAL,HIGH"
+          ignore-unfixed: true
+          exit-code: "0"
+
+      # limit-severities-for-sarif is required for `severity` to apply at all.
+      # Without it the action logs "Building SARIF report with all severities"
+      # and scans every severity, so exit-code 1 fired on LOW and MEDIUM
+      # findings too — the CRITICAL,HIGH filter below was silently ignored.
       - name: Run Trivy filesystem scan
         uses: aquasecurity/trivy-action@master
         with:
@@ -444,19 +476,47 @@ jobs:
           format: "sarif"
           output: "trivy-fs-results.sarif"
           severity: "CRITICAL,HIGH"
+          limit-severities-for-sarif: true
           ignore-unfixed: true
           exit-code: "1"
 
+      # Tagged with the commit SHA, not a fixed `:scan`. A locally built image
+      # has no registry digest, so Trivy's per-artifact cache key falls back to
+      # the tag — a constant tag made every run collide with the previous one's
+      # cached analysis. That cache went stale long ago and kept reporting
+      # package versions the image had not contained for months (msgpack 1.1.2
+      # against an image holding 1.2.1, setuptools 70.3.0 against 84.0.0),
+      # which is why the scan could not be fixed by changing dependencies.
       - name: Build Docker image for scanning
-        run: docker build -t stratum-api:scan ./backend
+        run: docker build -t stratum-api:${{ github.sha }} ./backend
+
+      # skip-files below excludes pip/_vendor/bom.cdx.json — a CycloneDX SBOM
+      # pip ships describing its own vendored libraries. Trivy trusts an
+      # embedded SBOM over the real site-packages contents, so it reported
+      # pip's internal msgpack 1.1.2 and setuptools 70.3.0 as application
+      # dependencies. Those versions were never in the image (it carries 1.2.1
+      # and 84.0.0), which is why no requirements change could clear them.
+      # pip's vendored code is not part of the app's dependency surface; the
+      # packages that are get scanned from their own dist-info metadata.
+      - name: Trivy container image scan (report)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "stratum-api:${{ github.sha }}"
+          skip-files: "**/pip/_vendor/bom.cdx.json"
+          format: "table"
+          severity: "CRITICAL,HIGH"
+          ignore-unfixed: true
+          exit-code: "0"
 
       - name: Trivy container image scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: "stratum-api:scan"
+          image-ref: "stratum-api:${{ github.sha }}"
+          skip-files: "**/pip/_vendor/bom.cdx.json"
           format: "sarif"
           output: "trivy-image-results.sarif"
           severity: "CRITICAL,HIGH"
+          limit-severities-for-sarif: true
           ignore-unfixed: true
           exit-code: "1"
 
@@ -473,6 +533,15 @@ jobs:
   secrets:
     name: Secret Scanning
     runs-on: ubuntu-latest
+    # gitleaks-action's pull_request path reads the PR's commits and writes a
+    # summary comment, so it needs more than the repository's default
+    # read-only GITHUB_TOKEN — without this it fails with HTTP 403 "Resource
+    # not accessible by integration" before scanning anything. Push runs took a
+    # different code path and so kept passing, which is why this only ever
+    # showed up on PRs.
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - name: Checkout code
@@ -480,7 +549,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Dependabot PRs are the one case the `permissions:` block above cannot
+      # rescue: those runs get a read-only token that job-level permissions are
+      # not allowed to elevate, so gitleaks would still 403. They only ever
+      # touch dependency manifests and lockfiles, and the push-to-main run
+      # re-scans the merged result with a full-permission token.
       - name: Run gitleaks
+        if: github.actor != 'dependabot[bot]'
         uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -564,7 +639,10 @@ jobs:
       - name: Install backend dependencies
         working-directory: backend
         run: |
-          python -m pip install --upgrade pip
+          # setuptools/wheel are upgraded alongside pip to match backend/Dockerfile:
+          # the runner's bundled setuptools is old enough to carry fixable
+          # advisories that pip-audit reports against the installed environment.
+          python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
 
       - name: Start API server
