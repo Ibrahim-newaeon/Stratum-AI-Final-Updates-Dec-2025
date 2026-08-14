@@ -3,10 +3,13 @@
 # =============================================================================
 """Deep coverage tests for ``app.stratum.adapters.snapchat_adapter``.
 
-The Snapchat adapter uses a synchronous ``requests.Session`` (NOT httpx), so
-these tests stub the session boundary with an in-memory fake instead of respx.
-The OAuth token refresh path uses module-level ``requests.post``, which is
-monkeypatched where exercised. Covers: credential validation, token refresh
+The Snapchat adapter holds a long-lived ``httpx.AsyncClient`` on ``self.session``
+and opens a second, short-lived one for the OAuth token refresh, so these tests
+stub the client boundary with an in-memory async fake instead of respx. Both
+usages resolve the same ``httpx.AsyncClient`` symbol, so ``FakeAsyncClient``
+doubles as an async context manager and ``fake_client_factory`` hands out the
+session client first and the token client second — the order ``initialize``
+constructs them. Covers: credential validation, token refresh
 and expiry handling, initialize/cleanup lifecycle, account/campaign/adsquad/ad
 fetch + unified model mapping, stats aggregation, EMQ estimation,
 budget/status/create mutations via ``execute_action``, media uploads,
@@ -26,8 +29,8 @@ Behaviors pinned here (fixed under #540):
 
 from datetime import UTC, datetime, timedelta
 
+import httpx
 import pytest
-import requests
 
 from app.stratum.adapters.base import (
     AdapterError,
@@ -42,12 +45,12 @@ pytestmark = pytest.mark.integration
 
 
 # =============================================================================
-# Fakes for the requests transport boundary
+# Fakes for the httpx transport boundary
 # =============================================================================
 
 
 class FakeResponse:
-    """Minimal stand-in for requests.Response."""
+    """Minimal stand-in for httpx.Response."""
 
     def __init__(self, payload=None, status_code=200, headers=None):
         self._payload = payload if payload is not None else {}
@@ -59,17 +62,28 @@ class FakeResponse:
 
     def raise_for_status(self):
         if self.status_code >= 400:
-            raise requests.HTTPError(f"HTTP {self.status_code}")
+            raise httpx.HTTPError(f"HTTP {self.status_code}")
 
 
-class FakeSession:
-    """Queue-driven fake of requests.Session recording every call."""
+class FakeAsyncClient:
+    """Queue-driven fake of httpx.AsyncClient recording every call.
 
-    def __init__(self, queue=None):
+    Serves both ways the adapter uses the class: assigned to ``self.session``
+    for the lifetime of the adapter, and entered as ``async with`` in the token
+    refresh path — hence both ``aclose`` and the async context-manager methods.
+    """
+
+    def __init__(self, queue=None, **kwargs):
         self.queue = list(queue or [])
         self.calls = []
         self.headers = {}
         self.closed = False
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc_info):
+        return False
 
     def _next(self, method, url, **kwargs):
         self.calls.append({"method": method, "url": url, **kwargs})
@@ -80,20 +94,55 @@ class FakeSession:
             raise item
         return item
 
-    def get(self, url, headers=None, params=None, **kwargs):
+    async def get(self, url, headers=None, params=None, **kwargs):
         return self._next("GET", url, headers=headers, params=params)
 
-    def post(self, url, headers=None, json=None, **kwargs):
-        return self._next("POST", url, headers=headers, json=json)
+    async def post(self, url, headers=None, json=None, data=None, **kwargs):
+        return self._next("POST", url, headers=headers, json=json, data=data)
 
-    def put(self, url, headers=None, json=None, **kwargs):
+    async def put(self, url, headers=None, json=None, **kwargs):
         return self._next("PUT", url, headers=headers, json=json)
 
-    def request(self, method, url, headers=None, json=None, **kwargs):
+    async def request(self, method, url, headers=None, json=None, **kwargs):
         return self._next(method, url, headers=headers, json=json)
 
-    def close(self):
+    async def aclose(self):
         self.closed = True
+
+
+# Backwards-compatible alias: the tests below were written against the
+# requests.Session-era name.
+FakeSession = FakeAsyncClient
+
+
+def fake_client_factory(session_client, token_handler=None):
+    """Stand in for the ``httpx.AsyncClient`` symbol during ``initialize``.
+
+    ``initialize`` constructs the class twice — first for ``self.session``,
+    then inside ``_refresh_access_token`` — so hand out the session client on
+    the first call and a token client on every call after it.
+
+    Pass ``session_client=None`` when the test drives ``_refresh_access_token``
+    directly: there is no session to build, so every construction is a token
+    client.
+    """
+
+    class _TokenClient(FakeAsyncClient):
+        async def post(self, url, headers=None, json=None, data=None, **kwargs):
+            self.calls.append({"method": "POST", "url": url, "data": data})
+            if token_handler is None:
+                return token_response()
+            return token_handler(url, data)
+
+    state = {"n": 0}
+
+    def _make(*args, **kwargs):
+        state["n"] += 1
+        if session_client is not None and state["n"] == 1:
+            return session_client
+        return _TokenClient()
+
+    return _make
 
 
 CREDS = {
@@ -146,12 +195,13 @@ class TestInitAndAuth:
     async def test_refresh_access_token_success(self, monkeypatch):
         posts = []
 
-        def fake_post(url, data=None, timeout=None):
-            posts.append({"url": url, "data": data, "timeout": timeout})
+        def fake_post(url, data=None):
+            posts.append({"url": url, "data": data})
             return token_response(access="tok-1", expires_in=1800, refresh="rtok-2")
 
         monkeypatch.setattr(
-            "app.stratum.adapters.snapchat_adapter.requests.post", fake_post
+            "app.stratum.adapters.snapchat_adapter.httpx.AsyncClient",
+            fake_client_factory(None, fake_post),
         )
         adapter = SnapchatAdapter(dict(CREDS))
         before = datetime.now(UTC)
@@ -170,11 +220,12 @@ class TestInitAndAuth:
         assert call["data"]["refresh_token"] == "rtok-1"
 
     async def test_refresh_defaults_expiry_when_missing(self, monkeypatch):
-        def fake_post(url, data=None, timeout=None):
+        def fake_post(url, data=None):
             return FakeResponse({"access_token": "tok-2"})  # no expires_in
 
         monkeypatch.setattr(
-            "app.stratum.adapters.snapchat_adapter.requests.post", fake_post
+            "app.stratum.adapters.snapchat_adapter.httpx.AsyncClient",
+            fake_client_factory(None, fake_post),
         )
         adapter = SnapchatAdapter(dict(CREDS))
         await adapter._refresh_access_token()
@@ -218,11 +269,8 @@ class TestInitAndAuth:
     async def test_initialize_success_adopts_org_from_me(self, monkeypatch):
         fake = FakeSession([FakeResponse({"me": {"organization_id": "org-9"}})])
         monkeypatch.setattr(
-            "app.stratum.adapters.snapchat_adapter.requests.Session", lambda: fake
-        )
-        monkeypatch.setattr(
-            "app.stratum.adapters.snapchat_adapter.requests.post",
-            lambda url, data=None, timeout=None: token_response(),
+            "app.stratum.adapters.snapchat_adapter.httpx.AsyncClient",
+            fake_client_factory(fake),
         )
         creds = {k: v for k, v in CREDS.items() if k != "organization_id"}
         adapter = SnapchatAdapter(creds)
@@ -237,11 +285,8 @@ class TestInitAndAuth:
     async def test_initialize_keeps_configured_org(self, monkeypatch):
         fake = FakeSession([FakeResponse({"me": {"organization_id": "org-9"}})])
         monkeypatch.setattr(
-            "app.stratum.adapters.snapchat_adapter.requests.Session", lambda: fake
-        )
-        monkeypatch.setattr(
-            "app.stratum.adapters.snapchat_adapter.requests.post",
-            lambda url, data=None, timeout=None: token_response(),
+            "app.stratum.adapters.snapchat_adapter.httpx.AsyncClient",
+            fake_client_factory(fake),
         )
         adapter = SnapchatAdapter(dict(CREDS))
         await adapter.initialize()
@@ -250,11 +295,8 @@ class TestInitAndAuth:
     async def test_initialize_auth_failure_raises(self, monkeypatch):
         fake = FakeSession([FakeResponse({"request_status": "ERROR"})])
         monkeypatch.setattr(
-            "app.stratum.adapters.snapchat_adapter.requests.Session", lambda: fake
-        )
-        monkeypatch.setattr(
-            "app.stratum.adapters.snapchat_adapter.requests.post",
-            lambda url, data=None, timeout=None: token_response(),
+            "app.stratum.adapters.snapchat_adapter.httpx.AsyncClient",
+            fake_client_factory(fake),
         )
         adapter = SnapchatAdapter(dict(CREDS))
         with pytest.raises(AuthenticationError, match="verify"):
@@ -264,15 +306,13 @@ class TestInitAndAuth:
     async def test_initialize_token_network_failure_raises_adapter_error(
         self, monkeypatch
     ):
+        def boom(url, data=None):
+            raise httpx.ConnectError("no route")
+
         monkeypatch.setattr(
-            "app.stratum.adapters.snapchat_adapter.requests.Session",
-            lambda: FakeSession([]),
+            "app.stratum.adapters.snapchat_adapter.httpx.AsyncClient",
+            fake_client_factory(FakeAsyncClient([]), boom),
         )
-
-        def boom(url, data=None, timeout=None):
-            raise requests.ConnectionError("no route")
-
-        monkeypatch.setattr("app.stratum.adapters.snapchat_adapter.requests.post", boom)
         adapter = SnapchatAdapter(dict(CREDS))
         with pytest.raises(AdapterError, match="Failed to connect"):
             await adapter.initialize()
@@ -976,7 +1016,7 @@ class TestHelpers:
             adapter._make_request("GET", "/me")
 
     def test_make_request_request_exception_becomes_platform_error(self):
-        adapter = make_adapter([requests.ConnectionError("dns fail")])
+        adapter = make_adapter([httpx.ConnectError("dns fail")])
         with pytest.raises(PlatformError, match="Snapchat API request failed"):
             adapter._make_request("GET", "/me")
 
