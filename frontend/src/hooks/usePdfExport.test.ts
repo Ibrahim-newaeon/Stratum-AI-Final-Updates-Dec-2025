@@ -386,7 +386,9 @@ describe('usePdfExport', () => {
       element.appendChild(hiddenEl);
 
       // Mock getComputedStyle
-      const originalGetComputedStyle = window.getComputedStyle;
+      // .bind(window): captured unbound, typescript-eslint flags this under
+      // unbound-method — getComputedStyle needs its window receiver.
+      const originalGetComputedStyle = window.getComputedStyle.bind(window);
       window.getComputedStyle = vi.fn().mockReturnValue({ display: 'none' }) as any;
 
       const { result } = renderHook(() => usePdfExport());
