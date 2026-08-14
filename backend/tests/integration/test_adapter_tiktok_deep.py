@@ -827,15 +827,15 @@ class TestUploads:
 
 
 class TestHelpers:
-    def test_make_request_maps_request_exception_to_error_envelope(self):
+    async def test_make_request_maps_request_exception_to_error_envelope(self):
         adapter = make_adapter([httpx.ConnectError("dns fail")])
-        result = adapter._make_request("GET", "/campaign/get/")
+        result = await adapter._make_request("GET", "/campaign/get/")
         assert result["code"] == -1
         assert "dns fail" in result["message"]
 
-    def test_make_request_post_uses_json_body(self):
+    async def test_make_request_post_uses_json_body(self):
         adapter = make_adapter([ok()])
-        adapter._make_request("POST", "/x/", data={"a": 1})
+        await adapter._make_request("POST", "/x/", data={"a": 1})
         call = adapter.session.calls[0]
         assert call["method"] == "POST"
         assert call["json"] == {"a": 1}

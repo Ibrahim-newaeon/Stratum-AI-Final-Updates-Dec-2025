@@ -988,37 +988,37 @@ class TestUploads:
 
 
 class TestHelpers:
-    def test_make_request_sends_bearer_header(self):
+    async def test_make_request_sends_bearer_header(self):
         adapter = make_adapter([FakeResponse({"ok": True})])
-        result = adapter._make_request("GET", "/me")
+        result = await adapter._make_request("GET", "/me")
         assert result == {"ok": True}
         headers = adapter.session.calls[0]["headers"]
         assert headers["Authorization"] == "Bearer tok-abc"
         assert headers["Content-Type"] == "application/json"
 
-    def test_make_request_other_method_uses_session_request(self):
+    async def test_make_request_other_method_uses_session_request(self):
         adapter = make_adapter([FakeResponse({"ok": 1})])
-        adapter._make_request("DELETE", "/ads/x", data={"a": 1})
+        await adapter._make_request("DELETE", "/ads/x", data={"a": 1})
         call = adapter.session.calls[0]
         assert call["method"] == "DELETE"
         assert call["json"] == {"a": 1}
 
-    def test_make_request_429_raises_rate_limit_error(self):
+    async def test_make_request_429_raises_rate_limit_error(self):
         adapter = make_adapter(
             [FakeResponse({}, status_code=429, headers={"X-RateLimit-Reset": "30"})]
         )
         with pytest.raises(RateLimitError, match="reset in 30s"):
-            adapter._make_request("GET", "/me")
+            await adapter._make_request("GET", "/me")
 
-    def test_make_request_429_defaults_reset_to_60(self):
+    async def test_make_request_429_defaults_reset_to_60(self):
         adapter = make_adapter([FakeResponse({}, status_code=429)])
         with pytest.raises(RateLimitError, match="reset in 60s"):
-            adapter._make_request("GET", "/me")
+            await adapter._make_request("GET", "/me")
 
-    def test_make_request_request_exception_becomes_platform_error(self):
+    async def test_make_request_request_exception_becomes_platform_error(self):
         adapter = make_adapter([httpx.ConnectError("dns fail")])
         with pytest.raises(PlatformError, match="Snapchat API request failed"):
-            adapter._make_request("GET", "/me")
+            await adapter._make_request("GET", "/me")
 
     def test_micros_to_dollars(self):
         adapter = SnapchatAdapter(dict(CREDS))

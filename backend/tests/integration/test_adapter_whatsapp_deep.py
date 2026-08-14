@@ -1115,39 +1115,39 @@ class TestHelpers:
     def test_normalize_phone(self, adapter, raw, expected):
         assert adapter._normalize_phone(raw) == expected
 
-    def test_make_request_delete(self, adapter):
+    async def test_make_request_delete(self, adapter):
         with patch_http("delete", return_value=_resp({"success": True})) as mock_delete:
-            result = adapter._make_request("DELETE", "/thing/1")
+            result = await adapter._make_request("DELETE", "/thing/1")
         assert result == {"success": True}
         assert mock_delete.call_args.args[0].endswith("/thing/1")
 
-    def test_make_request_other_method(self, adapter):
+    async def test_make_request_other_method(self, adapter):
         with patch_http("request", return_value=_resp({"patched": True})) as mock_req:
-            result = adapter._make_request("PATCH", "/thing/2", data={"a": 1})
+            result = await adapter._make_request("PATCH", "/thing/2", data={"a": 1})
         assert result == {"patched": True}
         assert mock_req.call_args.args[:2] == ("PATCH",) + (
             f"{WhatsAppAdapter.BASE_URL}/thing/2",
         )
         assert mock_req.call_args.kwargs["json"] == {"a": 1}
 
-    def test_make_request_http_error_extracts_api_message(self, adapter):
+    async def test_make_request_http_error_extracts_api_message(self, adapter):
         err = _err_resp({"error": {"message": "Invalid OAuth access token"}})
         with patch_http("get", return_value=err):
             with pytest.raises(PlatformError, match="Invalid OAuth access token"):
-                adapter._make_request("GET", "/me")
+                await adapter._make_request("GET", "/me")
 
-    def test_make_request_http_error_non_json_body(self, adapter):
+    async def test_make_request_http_error_non_json_body(self, adapter):
         with patch_http("get", return_value=_err_resp(None)):
             with pytest.raises(PlatformError, match="400 Client Error"):
-                adapter._make_request("GET", "/me")
+                await adapter._make_request("GET", "/me")
 
-    def test_make_request_connection_error_no_response(self, adapter):
+    async def test_make_request_connection_error_no_response(self, adapter):
         with patch_http(
             "post",
             side_effect=httpx.ConnectError("dns failure"),
         ):
             with pytest.raises(PlatformError, match="dns failure"):
-                adapter._make_request("POST", "/messages", data={})
+                await adapter._make_request("POST", "/messages", data={})
 
 
 # ============================================================================
