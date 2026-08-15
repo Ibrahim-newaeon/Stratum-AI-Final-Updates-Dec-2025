@@ -89,8 +89,15 @@ run_backup() {
 }
 
 prune_old() {
-    cutoff="$(date -u -d "${BACKUP_RETENTION_DAYS} days ago" +%Y-%m-%d 2>/dev/null)"
+    # `date -d "N days ago"` is GNU syntax; this runs on Alpine, where busybox
+    # date rejects it and the whole prune was skipping with a warning every
+    # cycle — retention silently unenforced while backups accumulated.
+    # Epoch arithmetic works on both: busybox takes -D %s, GNU takes @epoch.
+    cutoff_epoch=$(( $(date -u +%s) - BACKUP_RETENTION_DAYS * 86400 ))
+    cutoff="$(date -u -D %s -d "$cutoff_epoch" +%Y-%m-%d 2>/dev/null \
+              || date -u -d "@$cutoff_epoch" +%Y-%m-%d 2>/dev/null)"
     [ -z "$cutoff" ] && { log "WARNING: cannot compute cutoff; skipping prune"; return 0; }
+    log "pruning objects older than $cutoff"
 
     aws s3 ls "s3://${R2_BUCKET}/postgres/" --endpoint-url "$R2_ENDPOINT" 2>/dev/null \
     | while read -r d _t _s name; do
