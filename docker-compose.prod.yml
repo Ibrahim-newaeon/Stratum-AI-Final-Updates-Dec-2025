@@ -57,9 +57,21 @@ services:
   # ===========================================================================
   api:
     restart: always
+    # Inject the whole .env, as docker-compose.beta.yml already does.
+    # Compose reads .env for *interpolation* but does not pass it into the
+    # containers, so every Settings field carrying a production validator had
+    # to be listed per service — and each omission surfaced one restart at a
+    # time (CORS_ORIGINS, then FRONTEND_URL, ...). The explicit environment:
+    # entries below still take precedence over the file.
+    env_file:
+      - .env
     environment:
       - APP_ENV=production
       - DEBUG=false
+      # docker-compose.yml defaults this to true for local work, and Settings
+      # rejects app_env=production with it on — so without this override the
+      # production stack cannot start at all. Found on the first real deploy.
+      - USE_MOCK_AD_DATA=false
       - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-stratum_ai}?prepared_statement_cache_size=0
       - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-stratum_ai}
@@ -72,7 +84,10 @@ services:
       - LOG_FORMAT=json
       - SENTRY_DSN=${SENTRY_DSN:-}
     volumes:
-      - ./ml_service/models:/app/ml_service/models:ro
+      # Writable: the app auto-trains missing models on startup and the
+      # read-only mount made that fail with [Errno 30], leaving predictions
+      # permanently unavailable. Models are regenerated artefacts, not config.
+      - ./ml_service/models:/app/ml_service/models
     depends_on:
       - pgbouncer
     command: >
@@ -80,10 +95,14 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1G
+          # 1G killed every uvicorn worker on startup. Four workers each import
+          # the app and load the ML models, and the cgroup OOM killer took them
+          # one after another — uvicorn logged only "Child process died", with
+          # no traceback, so the cause was only visible in dmesg.
+          memory: 3G
           cpus: '2.0'
         reservations:
-          memory: 512M
+          memory: 1G
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -95,8 +114,22 @@ services:
   # ===========================================================================
   worker:
     restart: always
+    # Inject the whole .env, as docker-compose.beta.yml already does.
+    # Compose reads .env for *interpolation* but does not pass it into the
+    # containers, so every Settings field carrying a production validator had
+    # to be listed per service — and each omission surfaced one restart at a
+    # time (CORS_ORIGINS, then FRONTEND_URL, ...). The explicit environment:
+    # entries below still take precedence over the file.
+    env_file:
+      - .env
     environment:
       - APP_ENV=production
+      - USE_MOCK_AD_DATA=false
+      # Settings validates CORS_ORIGINS at import for every process, not just
+      # the HTTP one. Without this the worker falls back to the code default
+      # (localhost) and the production validator refuses to import celery_app
+      # at all — the worker is not serving CORS, but it still has to satisfy it.
+      - CORS_ORIGINS=${CORS_ORIGINS:?CORS_ORIGINS is required}
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-stratum_ai}?prepared_statement_cache_size=0
       - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-stratum_ai}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/0
@@ -105,14 +138,18 @@ services:
       - LOG_LEVEL=WARNING
       - SENTRY_DSN=${SENTRY_DSN:-}
     volumes:
-      - ./ml_service/models:/app/ml_service/models:ro
+      # Writable: the app auto-trains missing models on startup and the
+      # read-only mount made that fail with [Errno 30], leaving predictions
+      # permanently unavailable. Models are regenerated artefacts, not config.
+      - ./ml_service/models:/app/ml_service/models
     depends_on:
       - pgbouncer
     command: celery -A app.workers.celery_app worker --loglevel=warning --concurrency=2
     deploy:
       resources:
         limits:
-          memory: 1G
+          # Same reasoning as api: celery forks load the same ML models.
+          memory: 2G
           cpus: '2.0'
         reservations:
           memory: 512M
@@ -127,8 +164,18 @@ services:
   # ===========================================================================
   scheduler:
     restart: always
+    # Inject the whole .env, as docker-compose.beta.yml already does.
+    # Compose reads .env for *interpolation* but does not pass it into the
+    # containers, so every Settings field carrying a production validator had
+    # to be listed per service — and each omission surfaced one restart at a
+    # time (CORS_ORIGINS, then FRONTEND_URL, ...). The explicit environment:
+    # entries below still take precedence over the file.
+    env_file:
+      - .env
     environment:
       - APP_ENV=production
+      - USE_MOCK_AD_DATA=false
+      - CORS_ORIGINS=${CORS_ORIGINS:?CORS_ORIGINS is required}
       - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-stratum_ai}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/0
       - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/1
@@ -179,11 +226,25 @@ services:
   # PgBouncer - Connection Pooling (memory audit Feb 2026)
   # ===========================================================================
   pgbouncer:
-    image: edoburu/pgbouncer:1.22
+    # edoburu/pgbouncer publishes patch-suffixed tags (1.22.1-p0), never a
+    # bare minor. `1.22` has never existed, so this file could not start as
+    # written — caught bringing the Hetzner host up for the first time.
+    image: edoburu/pgbouncer:1.22.1-p0
     container_name: stratum_pgbouncer
     restart: always
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-stratum_ai}
+      # edoburu/pgbouncer listens on 5432 unless told otherwise, but every
+      # DATABASE_URL in this file points at pgbouncer:6432 and the healthcheck
+      # probes 6432 — so it came up "unhealthy" and the API could not connect.
+      LISTEN_PORT: 6432
+      # Postgres 14+ stores passwords as scram-sha-256. The image defaults
+      # AUTH_TYPE to md5, so pgbouncer held the credential in a form it could
+      # not present to the server:
+      #   ERROR cannot do SCRAM authentication: wrong password type
+      # Clients then timed out rather than being rejected, because the failure
+      # happened on the server side of the pool.
+      AUTH_TYPE: scram-sha-256
       POOL_MODE: transaction
       MAX_CLIENT_CONN: 200
       DEFAULT_POOL_SIZE: 25
@@ -191,6 +252,12 @@ services:
     # NOTE: No host port exposure — PgBouncer is internal to the Docker network only
     expose:
       - "6432"
+    # Every service in docker-compose.yml joins stratum_network explicitly.
+    # pgbouncer is introduced here, and a service that declares no network gets
+    # the project default instead — so it sat on stratum_default while the API
+    # looked for it on stratum_stratum_network and failed DNS resolution.
+    networks:
+      - stratum_network
     depends_on:
       - db
     deploy:

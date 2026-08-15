@@ -8,6 +8,7 @@ Implements proper context management for multi-tenant queries.
 
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator, Generator
+from uuid import uuid4
 
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -22,6 +23,27 @@ logger = get_logger(__name__)
 # =============================================================================
 # Async Engine (Primary - for FastAPI)
 # =============================================================================
+# asyncpg names prepared statements sequentially (__asyncpg_stmt_1__, ...).
+# Behind a transaction-pooling pgbouncer, consecutive queries from one client
+# land on different server connections, so those names collide and every query
+# fails:
+#
+#   DuplicatePreparedStatementError: prepared statement "__asyncpg_stmt_1__"
+#   already exists
+#
+# DATABASE_URL already carries prepared_statement_cache_size=0, but that only
+# stops asyncpg *caching* them — it still issues PREPARE, still with sequential
+# names, so it is not sufficient alone. Unique names are what actually makes
+# the driver safe behind a pooler.
+#
+# Applied unconditionally rather than only when the URL mentions pgbouncer: the
+# cost is a longer identifier, and keying behaviour off a hostname would break
+# silently the first time the pooler is renamed or moved.
+_asyncpg_connect_args: dict[str, Any] = {
+    "statement_cache_size": 0,
+    "prepared_statement_name_func": lambda: f"__asyncpg_{uuid4()}__",
+}
+
 async_engine = create_async_engine(
     settings.database_url,
     pool_size=settings.db_pool_size,
@@ -30,6 +52,7 @@ async_engine = create_async_engine(
     pool_timeout=settings.db_pool_timeout,
     pool_pre_ping=True,
     echo=settings.debug and settings.is_development,
+    connect_args=_asyncpg_connect_args,
 )
 
 AsyncSessionLocal = async_sessionmaker(
