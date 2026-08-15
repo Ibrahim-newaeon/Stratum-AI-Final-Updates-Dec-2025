@@ -217,13 +217,33 @@ class OAuthService(ABC):
     # Token Encryption
     # =========================================================================
 
-    def encrypt_token(self, token: str) -> str:
-        """Encrypt token for storage."""
-        return encrypt_pii(token)
+    def encrypt_token(self, token: str, tenant_id: int) -> str:
+        """Encrypt a platform token under the owning tenant's key.
 
-    def decrypt_token(self, encrypted: str) -> str:
-        """Decrypt token from storage."""
-        return decrypt_pii(encrypted)
+        ``tenant_id`` is a required *parameter*, never constructor state:
+        ``get_oauth_service`` caches one instance of each provider for the
+        whole process, so a tenant stored on ``self`` would be read by whoever
+        called next. That is the same shape as the cross-tenant credential
+        clobber fixed in #634 and must not be reintroduced here.
+
+        It is also required rather than defaulted. Passing no tenant silently
+        falls back to the single global-derived key, which is how every
+        platform credential in the system came to sit outside the per-tenant
+        key scheme (AUTH-05) that user PII already uses. A required argument
+        makes that a type error instead of an invisible downgrade — and every
+        caller has the tenant to hand, because the encrypted column and
+        ``tenant_id`` live on the same row.
+        """
+        return encrypt_pii(token, tenant_id)
+
+    def decrypt_token(self, encrypted: str, tenant_id: int) -> str:
+        """Decrypt a platform token stored for ``tenant_id``.
+
+        Safe for tokens written before this change: ``decrypt_pii`` dual-reads
+        the tenant DEK, then the tenant-salted key, then the true-global key,
+        so existing ciphertext keeps decrypting with no re-encryption pass.
+        """
+        return decrypt_pii(encrypted, tenant_id)
 
     # =========================================================================
     # Abstract Methods (Platform-specific)

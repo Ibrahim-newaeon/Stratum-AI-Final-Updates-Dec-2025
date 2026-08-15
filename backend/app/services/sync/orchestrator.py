@@ -642,7 +642,9 @@ class PlatformSyncOrchestrator:
         """Decrypt access token, refreshing if expired."""
         try:
             oauth = get_oauth_service(platform.value)
-            access_token = oauth.decrypt_token(conn.access_token_encrypted)
+            access_token = oauth.decrypt_token(
+                conn.access_token_encrypted, conn.tenant_id
+            )
         except (ValueError, TypeError, KeyError) as e:
             logger.error("token_decrypt_failed", error=str(e))
             return None
@@ -666,13 +668,17 @@ class PlatformSyncOrchestrator:
 
         try:
             oauth = get_oauth_service(platform.value)
-            refresh_token = oauth.decrypt_token(conn.refresh_token_encrypted)
+            refresh_token = oauth.decrypt_token(
+                conn.refresh_token_encrypted, conn.tenant_id
+            )
             new_tokens = await oauth.refresh_access_token(refresh_token)
 
-            conn.access_token_encrypted = oauth.encrypt_token(new_tokens.access_token)
+            conn.access_token_encrypted = oauth.encrypt_token(
+                new_tokens.access_token, conn.tenant_id
+            )
             if new_tokens.refresh_token:
                 conn.refresh_token_encrypted = oauth.encrypt_token(
-                    new_tokens.refresh_token
+                    new_tokens.refresh_token, conn.tenant_id
                 )
             conn.token_expires_at = new_tokens.expires_at
             conn.last_refreshed_at = datetime.now(UTC)

@@ -200,7 +200,7 @@ def _approver_info(action) -> Optional[ApproverInfo]:
     name: Optional[str] = None
     if approver.full_name:
         try:
-            name = decrypt_pii(approver.full_name)
+            name = decrypt_pii(approver.full_name, approver.tenant_id)
         except (ValueError, TypeError):
             name = None
 

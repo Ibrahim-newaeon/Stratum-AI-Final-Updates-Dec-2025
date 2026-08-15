@@ -259,10 +259,38 @@ class TestOAuthServiceBase:
     def test_encrypt_decrypt_token(self) -> None:
         svc = MetaOAuthService()
         token = "EAABsbCS1ZAoIBO..."
-        encrypted = svc.encrypt_token(token)
+        encrypted = svc.encrypt_token(token, 7)
         assert encrypted != token
-        decrypted = svc.decrypt_token(encrypted)
+        decrypted = svc.decrypt_token(encrypted, 7)
         assert decrypted == token
+
+    def test_legacy_globally_encrypted_token_still_decrypts(self) -> None:
+        """Tokens written before the tenant was threaded through must survive.
+
+        This is what makes the change deployable without a re-encryption pass:
+        ``decrypt_pii`` falls back through the tenant-salted key to the
+        true-global one, so ciphertext from the old ``encrypt_pii(token)``
+        write path still reads back when a tenant is supplied.
+        """
+        from app.core.security import encrypt_pii
+
+        svc = MetaOAuthService()
+        token = "legacy-global-token"
+        legacy = encrypt_pii(token)  # no tenant — the pre-fix write path
+
+        assert svc.decrypt_token(legacy, 7) == token
+
+    def test_each_tenant_round_trips_its_own_token(self) -> None:
+        """Fernet output is randomised, so unequal ciphertext proves nothing.
+
+        What matters is that a token encrypted for a tenant reads back under
+        that tenant's key.
+        """
+        svc = MetaOAuthService()
+        token = "same-token-both-tenants"
+
+        assert svc.decrypt_token(svc.encrypt_token(token, 1), 1) == token
+        assert svc.decrypt_token(svc.encrypt_token(token, 2), 2) == token
 
     def test_build_url_with_params(self) -> None:
         svc = MetaOAuthService()
@@ -1010,9 +1038,9 @@ class TestCrossPlatformConsistency:
     def test_encrypt_decrypt_roundtrip(self, platform_cls) -> None:
         svc = platform_cls()
         token = "test_token_12345"
-        enc = svc.encrypt_token(token)
+        enc = svc.encrypt_token(token, 3)
         assert enc != token
-        assert svc.decrypt_token(enc) == token
+        assert svc.decrypt_token(enc, 3) == token
 
     @pytest.mark.parametrize(
         "platform_cls,platform_name",

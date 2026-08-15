@@ -211,16 +211,18 @@ def refresh_tokens(self, tenant_id: int, platform: str):
             # own aiohttp session (no app DB engine), so asyncio.run here carries
             # no event-loop-pool hazard.
             service = get_oauth_service(platform)
-            refresh_token = service.decrypt_token(connection.refresh_token_encrypted)
+            refresh_token = service.decrypt_token(
+                connection.refresh_token_encrypted, connection.tenant_id
+            )
             new_tokens = asyncio.run(service.refresh_access_token(refresh_token))
 
             connection.access_token_encrypted = service.encrypt_token(
-                new_tokens.access_token
+                new_tokens.access_token, connection.tenant_id
             )
             # Providers may rotate the refresh token; keep the old one if not.
             if new_tokens.refresh_token:
                 connection.refresh_token_encrypted = service.encrypt_token(
-                    new_tokens.refresh_token
+                    new_tokens.refresh_token, connection.tenant_id
                 )
             connection.token_expires_at = new_tokens.expires_at or (
                 datetime.now(timezone.utc)

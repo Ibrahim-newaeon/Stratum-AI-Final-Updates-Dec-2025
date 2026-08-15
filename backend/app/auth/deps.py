@@ -130,11 +130,19 @@ async def get_current_user(
             detail="User account is deactivated",
         )
 
-    # Decrypt PII for response (gracefully handle key mismatch)
+    # Decrypt PII for response (gracefully handle key mismatch).
+    #
+    # Pass user.tenant_id. The write side (auth.py, users.py) encrypts with the
+    # tenant's key and _get_pii_salt derives a *different* key per tenant, so a
+    # tenant-less read cannot decrypt tenant-written data. The except blocks
+    # below then turned that hard failure into silent degradation — full_name
+    # quietly became None, email fell back to the JWT claim, and a
+    # pii_decryption_fallback warning fired on every request — which is exactly
+    # why it went unnoticed.
     from app.core.security import decrypt_pii
 
     try:
-        email = payload.get("email") or decrypt_pii(user.email)
+        email = payload.get("email") or decrypt_pii(user.email, user.tenant_id)
     except (ValueError, TypeError, UnicodeDecodeError) as exc:
         logger.warning(
             "pii_decryption_fallback", field="email", user_id=user.id, error=str(exc)
@@ -144,7 +152,9 @@ async def get_current_user(
         email = jwt_email if jwt_email else f"user-{user.id}@unknown"
 
     try:
-        full_name = decrypt_pii(user.full_name) if user.full_name else None
+        full_name = (
+            decrypt_pii(user.full_name, user.tenant_id) if user.full_name else None
+        )
     except (ValueError, TypeError, UnicodeDecodeError) as exc:
         logger.warning(
             "pii_decryption_fallback",

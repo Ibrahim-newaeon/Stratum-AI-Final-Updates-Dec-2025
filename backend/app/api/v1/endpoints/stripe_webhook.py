@@ -422,8 +422,10 @@ async def handle_invoice_payment_failed(db: AsyncSession, invoice: dict):
     email_service = get_email_service()
     for user in admin_users:
         try:
-            email = decrypt_pii(user.email) if user.email else None
-            full_name = decrypt_pii(user.full_name) if user.full_name else None
+            email = decrypt_pii(user.email, user.tenant_id) if user.email else None
+            full_name = (
+                decrypt_pii(user.full_name, user.tenant_id) if user.full_name else None
+            )
 
             if email:
                 email_service.send_payment_failed_email(

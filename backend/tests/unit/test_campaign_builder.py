@@ -1599,7 +1599,7 @@ class TestRefreshTokensTask:
         )
         service = MagicMock()
         service.decrypt_token.return_value = "plain_refresh"
-        service.encrypt_token.side_effect = lambda t: f"enc:{t}"
+        service.encrypt_token.side_effect = lambda t, tenant_id: f"enc:{t}"
         service.refresh_access_token = AsyncMock(return_value=new_tokens)
 
         mock_db = MagicMock()

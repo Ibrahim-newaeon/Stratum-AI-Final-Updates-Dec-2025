@@ -26,6 +26,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.deps import CurrentUserDep, VerifiedUserDep, require_admin
+from app.base_models import AuditAction, AuditLog
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.db.session import get_async_session
@@ -43,6 +44,39 @@ from app.services.oauth import (
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/oauth", tags=["oauth"])
+
+
+def _audit_connection(
+    db: AsyncSession,
+    *,
+    tenant_id: int,
+    user_id: Optional[int],
+    action: AuditAction,
+    platform: AdPlatform,
+    detail: dict,
+) -> None:
+    """Record a platform-connection change in ``audit_logs``.
+
+    Connecting a platform hands Stratum authority to spend money on that ad
+    account; disconnecting takes it away; a refresh rotates the credential
+    behind it. All three were structlog-only, so "who connected this ad
+    account, and when" was not answerable from the compliance table that
+    exists to answer exactly that.
+
+    Added to the caller's session rather than committed here — the audit row
+    belongs to the same transaction as the change it describes, so a failed
+    connect cannot leave an audit trail claiming it succeeded.
+    """
+    db.add(
+        AuditLog(
+            tenant_id=tenant_id,
+            user_id=user_id,
+            action=action,
+            resource_type="platform_connection",
+            resource_id=platform.value,
+            new_value={"platform": platform.value, **detail},
+        )
+    )
 
 
 def _column_str(raw: object) -> str:
@@ -324,13 +358,14 @@ async def oauth_callback(
 
         if connection:
             # Update existing connection
+            is_reconnect = True
             connection.status = ConnectionStatus.CONNECTED
             connection.access_token_encrypted = oauth_service.encrypt_token(
-                tokens.access_token
+                tokens.access_token, oauth_state.tenant_id
             )
             if tokens.refresh_token:
                 connection.refresh_token_encrypted = oauth_service.encrypt_token(
-                    tokens.refresh_token
+                    tokens.refresh_token, oauth_state.tenant_id
                 )
             connection.token_expires_at = tokens.expires_at
             connection.scopes = tokens.scopes
@@ -345,9 +380,13 @@ async def oauth_callback(
                 tenant_id=oauth_state.tenant_id,
                 platform=platform,
                 status=ConnectionStatus.CONNECTED,
-                access_token_encrypted=oauth_service.encrypt_token(tokens.access_token),
+                access_token_encrypted=oauth_service.encrypt_token(
+                    tokens.access_token, oauth_state.tenant_id
+                ),
                 refresh_token_encrypted=(
-                    oauth_service.encrypt_token(tokens.refresh_token)
+                    oauth_service.encrypt_token(
+                        tokens.refresh_token, oauth_state.tenant_id
+                    )
                     if tokens.refresh_token
                     else None
                 ),
@@ -358,6 +397,24 @@ async def oauth_callback(
                 granted_by_user_id=oauth_state.user_id,
             )
             db.add(connection)
+            is_reconnect = False
+
+        _audit_connection(
+            db,
+            tenant_id=oauth_state.tenant_id,
+            user_id=oauth_state.user_id,
+            action=AuditAction.CREATE,
+            platform=platform,
+            detail={
+                "event": "oauth_connected",
+                "reconnect": is_reconnect,
+                "scopes": tokens.scopes,
+                "expires_at": (
+                    tokens.expires_at.isoformat() if tokens.expires_at else None
+                ),
+                "has_refresh_token": bool(tokens.refresh_token),
+            },
+        )
 
         await db.commit()
 
@@ -567,7 +624,9 @@ async def list_ad_accounts(
     # Decrypt access token
     try:
         oauth_service = get_oauth_service(platform.value)
-        access_token = oauth_service.decrypt_token(connection.access_token_encrypted)
+        access_token = oauth_service.decrypt_token(
+            connection.access_token_encrypted, connection.tenant_id
+        )
     except (ValueError, OSError, KeyError) as e:
         logger.error("Failed to decrypt token", error=str(e))
         raise HTTPException(
@@ -580,17 +639,17 @@ async def list_ad_accounts(
         if connection.refresh_token_encrypted:
             try:
                 refresh_token = oauth_service.decrypt_token(
-                    connection.refresh_token_encrypted
+                    connection.refresh_token_encrypted, connection.tenant_id
                 )
                 new_tokens = await oauth_service.refresh_access_token(refresh_token)
 
                 # Update stored tokens
                 connection.access_token_encrypted = oauth_service.encrypt_token(
-                    new_tokens.access_token
+                    new_tokens.access_token, connection.tenant_id
                 )
                 if new_tokens.refresh_token:
                     connection.refresh_token_encrypted = oauth_service.encrypt_token(
-                        new_tokens.refresh_token
+                        new_tokens.refresh_token, connection.tenant_id
                     )
                 connection.token_expires_at = new_tokens.expires_at
                 connection.last_refreshed_at = datetime.now(UTC)
@@ -703,7 +762,9 @@ async def connect_ad_accounts(
     # Fetch accounts from platform to validate
     try:
         oauth_service = get_oauth_service(platform.value)
-        access_token = oauth_service.decrypt_token(connection.access_token_encrypted)
+        access_token = oauth_service.decrypt_token(
+            connection.access_token_encrypted, connection.tenant_id
+        )
         platform_accounts = await oauth_service.fetch_ad_accounts(access_token)
     except (
         ConnectionError,
@@ -863,22 +924,39 @@ async def refresh_token(
 
     try:
         oauth_service = get_oauth_service(platform.value)
-        refresh_token = oauth_service.decrypt_token(connection.refresh_token_encrypted)
+        refresh_token = oauth_service.decrypt_token(
+            connection.refresh_token_encrypted, connection.tenant_id
+        )
         new_tokens = await oauth_service.refresh_access_token(refresh_token)
 
         # Update stored tokens
         connection.access_token_encrypted = oauth_service.encrypt_token(
-            new_tokens.access_token
+            new_tokens.access_token, connection.tenant_id
         )
         if new_tokens.refresh_token:
             connection.refresh_token_encrypted = oauth_service.encrypt_token(
-                new_tokens.refresh_token
+                new_tokens.refresh_token, connection.tenant_id
             )
         connection.token_expires_at = new_tokens.expires_at
         connection.last_refreshed_at = datetime.now(UTC)
         connection.status = ConnectionStatus.CONNECTED
         connection.last_error = None
         connection.error_count = 0
+
+        _audit_connection(
+            db,
+            tenant_id=current_user.tenant_id,
+            user_id=current_user.id,
+            action=AuditAction.UPDATE,
+            platform=platform,
+            detail={
+                "event": "oauth_token_refreshed",
+                "expires_at": (
+                    new_tokens.expires_at.isoformat() if new_tokens.expires_at else None
+                ),
+                "refresh_token_rotated": bool(new_tokens.refresh_token),
+            },
+        )
 
         await db.commit()
 
@@ -950,13 +1028,15 @@ async def disconnect_platform(
         )
 
     # Try to revoke access with platform
+    revoked_upstream = False
+    revoke_error: Optional[str] = None
     if connection.access_token_encrypted:
         try:
             oauth_service = get_oauth_service(platform.value)
             access_token = oauth_service.decrypt_token(
-                connection.access_token_encrypted
+                connection.access_token_encrypted, connection.tenant_id
             )
-            await oauth_service.revoke_access(access_token)
+            revoked_upstream = bool(await oauth_service.revoke_access(access_token))
         except (
             ConnectionError,
             TimeoutError,
@@ -964,19 +1044,18 @@ async def disconnect_platform(
             ValueError,
             OAuthProviderError,
         ) as e:
+            revoke_error = str(e)
             logger.warning("Failed to revoke access with platform", error=str(e))
             # Continue with local disconnect anyway
 
     # Disable all ad accounts
-    await db.execute(
-        select(TenantAdAccount).where(TenantAdAccount.connection_id == connection.id)
-    )
-    # Update all related ad accounts
     accounts_result = await db.execute(
         select(TenantAdAccount).where(TenantAdAccount.connection_id == connection.id)
     )
+    disabled_accounts = 0
     for account in accounts_result.scalars().all():
         account.is_enabled = False
+        disabled_accounts += 1
 
     # Mark connection as disconnected and clear tokens
     connection.status = ConnectionStatus.DISCONNECTED
@@ -984,12 +1063,30 @@ async def disconnect_platform(
     connection.refresh_token_encrypted = None
     connection.token_expires_at = None
 
+    _audit_connection(
+        db,
+        tenant_id=current_user.tenant_id,
+        user_id=current_user.id,
+        action=AuditAction.DELETE,
+        platform=platform,
+        detail={
+            "event": "oauth_disconnected",
+            # Whether the platform itself dropped the grant. A local disconnect
+            # with revoked_upstream=False means the token may still be live on
+            # the provider side — worth knowing during an incident.
+            "revoked_upstream": revoked_upstream,
+            "revoke_error": revoke_error,
+            "ad_accounts_disabled": disabled_accounts,
+        },
+    )
+
     await db.commit()
 
     logger.info(
         "platform_disconnected",
         platform=platform.value,
         tenant_id=current_user.tenant_id,
+        revoked_upstream=revoked_upstream,
     )
 
     return APIResponse(
