@@ -682,3 +682,51 @@ alembic revision --autogenerate -m "Add new_table"
 # Create empty migration for manual changes
 alembic revision -m "Manual data migration"
 ```
+
+### Production safety
+
+`release.sh` runs `alembic upgrade head` on boot against the live database, so
+a migration's locking behaviour is a production concern rather than a
+deploy-time detail. Four things to get right:
+
+**1. Index an existing table concurrently.** A plain `CREATE INDEX` holds a
+lock that blocks writes for the whole build — on a large table that is a write
+stall for every tenant on it.
+
+```python
+def upgrade() -> None:
+    # CREATE INDEX CONCURRENTLY cannot run inside a transaction
+    op.get_bind().execution_options(isolation_level="AUTOCOMMIT")
+    op.create_index(
+        "ix_campaigns_external",
+        "campaigns",
+        ["external_id"],
+        postgresql_concurrently=True,
+        if_not_exists=True,
+    )
+```
+
+This does **not** apply to an index created alongside its table in the same
+migration: the table is empty, so the build is instant. Most indexes in this
+repo are that case and are correct as written.
+
+**2. A NOT NULL column needs a server default**, or the ALTER fails on any
+table that already has rows. Otherwise add it nullable, backfill, then tighten.
+
+**3. Write a real `downgrade()`.** `pass` is only honest when the upgrade
+genuinely cannot be reversed — say so in a comment when that is the case.
+
+**4. Prefer `IF NOT EXISTS` / `IF EXISTS`.** `release.sh` can run concurrently
+across replicas, so a re-run must be a no-op rather than an error.
+
+### Known gap
+
+`047_add_missing_indexes` (14 indexes) and `060_add_fk_indexes` (62) build
+indexes on populated tables **without** `CONCURRENTLY`, and `060` does all 62
+in one transaction — a single long lock window with no partial progress.
+
+These are deliberately **not** rewritten. Alembic records them as applied, so
+editing them would not re-run anywhere they have already run; it would only
+change behaviour for a fresh database while turning the recorded history into
+a fiction. They are documented here instead, and the rules above govern
+everything new.
