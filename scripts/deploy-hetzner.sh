@@ -134,8 +134,13 @@ update() {
     log_info "Restarting workers"
     dc up -d --no-deps worker scheduler
 
-    log_info "Reloading edge"
-    dc exec -T edge nginx -t && dc exec -T edge nginx -s reload
+    # Recreate, do not reload. A single-file bind mount pins the host file's
+    # INODE, and `git pull` writes a new one — so the container keeps serving
+    # the config it started with and `nginx -s reload` re-reads that same stale
+    # file, reporting success. Config changes appeared to deploy and did not.
+    log_info "Recreating edge (picks up config changes)"
+    dc up -d --force-recreate --no-deps edge
+    dc exec -T edge nginx -t
 
     log_info "Update complete"
 }
