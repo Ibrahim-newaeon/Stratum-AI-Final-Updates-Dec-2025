@@ -203,6 +203,12 @@ services:
     # NOTE: No host port exposure — PgBouncer is internal to the Docker network only
     expose:
       - "6432"
+    # Every service in docker-compose.yml joins stratum_network explicitly.
+    # pgbouncer is introduced here, and a service that declares no network gets
+    # the project default instead — so it sat on stratum_default while the API
+    # looked for it on stratum_stratum_network and failed DNS resolution.
+    networks:
+      - stratum_network
     depends_on:
       - db
     deploy:

@@ -49,6 +49,11 @@ services:
       # scripts/deploy-hetzner.sh setup; never committed.
       - ./certs:/etc/nginx/certs:ro
       - nginx_logs:/var/log/nginx
+    # Services introduced outside docker-compose.yml must join stratum_network
+    # explicitly, or compose puts them on the project default where the API's
+    # DNS name does not resolve.
+    networks:
+      - stratum_network
     healthcheck:
       # Checks nginx itself, not the API — an unhealthy upstream should not
       # restart the edge that is reporting it.
@@ -104,6 +109,8 @@ services:
       BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
     volumes:
       - ./scripts/backup:/opt/backup:ro
+    networks:
+      - stratum_network
     depends_on:
       - db
     deploy:
