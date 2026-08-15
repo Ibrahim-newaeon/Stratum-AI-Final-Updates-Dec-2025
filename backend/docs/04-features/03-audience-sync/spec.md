@@ -125,6 +125,7 @@ class AudienceSyncJob:
     profiles_added: int = 0
     profiles_removed: int = 0
     profiles_failed: int = 0
+    profiles_suppressed: int = 0        # withheld: no advertising consent
     match_rate: float | None
 
     # Execution
@@ -265,6 +266,57 @@ class SnapchatAudienceConnector(BaseAudienceConnector):
 ```
 
 ---
+
+## Consent Gating (GDPR-01)
+
+Segment membership decides *who matches the rules*. It does not decide *whose
+email may be handed to Meta*. Only profiles holding live advertising consent
+are sent to a platform.
+
+A profile is syncable when it has a `cdp_consents` row where:
+
+- `consent_type` is `ads` or `all` (`analytics`, `email` and `sms` do **not**
+  authorise an ad-platform transfer), **and**
+- `granted` is true, **and**
+- `revoked_at` is null.
+
+Both the `granted` and `revoked_at` tests are applied. The ingest path keeps
+them in step — revocation sets `granted=False` *and* stamps `revoked_at`; a
+re-grant clears it — so requiring both means a future writer that updates only
+one field withholds the profile rather than leaking it.
+
+**Absence of a consent record is a refusal, not a maybe.** GDPR consent is
+affirmative, so a profile with no `cdp_consents` row at all is withheld exactly
+like one that revoked. A tenant who has never populated consent therefore syncs
+nothing — which is the correct outcome, and is visible rather than silent:
+`AudienceSyncJob.profiles_suppressed` counts the withheld members on every run
+and the sync-history UI renders it. If an audience is smaller than expected,
+that counter is the first thing to read.
+
+Enforcement lives in `AudienceSyncService._get_segment_profiles`; the predicate
+is shared with `_count_consent_suppressed` through
+`_advertising_consent_subquery` so the count and the filter cannot disagree.
+
+### Erasure Propagation (GDPR-02)
+
+Deleting a profile from the CDP does not remove it from a platform: the hashed
+identifier was uploaded to a custom audience and stays there until explicitly
+removed. Art. 17(2) requires informing the recipients of the data.
+
+`DELETE /api/v1/cdp/profiles/{id}` therefore calls
+`AudienceSyncService.erase_profile_from_platforms` **before** deleting local
+rows — it needs the identifier hashes — which invokes `remove_users` against
+every platform audience for the tenant. All audiences are attempted, not only
+those whose segment the profile currently belongs to: `add_users` syncs never
+remove a profile that left a segment, so stale uploads are the exact case that
+needs cleaning, and removing an absent hash is a no-op on all four platforms.
+
+The call is best-effort and never raises — a dead platform must not block local
+erasure. Per-audience outcomes are returned on the deletion response
+(`platform_removals`, `platform_removals_failed`) and written to `audit_logs`,
+because a removal that silently failed is an invisible compliance breach. A
+non-zero `platform_removals_failed` means erasure is incomplete off-platform
+and needs a retry.
 
 ## Identifier Handling
 

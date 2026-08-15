@@ -3981,6 +3981,16 @@ async def delete_profile(
     )
     memberships_deleted = memberships_result.scalar() or 0
 
+    # Propagate the erasure to the ad platforms BEFORE deleting local rows —
+    # the removal calls need this profile's identifier hashes (GDPR-02).
+    # Deleting locally while the hashed email stays in a Meta Custom Audience
+    # is not erasure; Art. 17(2) requires informing the recipients. Best-effort
+    # and never raises, so a platform outage cannot block the local erasure.
+    from app.services.cdp.audience_sync.service import AudienceSyncService
+
+    sync_service = AudienceSyncService(db, tenant_id)
+    platform_removals = await sync_service.erase_profile_from_platforms(profile_id)
+
     # Delete events unconditionally — GDPR erasure must remove the events' PII
     # (SEC-002). The CDPEvent.profile_id FK is ON DELETE SET NULL, so relying on
     # the profile delete would orphan, not remove, these rows.
@@ -4024,12 +4034,39 @@ async def delete_profile(
 
     # Delete profile
     await db.delete(profile)
+
+    deletion_time = datetime.now(UTC)
+    failed_removals = [r for r in platform_removals if not r["removed"]]
+
+    # Durable erasure record. A structlog line is not the artifact you produce
+    # to a regulator, and it is certainly not where a failed platform removal
+    # should be the only trace — audit_logs outlives log retention.
+    from app.base_models import AuditAction, AuditLog
+
+    db.add(
+        AuditLog(
+            tenant_id=tenant_id,
+            user_id=getattr(current_user, "id", None),
+            action=AuditAction.DELETE,
+            resource_type="cdp_profile",
+            resource_id=str(profile_id),
+            new_value={
+                "erasure": "gdpr_right_to_erasure",
+                "reason": reason,
+                "events_deleted": events_deleted,
+                "identifiers_deleted": identifiers_deleted,
+                "consents_deleted": consents_deleted,
+                "segment_memberships_deleted": memberships_deleted,
+                "platform_removals": platform_removals,
+                "platform_removals_failed": len(failed_removals),
+            },
+        )
+    )
+
     await db.commit()
 
     # Invalidate cache
     _profile_cache.invalidate(tenant_id, str(profile_id))
-
-    deletion_time = datetime.now(UTC)
 
     logger.info(
         "cdp_profile_deleted_gdpr",
@@ -4037,6 +4074,8 @@ async def delete_profile(
         profile_id=str(profile_id),
         events_deleted=events_deleted,
         identifiers_deleted=identifiers_deleted,
+        platform_removals_attempted=len(platform_removals),
+        platform_removals_failed=len(failed_removals),
         reason=reason,
         deleted_by=current_user.id if hasattr(current_user, "id") else None,
     )
@@ -4049,6 +4088,8 @@ async def delete_profile(
         consents_deleted=consents_deleted,
         segment_memberships_deleted=memberships_deleted,
         deletion_timestamp=deletion_time,
+        platform_removals=platform_removals,
+        platform_removals_failed=len(failed_removals),
     )
 
 

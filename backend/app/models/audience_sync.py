@@ -207,6 +207,10 @@ class AudienceSyncJob(Base, TimestampMixin):
     profiles_added = Column(Integer, nullable=False, default=0)
     profiles_removed = Column(Integer, nullable=False, default=0)
     profiles_failed = Column(Integer, nullable=False, default=0)
+    # Segment members withheld from the platform for lack of advertising
+    # consent. Not a failure — a lawful refusal — so it is counted separately
+    # from profiles_failed and excluded from profiles_total.
+    profiles_suppressed = Column(Integer, nullable=False, default=0)
 
     # Error tracking
     error_message = Column(Text, nullable=True)
