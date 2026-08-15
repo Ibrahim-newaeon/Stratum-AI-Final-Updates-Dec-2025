@@ -1,0 +1,263 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Stratum AI - Hetzner deployment (Cloudflare edge)
+# =============================================================================
+# Commands: setup | deploy | update | status | logs | backup | restore | verify
+#
+# Run on the Hetzner host, from the repository root.
+#
+#   ./scripts/deploy-hetzner.sh setup     # one-time: firewall, certs, dirs
+#   ./scripts/deploy-hetzner.sh deploy    # first bring-up
+#   ./scripts/deploy-hetzner.sh update    # pull + migrate + restart
+#   ./scripts/deploy-hetzner.sh verify    # post-cutover assertions
+#
+# Modelled on scripts/deploy-beta.sh so the operational vocabulary is the same,
+# with two differences that matter: backups live off-host (Cloudflare R2), and
+# `restore` is a first-class command. A backup nobody has restored is a guess.
+# =============================================================================
+
+set -euo pipefail
+
+COMPOSE_FILES="-f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.hetzner.yml"
+ENV_FILE=".env"
+CERT_DIR="./certs"
+CF_ORIGIN_PULL_CA_URL="https://developers.cloudflare.com/ssl/static/authenticated_origin_pull_ca.pem"
+
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
+log_info()  { echo -e "${GREEN}[INFO]${NC} $*"; }
+log_warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
+
+require_env() {
+    [ -f "$ENV_FILE" ] || { log_error "$ENV_FILE not found — copy .env.hetzner.template and fill it in"; exit 1; }
+}
+
+dc() { docker compose $COMPOSE_FILES "$@"; }
+
+# -----------------------------------------------------------------------------
+# setup
+# -----------------------------------------------------------------------------
+setup() {
+    require_env
+
+    log_info "Configuring firewall"
+    # The origin must be unreachable except through Cloudflare. Without this,
+    # anyone who learns the host address bypasses the WAF, the edge rate limits,
+    # and — critically — can send a forged CF-Connecting-IP header. nginx would
+    # ignore that header from a non-Cloudflare peer, but defence in depth is
+    # cheaper than relying on one control.
+    if command -v ufw >/dev/null 2>&1; then
+        ufw --force reset >/dev/null
+        ufw default deny incoming
+        ufw default allow outgoing
+        ufw allow 22/tcp comment 'ssh'
+        while read -r cidr; do
+            [ -z "$cidr" ] && continue
+            ufw allow from "$cidr" to any port 443 proto tcp comment 'cloudflare'
+            ufw allow from "$cidr" to any port 80 proto tcp comment 'cloudflare'
+        done < <(cf_ip_list)
+        ufw --force enable
+        log_info "Firewall: 443/80 restricted to Cloudflare ranges, 22 open"
+    else
+        log_warn "ufw not present — restrict 80/443 to Cloudflare ranges manually"
+    fi
+
+    log_info "Preparing certificate directory"
+    mkdir -p "$CERT_DIR"
+    chmod 700 "$CERT_DIR"
+
+    if [ ! -f "$CERT_DIR/cloudflare-origin-pull-ca.pem" ]; then
+        log_info "Fetching Cloudflare origin-pull CA"
+        curl -fsSL "$CF_ORIGIN_PULL_CA_URL" -o "$CERT_DIR/cloudflare-origin-pull-ca.pem"
+    fi
+
+    if [ ! -f "$CERT_DIR/origin.pem" ] || [ ! -f "$CERT_DIR/origin.key" ]; then
+        log_error "Origin certificate missing."
+        cat <<'EOS'
+
+  Create one in the Cloudflare dashboard:
+    SSL/TLS -> Origin Server -> Create Certificate
+    Hostnames: api.stratumai.app
+    Validity:  15 years
+
+  Save the certificate to ./certs/origin.pem and the key to ./certs/origin.key,
+  then: chmod 600 ./certs/origin.key
+
+  Then set SSL/TLS -> Overview -> Full (strict), and enable
+  SSL/TLS -> Origin Server -> Authenticated Origin Pulls.
+
+EOS
+        exit 1
+    fi
+
+    chmod 600 "$CERT_DIR/origin.key"
+    log_info "Setup complete"
+}
+
+cf_ip_list() {
+    curl -fsSL https://www.cloudflare.com/ips-v4 2>/dev/null || true
+    echo
+    curl -fsSL https://www.cloudflare.com/ips-v6 2>/dev/null || true
+}
+
+# -----------------------------------------------------------------------------
+# deploy / update
+# -----------------------------------------------------------------------------
+deploy() {
+    require_env
+    log_info "Building images"
+    dc build
+    log_info "Starting stack"
+    dc up -d
+    wait_healthy
+    log_info "Deployed"
+}
+
+update() {
+    require_env
+    log_info "Backing up before update"
+    backup || { log_error "Backup failed — aborting update"; exit 1; }
+
+    log_info "Pulling changes"
+    git pull --ff-only
+
+    log_info "Rebuilding"
+    dc build
+
+    # The api service runs `alembic upgrade head` in its command, so recreating
+    # it applies migrations. Restart the API first and workers after, so a
+    # worker never runs against a schema the API has not migrated yet.
+    log_info "Restarting API (applies migrations)"
+    dc up -d --no-deps api
+    wait_healthy
+
+    log_info "Restarting workers"
+    dc up -d --no-deps worker scheduler
+
+    log_info "Reloading edge"
+    dc exec -T edge nginx -t && dc exec -T edge nginx -s reload
+
+    log_info "Update complete"
+}
+
+wait_healthy() {
+    log_info "Waiting for API health"
+    for _ in $(seq 1 30); do
+        if dc exec -T api curl -fsS http://localhost:8000/health >/dev/null 2>&1; then
+            log_info "API healthy"
+            return 0
+        fi
+        sleep 5
+    done
+    log_error "API did not become healthy"
+    dc logs --tail 80 api
+    return 1
+}
+
+# -----------------------------------------------------------------------------
+# backup / restore
+# -----------------------------------------------------------------------------
+backup() {
+    require_env
+    log_info "Triggering an immediate off-host backup"
+    # `once` runs a single cycle and exits with the dump's status, so a failure
+    # here can abort an update rather than being logged and ignored.
+    dc exec -T backup /bin/sh /opt/backup/run.sh once
+}
+
+restore() {
+    require_env
+    local key="${1:-}"
+    if [ -z "$key" ]; then
+        log_error "Usage: $0 restore <s3-key>"
+        log_info "Available backups:"
+        dc exec -T backup aws s3 ls "s3://${R2_BUCKET:-stratum-backups}/postgres/" \
+            --endpoint-url "$R2_ENDPOINT"
+        exit 1
+    fi
+
+    # Restoring over a live database is how a bad afternoon becomes a bad
+    # quarter. Require explicit confirmation and stop the writers first.
+    log_warn "This will overwrite the CURRENT database with ${key}."
+    read -r -p "Type RESTORE to continue: " confirm
+    [ "$confirm" = "RESTORE" ] || { log_info "Aborted"; exit 1; }
+
+    log_info "Stopping writers"
+    dc stop api worker scheduler
+
+    log_info "Restoring ${key}"
+    dc exec -T backup /bin/sh -c \
+        "aws s3 cp 's3://${R2_BUCKET:-stratum-backups}/postgres/${key}' - \
+         --endpoint-url \"\$R2_ENDPOINT\" | gunzip | psql"
+
+    log_info "Restarting stack"
+    dc up -d
+    wait_healthy
+    log_info "Restore complete — verify before announcing recovery"
+}
+
+# -----------------------------------------------------------------------------
+# verify — post-cutover assertions
+# -----------------------------------------------------------------------------
+verify() {
+    require_env
+    local fail=0
+
+    log_info "1/4 API reachable through Cloudflare"
+    if curl -fsS https://api.stratumai.app/health >/dev/null; then
+        log_info "    ok"
+    else
+        log_error "    unreachable"; fail=1
+    fi
+
+    log_info "2/4 Direct-to-origin refused"
+    local origin_ip
+    origin_ip="$(curl -fsS https://ifconfig.me 2>/dev/null || echo '')"
+    if [ -n "$origin_ip" ] && curl -fsS --max-time 5 "https://${origin_ip}/health" \
+        --resolve "api.stratumai.app:443:${origin_ip}" >/dev/null 2>&1; then
+        log_error "    origin answered a non-Cloudflare client"; fail=1
+    else
+        log_info "    ok (refused or unreachable)"
+    fi
+
+    log_info "3/4 Real client IP reaching the application"
+    # The audit trail is the consumer that matters. A Cloudflare address here
+    # means the real_ip block is not doing its job — see issue #652.
+    local logged
+    logged="$(dc exec -T edge tail -n 1 /var/log/nginx/access.log 2>/dev/null | awk '{print $1}')"
+    case "$logged" in
+        172.6[4-9].*|104.1[6-9].*|162.15[89].*|103.2*|141.101.*|108.162.*)
+            log_error "    edge logged a Cloudflare address ($logged)"; fail=1 ;;
+        "") log_warn "    no access-log entry yet" ;;
+        *)  log_info "    ok ($logged)" ;;
+    esac
+
+    log_info "4/4 A backup exists in R2"
+    if dc exec -T backup aws s3 ls "s3://${R2_BUCKET:-stratum-backups}/postgres/" \
+        --endpoint-url "$R2_ENDPOINT" 2>/dev/null | tail -1 | grep -q .; then
+        log_info "    ok"
+    else
+        log_error "    no backup objects found"; fail=1
+    fi
+
+    [ "$fail" -eq 0 ] && log_info "All checks passed" || log_error "Checks failed"
+    return "$fail"
+}
+
+status() { require_env; dc ps; }
+logs()   { require_env; dc logs --tail "${2:-100}" -f "${1:-}"; }
+
+case "${1:-}" in
+    setup)   setup ;;
+    deploy)  deploy ;;
+    update)  update ;;
+    status)  status ;;
+    logs)    shift; logs "$@" ;;
+    backup)  backup ;;
+    restore) shift; restore "$@" ;;
+    verify)  verify ;;
+    *)
+        echo "Usage: $0 {setup|deploy|update|status|logs|backup|restore <key>|verify}"
+        exit 1
+        ;;
+esac

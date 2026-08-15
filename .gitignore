@@ -15,6 +15,13 @@ build/
 .env.local
 .env.*.local
 
+# TLS material. The Hetzner runbook has operators drop the Cloudflare origin
+# certificate and its private key into ./certs on the host; without this,
+# nothing stops `git add -A` from committing the key.
+certs/
+*.pem
+*.key
+
 # IDE
 .idea/
 .vscode/

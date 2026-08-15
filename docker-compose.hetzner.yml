@@ -1,0 +1,116 @@
+# =============================================================================
+# Stratum AI - Hetzner origin behind Cloudflare
+# =============================================================================
+# Usage:
+#   docker compose -f docker-compose.yml \
+#                  -f docker-compose.prod.yml \
+#                  -f docker-compose.hetzner.yml up -d
+#
+# Layered on prod rather than replacing it, so the tuning that already exists
+# there (postgres settings, resource limits, no exposed DB/Redis ports,
+# pgbouncer) stays in one place. This file only adds what is specific to
+# running behind Cloudflare on a single Hetzner host.
+#
+# What changes versus prod:
+#   * frontend container is not started — the SPA is served by Cloudflare Pages
+#   * an `edge` nginx terminates TLS with a Cloudflare Origin Certificate and
+#     restores the visitor IP from CF-Connecting-IP
+#   * `backup` streams logical dumps off-host to Cloudflare R2
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # Frontend — not served from this host
+  # ===========================================================================
+  # Cloudflare Pages builds and serves the SPA from frontend/dist. Keeping the
+  # container defined but behind an unused profile means `docker compose` still
+  # validates the file, while `up` never starts it.
+  frontend:
+    profiles:
+      - unused
+    ports: !reset []
+
+  # ===========================================================================
+  # Edge — TLS termination, real client IP, rate limiting
+  # ===========================================================================
+  edge:
+    image: nginx:1.27-alpine
+    container_name: stratum_edge
+    restart: always
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/stratumai.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/proxy_params.conf:/etc/nginx/conf.d/proxy_params.conf:ro
+      # Origin cert, key, and the Cloudflare origin-pull CA. Provisioned by
+      # scripts/deploy-hetzner.sh setup; never committed.
+      - ./certs:/etc/nginx/certs:ro
+      - nginx_logs:/var/log/nginx
+    healthcheck:
+      # Checks nginx itself, not the API — an unhealthy upstream should not
+      # restart the edge that is reporting it.
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.5'
+
+  # ===========================================================================
+  # API — no host port; only the edge reaches it
+  # ===========================================================================
+  api:
+    ports: !reset []
+    environment:
+      - APP_ENV=production
+      - FRONTEND_URL=https://app.stratumai.app
+      - OAUTH_REDIRECT_BASE_URL=https://api.stratumai.app
+      - CORS_ORIGINS=https://app.stratumai.app,https://stratumai.app
+
+  # ===========================================================================
+  # Off-host backups to Cloudflare R2
+  # ===========================================================================
+  # The existing deploy-beta.sh takes a pg_dump before each update and keeps
+  # five copies in /opt/stratum-ai-backups — on the same host as the database.
+  # A host loss takes the backups with it, and nothing runs on a schedule.
+  #
+  # This service loops on an interval, streams a compressed dump straight to
+  # R2 (never landing a plaintext copy on local disk), and prunes by age.
+  # R2 is S3-compatible, has no egress fee, and can be pinned to the EU
+  # jurisdiction — which keeps personal data inside the same boundary as the
+  # Falkenstein host.
+  backup:
+    image: amazon/aws-cli:2.17.0
+    container_name: stratum_backup
+    restart: always
+    entrypoint: ["/bin/sh", "/opt/backup/run.sh"]
+    environment:
+      AWS_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?R2_ACCESS_KEY_ID is required}
+      AWS_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?R2_SECRET_ACCESS_KEY is required}
+      AWS_DEFAULT_REGION: auto
+      R2_ENDPOINT: ${R2_ENDPOINT:?R2_ENDPOINT is required}
+      R2_BUCKET: ${R2_BUCKET:-stratum-backups}
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      PGDATABASE: ${POSTGRES_DB:-stratum_ai}
+      BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-21600}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
+    volumes:
+      - ./scripts/backup:/opt/backup:ro
+    depends_on:
+      - db
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+
+volumes:
+  nginx_logs:
