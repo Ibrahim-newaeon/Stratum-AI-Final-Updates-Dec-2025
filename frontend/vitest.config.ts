@@ -30,15 +30,22 @@ export default defineConfig({
         'src/**/*.test.{ts,tsx}',
         'src/components/ui/**',
       ],
-      // Baseline thresholds set to the suite's verified current coverage of the
-      // included modules. They act as a regression ratchet (CI fails if
-      // coverage drops); raise them as tests are added. The previous 40% was
-      // aspirational and unmet (~16–26%), leaving the gate permanently red.
+      // A regression ratchet, not a target: CI fails if coverage drops below
+      // these. Raise them as tests are added; never lower them.
+      //
+      // Set to the measured coverage on 2026-08-15 (26.04 / 19.75 / 18.12 /
+      // 26.86), rounded down to the whole percent. The previous values
+      // (23/16/15/24) were the same idea but had drifted 2-3 points below
+      // actual, which is enough slack to delete a tested module, or add an
+      // untested one, without the gate noticing.
+      //
+      // The 40% before that was aspirational and unmet, leaving the gate
+      // permanently red — which is how a gate stops being read.
       thresholds: {
-        statements: 23,
-        branches: 16,
-        functions: 15,
-        lines: 24,
+        statements: 26,
+        branches: 19,
+        functions: 18,
+        lines: 26,
       },
     },
     css: false,

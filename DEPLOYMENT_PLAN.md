@@ -31,26 +31,27 @@ All frontend polishing is complete. The codebase is production-ready.
 ### Repository
 - **GitHub**: https://github.com/Ibrahim-newaeon/Stratum-AI-Final-Updates-Dec-2025
 - **Main Branch**: `main` (all latest code)
-- **GitHub Pages Branch**: `gh-pages` (last synced Feb 12, 2026; not
-  currently served — see GitHub Pages below)
+- **GitHub Pages Branch**: `gh-pages` — the live Pages source
 
 ---
 
 ## COMPLETED
 
 ### GitHub Pages (Landing Page)
-- **Status**: NOT LIVE — the URL below returns 404 "Site not found"
+- **Status**: LIVE — verified 2026-08-15, HTTP 200, 116,980 bytes
 - **URL**: https://ibrahim-newaeon.github.io/Stratum-AI-Final-Updates-Dec-2025/
-- **Branch**: `gh-pages` — still holds the site (529 files: `landing-en`,
-  `landing-ar`, dashboard demos, client onboarding, glossary). The content
-  exists; it is simply not being served.
-- **Why**: GitHub Pages is not enabled on the repository. `GET /repos/.../pages`
-  returns 404, which is also why the `Deploy Docs to GitHub Pages` workflow
-  failed on every run from at least 2026-04-28 until it was removed in #641.
-- **To publish**: Settings → Pages → Source. This is a **private** repository,
-  so serving Pages requires a plan that supports it, and publishing would make
-  the branch contents publicly readable.
+- **Source**: branch `gh-pages`, path `/` — 529 files (`landing-en`,
+  `landing-ar`, dashboard demos, client onboarding, glossary)
+- **HTTPS**: enforced
 - **Cost**: FREE
+
+**What was wrong before, so it is not repeated:** Pages was enabled but its
+source pointed at `main` / `/`, and `main` has no root `index.html` — so every
+build failed and the URL served GitHub's 404 page. The content had always been
+on `gh-pages`. Repointing the source and forcing a rebuild was the whole fix.
+
+Verified after the change: `/`, `/landing-en.html`, `/glossary.html` and
+`/client-onboarding.html` all return 200.
 
 ---
 
@@ -286,7 +287,7 @@ This file contains all real API keys and credentials. Copy values from there int
 
 | Environment | URL | Status |
 |-------------|-----|--------|
-| Landing (GitHub Pages) | https://ibrahim-newaeon.github.io/Stratum-AI-Final-Updates-Dec-2025/ | NOT LIVE — 404, Pages not enabled |
+| Landing (GitHub Pages) | https://ibrahim-newaeon.github.io/Stratum-AI-Final-Updates-Dec-2025/ | LIVE (serving from `gh-pages`) |
 | Frontend (Production) | https://stratumai.app | Pending Railway deploy |
 | Backend API (Production) | https://api.stratumai.app | Pending Railway deploy |
 | API Health Check | https://api.stratumai.app/health | Pending Railway deploy |
@@ -294,10 +295,12 @@ This file contains all real API keys and credentials. Copy values from there int
 ---
 
 **Last Updated:** 2026-08-15
-**Status:** Landing page NOT live (Pages not enabled — content still on
-`gh-pages`). Railway deploy fixes applied (nginx config, PORT handling).
+**Status:** Landing page LIVE (Pages serving from `gh-pages`, verified HTTP
+200). Railway deploy fixes applied (nginx config, PORT handling).
 
-> The 2026-02-13 revision of this file recorded the landing page as LIVE. It
-> was not, and had not been for some time — the URL 404s. Verify a deployment
-> URL before recording it here; a deployment document that is confidently
-> wrong is worse than one that is out of date.
+> The 2026-02-13 revision recorded the landing page as LIVE when it was not —
+> the URL had been 404ing, because Pages pointed at `main`, which has no root
+> `index.html`. It was repointed at `gh-pages` on 2026-08-15 and now serves.
+>
+> Both states in this file have now been wrong at some point, in opposite
+> directions. Curl the URL before recording a status here.
