@@ -192,6 +192,10 @@ services:
     restart: always
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-stratum_ai}
+      # edoburu/pgbouncer listens on 5432 unless told otherwise, but every
+      # DATABASE_URL in this file points at pgbouncer:6432 and the healthcheck
+      # probes 6432 — so it came up "unhealthy" and the API could not connect.
+      LISTEN_PORT: 6432
       POOL_MODE: transaction
       MAX_CLIENT_CONN: 200
       DEFAULT_POOL_SIZE: 25
