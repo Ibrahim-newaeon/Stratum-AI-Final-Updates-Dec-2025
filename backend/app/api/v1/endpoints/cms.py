@@ -3256,17 +3256,22 @@ async def invite_cms_user(
             detail="A user with this email already exists",
         )
 
+    # CMS users live on the global tenant 1. Name it once and use it for both
+    # the row and its PII key, so this path joins the per-tenant key scheme
+    # (AUTH-05) rather than silently falling back to the global key.
+    cms_tenant_id = 1
+
     # Create the user
     new_user = User(
-        email=encrypt_pii(body.email.lower().strip()),
+        email=encrypt_pii(body.email.lower().strip(), cms_tenant_id),
         email_hash=email_hash,
         password_hash=get_password_hash(body.password),
-        full_name=encrypt_pii(body.full_name),
+        full_name=encrypt_pii(body.full_name, cms_tenant_id),
         role=UserRole.VIEWER,  # Minimal platform role
         cms_role=body.cms_role,
         is_active=True,
         is_verified=True,
-        tenant_id=1,  # Global CMS tenant
+        tenant_id=cms_tenant_id,
     )
     db.add(new_user)
     await db.commit()

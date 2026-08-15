@@ -276,30 +276,41 @@ class AudienceSyncCredential(Base, TimestampMixin):
     token_expires_at = Column(DateTime(timezone=True), nullable=True)
 
     def set_access_token(self, token: str | None) -> None:
-        """Encrypt and store access token."""
+        """Encrypt and store access token under this row's tenant key.
+
+        ``self.tenant_id`` is passed so the credential joins the per-tenant key
+        scheme (AUTH-05) that user PII already uses; without it every tenant's
+        platform tokens share one global-derived key. No caller change is
+        needed — the tenant is on the row that owns the column.
+        """
         if token is None:
             self._access_token_encrypted = None
         else:
             from app.core.security import encrypt_pii
 
-            self._access_token_encrypted = encrypt_pii(token)
+            self._access_token_encrypted = encrypt_pii(token, self.tenant_id)
 
     def get_access_token(self) -> str | None:
-        """Decrypt and return access token."""
+        """Decrypt and return access token.
+
+        ``decrypt_pii`` dual-reads (tenant DEK, tenant-salted, true-global), so
+        credentials written before the tenant was threaded through still
+        decrypt without a re-encryption pass.
+        """
         if self._access_token_encrypted is None:
             return None
         from app.core.security import decrypt_pii
 
-        return decrypt_pii(self._access_token_encrypted)
+        return decrypt_pii(self._access_token_encrypted, self.tenant_id)
 
     def set_refresh_token(self, token: str | None) -> None:
-        """Encrypt and store refresh token."""
+        """Encrypt and store refresh token under this row's tenant key."""
         if token is None:
             self._refresh_token_encrypted = None
         else:
             from app.core.security import encrypt_pii
 
-            self._refresh_token_encrypted = encrypt_pii(token)
+            self._refresh_token_encrypted = encrypt_pii(token, self.tenant_id)
 
     def get_refresh_token(self) -> str | None:
         """Decrypt and return refresh token."""
@@ -307,7 +318,7 @@ class AudienceSyncCredential(Base, TimestampMixin):
             return None
         from app.core.security import decrypt_pii
 
-        return decrypt_pii(self._refresh_token_encrypted)
+        return decrypt_pii(self._refresh_token_encrypted, self.tenant_id)
 
     # Properties for backward compatibility
     @property

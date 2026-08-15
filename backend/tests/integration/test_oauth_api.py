@@ -134,10 +134,10 @@ async def _make_connection(
         platform=platform,
         status=status,
         access_token_encrypted=(
-            svc.encrypt_token(access_token) if access_token else None
+            svc.encrypt_token(access_token, tenant_id) if access_token else None
         ),
         refresh_token_encrypted=(
-            svc.encrypt_token(refresh_token) if refresh_token else None
+            svc.encrypt_token(refresh_token, tenant_id) if refresh_token else None
         ),
         token_expires_at=(now + expires_delta) if expires_delta else None,
         scopes=["ads_read"],
@@ -435,8 +435,14 @@ class TestCallback:
         assert conn.status == ConnectionStatus.CONNECTED
         # Tokens are stored encrypted, roundtrip through the service decrypt.
         assert conn.access_token_encrypted != "meta-long-lived"
-        assert meta.decrypt_token(conn.access_token_encrypted) == "meta-long-lived"
-        assert meta.decrypt_token(conn.refresh_token_encrypted) == "new-refresh-token"
+        assert (
+            meta.decrypt_token(conn.access_token_encrypted, conn.tenant_id)
+            == "meta-long-lived"
+        )
+        assert (
+            meta.decrypt_token(conn.refresh_token_encrypted, conn.tenant_id)
+            == "new-refresh-token"
+        )
 
     async def test_callback_state_single_use(
         self,
@@ -510,7 +516,10 @@ class TestCallback:
         assert conn.status == ConnectionStatus.CONNECTED
         assert conn.last_error is None
         assert conn.error_count == 0
-        assert meta.decrypt_token(conn.access_token_encrypted) == "reconnected-token"
+        assert (
+            meta.decrypt_token(conn.access_token_encrypted, conn.tenant_id)
+            == "reconnected-token"
+        )
         assert conn.granted_by_user_id == test_user["id"]
 
     async def test_callback_storage_failure_redirects(
@@ -534,7 +543,7 @@ class TestCallback:
         monkeypatch.setattr(
             meta,
             "encrypt_token",
-            lambda token: (_ for _ in ()).throw(ValueError("bad key")),
+            lambda token, tenant_id: (_ for _ in ()).throw(ValueError("bad key")),
         )
         resp = await client.get(
             f"{_BASE}/meta/callback",
@@ -696,7 +705,10 @@ class TestListAdAccounts:
         refresh.assert_awaited_once_with("stored-refresh-token")
         # Fetch used the refreshed token, and the new token was persisted.
         fetch.assert_awaited_once_with("refreshed-access")
-        assert meta.decrypt_token(conn.access_token_encrypted) == "refreshed-access"
+        assert (
+            meta.decrypt_token(conn.access_token_encrypted, conn.tenant_id)
+            == "refreshed-access"
+        )
         assert conn.token_expires_at > datetime.now(UTC)
 
     async def test_accounts_expired_token_refresh_fails_401(
@@ -928,8 +940,14 @@ class TestRefreshToken:
         assert conn.status == ConnectionStatus.CONNECTED
         assert conn.last_error is None
         assert conn.error_count == 0
-        assert meta.decrypt_token(conn.access_token_encrypted) == "post-refresh"
-        assert meta.decrypt_token(conn.refresh_token_encrypted) == "rotated-refresh"
+        assert (
+            meta.decrypt_token(conn.access_token_encrypted, conn.tenant_id)
+            == "post-refresh"
+        )
+        assert (
+            meta.decrypt_token(conn.refresh_token_encrypted, conn.tenant_id)
+            == "rotated-refresh"
+        )
 
     async def test_refresh_provider_failure_502(
         self,

@@ -1556,7 +1556,7 @@ async def seed_platforms(
         conn = conn_result.scalar_one_or_none()
 
         if conn:
-            conn.access_token_encrypted = encrypt_pii(token)
+            conn.access_token_encrypted = encrypt_pii(token, body.tenant_id)
             conn.status = ConnectionStatus.CONNECTED.value
             conn.connected_at = now
             conn.updated_at = now
@@ -1568,7 +1568,7 @@ async def seed_platforms(
                 tenant_id=body.tenant_id,
                 platform=platform_name,
                 status=ConnectionStatus.CONNECTED.value,
-                access_token_encrypted=encrypt_pii(token),
+                access_token_encrypted=encrypt_pii(token, body.tenant_id),
                 connected_at=now,
                 granted_by_user_id=user_id,
                 scopes=[],
@@ -1578,7 +1578,7 @@ async def seed_platforms(
         # Store refresh token for Google (uses refresh_token flow)
         if platform_name == "google" and settings.google_ads_refresh_token:
             conn.refresh_token_encrypted = encrypt_pii(
-                settings.google_ads_refresh_token
+                settings.google_ads_refresh_token, body.tenant_id
             )
 
         # Flush to get conn.id for ad accounts

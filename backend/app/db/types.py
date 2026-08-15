@@ -24,6 +24,19 @@ class EncryptedString(TypeDecorator):
     introduced are returned as-is (they fail to decrypt) and get re-encrypted
     on their next write — so **no data migration is required** and the
     underlying column stays ``VARCHAR``.
+
+    **Uses the global key, not a per-tenant one, and cannot do otherwise.**
+    A ``TypeDecorator`` is handed the bare value, never the row, so there is no
+    way to reach ``tenant_id`` from here. Everything else that stores a secret
+    now passes the owning tenant to ``encrypt_pii`` (AUTH-05); this type is the
+    one place that structurally can't.
+
+    Only ``SlackIntegration.webhook_url`` uses it today, so the exposure is one
+    low-sensitivity column. Do **not** reach for this type for access tokens,
+    refresh tokens, or user PII — those have tenant-aware call sites and should
+    use them. Making this tenant-aware means moving to explicit
+    ``set_x``/``get_x`` accessors on the model (as ``AudienceSyncCredential``
+    does) rather than a column type.
     """
 
     impl = String

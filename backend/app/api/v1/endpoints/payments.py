@@ -303,7 +303,7 @@ async def create_checkout(
         if admin_user:
             from app.core.security import decrypt_pii
 
-            email = decrypt_pii(admin_user.email)
+            email = decrypt_pii(admin_user.email, admin_user.tenant_id)
             customer = await stripe_service.create_customer(
                 email=email,
                 name=tenant.name,

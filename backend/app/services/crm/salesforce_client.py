@@ -167,7 +167,7 @@ class SalesforceClient:
         if not connection or not connection.access_token_enc:
             return None
 
-        return decrypt_token(connection.access_token_enc)
+        return decrypt_token(connection.access_token_enc, connection.tenant_id)
 
     async def _make_request(
         self,
@@ -336,9 +336,11 @@ class SalesforceClient:
             self.db.add(connection)
 
         # Update connection
-        connection.access_token_enc = encrypt_token(access_token)
+        connection.access_token_enc = encrypt_token(access_token, connection.tenant_id)
         if refresh_token:
-            connection.refresh_token_enc = encrypt_token(refresh_token)
+            connection.refresh_token_enc = encrypt_token(
+                refresh_token, connection.tenant_id
+            )
         connection.token_expires_at = expires_at
         connection.provider_account_id = user_info.get("organization_id", "")
         connection.provider_account_name = user_info.get(
@@ -380,7 +382,9 @@ class SalesforceClient:
         if not connection or not connection.refresh_token_enc:
             return False
 
-        refresh_token = decrypt_token(connection.refresh_token_enc)
+        refresh_token = decrypt_token(
+            connection.refresh_token_enc, connection.tenant_id
+        )
 
         async with aiohttp.ClientSession() as session:
             data = {
@@ -409,7 +413,9 @@ class SalesforceClient:
                 token_data = await response.json()
 
         # Update connection with new token
-        connection.access_token_enc = encrypt_token(token_data["access_token"])
+        connection.access_token_enc = encrypt_token(
+            token_data["access_token"], connection.tenant_id
+        )
         issued_at = int(token_data.get("issued_at", 0)) / 1000
         connection.token_expires_at = datetime.fromtimestamp(
             issued_at, tz=UTC
@@ -437,7 +443,7 @@ class SalesforceClient:
         # Revoke token if possible
         if connection.access_token_enc:
             try:
-                token = decrypt_token(connection.access_token_enc)
+                token = decrypt_token(connection.access_token_enc, connection.tenant_id)
                 async with aiohttp.ClientSession() as session:
                     await session.post(
                         SALESFORCE_REVOKE_URL,

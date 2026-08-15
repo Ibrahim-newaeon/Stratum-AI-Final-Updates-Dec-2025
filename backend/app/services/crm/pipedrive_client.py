@@ -131,8 +131,12 @@ class PipedriveClient:
         connection = await self._get_or_create_connection()
 
         # Encrypt and store tokens
-        connection.access_token_enc = encrypt_pii(data["access_token"])
-        connection.refresh_token_enc = encrypt_pii(data["refresh_token"])
+        connection.access_token_enc = encrypt_pii(
+            data["access_token"], connection.tenant_id
+        )
+        connection.refresh_token_enc = encrypt_pii(
+            data["refresh_token"], connection.tenant_id
+        )
         connection.token_expires_at = datetime.now(UTC) + timedelta(
             seconds=data["expires_in"]
         )
@@ -172,7 +176,7 @@ class PipedriveClient:
         if not connection or not connection.refresh_token_enc:
             return False
 
-        refresh_token = decrypt_pii(connection.refresh_token_enc)
+        refresh_token = decrypt_pii(connection.refresh_token_enc, connection.tenant_id)
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -198,8 +202,12 @@ class PipedriveClient:
             data = response.json()
 
         # Update tokens
-        connection.access_token_enc = encrypt_pii(data["access_token"])
-        connection.refresh_token_enc = encrypt_pii(data["refresh_token"])
+        connection.access_token_enc = encrypt_pii(
+            data["access_token"], connection.tenant_id
+        )
+        connection.refresh_token_enc = encrypt_pii(
+            data["refresh_token"], connection.tenant_id
+        )
         connection.token_expires_at = datetime.now(UTC) + timedelta(
             seconds=data["expires_in"]
         )
@@ -254,7 +262,7 @@ class PipedriveClient:
                 await self.db.refresh(connection)
 
         return (
-            decrypt_pii(connection.access_token_enc)
+            decrypt_pii(connection.access_token_enc, connection.tenant_id)
             if connection.access_token_enc
             else None
         )

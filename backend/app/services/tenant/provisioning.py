@@ -143,10 +143,15 @@ class TenantProvisioningService:
         """Create the initial admin user for the tenant."""
         user = User(
             tenant_id=tenant_id,
-            email=encrypt_pii(email),
+            # Pass tenant_id (AUTH-05). auth.py and users.py already do, so
+            # omitting it here left every tenant's *founding* admin encrypted
+            # under the global key while every user invited afterwards used the
+            # tenant DEK — one column, two keys, decided by which code path
+            # created the row. Dual-read decryption is why nothing broke.
+            email=encrypt_pii(email, tenant_id),
             email_hash=hash_pii_for_lookup(email.lower()),
             password_hash=get_password_hash(password),
-            full_name=encrypt_pii(full_name) if full_name else None,
+            full_name=encrypt_pii(full_name, tenant_id) if full_name else None,
             role=UserRole.ADMIN,
             is_active=True,
             is_verified=True,  # Admin is auto-verified
