@@ -217,6 +217,54 @@ jobs:
               if ran < floor:
                   print(f"::error::{path}: only {ran} tests ran, floor is {floor}")
                   failed = True
+
+          # Every test file on disk must contribute at least one collected
+          # test. A total-count floor cannot see one module going quiet: the
+          # other 300 files keep the number well above it.
+          #
+          # This is not hypothetical. test_adapter_whatsapp_deep.py (1204
+          # lines) and test_knowledge_graph.py (277) both lacked a pytestmark,
+          # so `-m "integration"` deselected them entirely. They looked like
+          # coverage for months and produced none — and by the time the first
+          # was switched on, its mocks had rotted. Nothing reported it, because
+          # a file that is collected and then filtered out is indistinguishable
+          # from a file that was never there.
+          import pathlib
+
+          SUITES = {
+              "unit-junit.xml": pathlib.Path("tests/unit"),
+              "integration-junit.xml": pathlib.Path("tests/integration"),
+          }
+          for report, suite_dir in SUITES.items():
+              try:
+                  root = ET.parse(report).getroot()
+              except (OSError, ET.ParseError):
+                  continue  # already reported above
+
+              seen = set()
+              for case in root.iter("testcase"):
+                  # pytest sets `file` on each testcase; fall back to the
+                  # dotted classname when a plugin strips it.
+                  f = case.get("file")
+                  if not f:
+                      cls = case.get("classname", "")
+                      parts = [p for p in cls.split(".") if p]
+                      while parts and not parts[-1].startswith("test_"):
+                          parts.pop()
+                      f = "/".join(parts) + ".py" if parts else ""
+                  if f:
+                      seen.add(pathlib.Path(f).name)
+
+              on_disk = {p.name for p in suite_dir.glob("test_*.py")}
+              missing = sorted(on_disk - seen)
+              print(f"{suite_dir}: {len(on_disk)} files on disk, {len(seen)} collected")
+              if missing:
+                  for name in missing:
+                      print(
+                          f"::error::{suite_dir}/{name} contributed no tests — "
+                          "missing pytestmark, or every test deselected"
+                      )
+                  failed = True
           sys.exit(1 if failed else 0)
           EOF
 
