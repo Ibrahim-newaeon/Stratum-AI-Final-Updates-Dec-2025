@@ -14,7 +14,8 @@ Covers ``backend/app/api/v1/endpoints/oauth.py``:
 - POST /{platform}/accounts/connect - connect/enable selected accounts
 - POST /{platform}/refresh      - explicit token refresh (+ error path)
 - DELETE /{platform}/disconnect - revoke + local teardown
-- _auto_sync_after_oauth        - fire-and-forget post-OAuth sync helper
+- post-OAuth sync dispatch      - queued to Celery, broker failure tolerated
+- callback-URL allowlist        - open-redirect guard on /authorize
 
 Mocking strategy: the provider services (Meta/Google/TikTok/Snapchat) make
 their outbound HTTP calls with **aiohttp**, which respx cannot intercept
@@ -32,13 +33,11 @@ NOTE: run with the session-scoped event loop CI uses
 """
 
 from datetime import UTC, datetime, timedelta
-from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
 from httpx import AsyncClient
 
-import app.api.v1.endpoints.oauth as oauth_ep
 from app.models.campaign_builder import (
     AdPlatform,
     ConnectionStatus,
@@ -109,12 +108,23 @@ def oauth_creds(monkeypatch):
 
 @pytest.fixture
 def no_auto_sync(monkeypatch):
-    """Replace the fire-and-forget post-OAuth sync with a no-op coroutine."""
+    """Stop the post-OAuth campaign sync from reaching a real Celery broker.
 
-    async def _noop(tenant_id, platform):
+    The callback now dispatches ``sync_platform_campaigns.delay`` instead of
+    spawning a bare asyncio task, so this patches the task's ``delay`` and
+    records the calls, letting tests assert the sync was *queued* rather than
+    merely that nothing exploded.
+    """
+    from app.workers.tasks import sync as sync_tasks
+
+    calls: list[tuple] = []
+
+    def _record(*args, **kwargs):
+        calls.append((args, kwargs))
         return None
 
-    monkeypatch.setattr(oauth_ep, "_auto_sync_after_oauth", _noop)
+    monkeypatch.setattr(sync_tasks.sync_platform_campaigns, "delay", _record)
+    return calls
 
 
 async def _make_connection(
@@ -394,9 +404,15 @@ class TestCallback:
         """Full flow: authorize endpoint -> Redis state -> callback -> DB row."""
         from sqlalchemy import and_, select
 
+        from app.core.config import settings
+
+        # Must be an allowed origin — the authorize endpoint now rejects
+        # callback URLs outside the configured CORS origins.
+        callback_url = settings.cors_origins_list[0].rstrip("/")
+
         start = await authenticated_client.post(
             f"{_BASE}/meta/authorize",
-            json={"frontend_callback_url": "http://myapp.example.com"},
+            json={"frontend_callback_url": callback_url},
         )
         assert start.status_code == 200, start.text
         state_token = start.json()["data"]["state"]
@@ -420,8 +436,11 @@ class TestCallback:
         assert resp.status_code in _REDIRECT_CODES
         location = resp.headers["location"]
         # Redirects to the frontend_callback_url captured in the state.
-        assert location.startswith("http://myapp.example.com/connect")
+        assert location.startswith(f"{callback_url}/connect")
         assert "status=success" in location
+
+        # The post-connect campaign sync is queued to Celery, not run inline.
+        assert no_auto_sync == [((test_tenant["id"], "meta"), {})]
 
         result = await db_session.execute(
             select(TenantPlatformConnection).where(
@@ -1055,42 +1074,81 @@ class TestTenantIsolation:
 
 
 # =============================================================================
-# _auto_sync_after_oauth helper
+# Post-OAuth sync dispatch and callback-URL validation
 # =============================================================================
 
 
-class TestAutoSyncHelper:
-    async def test_auto_sync_success_path(self, test_tenant, monkeypatch):
-        import app.services.sync.orchestrator as orch_mod
+class TestPostOAuthSyncDispatch:
+    async def test_broker_failure_does_not_fail_the_oauth_flow(
+        self,
+        authenticated_client: AsyncClient,
+        test_tenant,
+        oauth_creds,
+        monkeypatch,
+    ):
+        """A dead Celery broker must not lose a completed authorization.
 
-        calls = {}
+        The tokens are already stored and committed by this point; failing the
+        callback would leave the user re-running consent for no reason.
+        """
+        from app.core.config import settings
+        from app.workers.tasks import sync as sync_tasks
 
-        class FakeOrchestrator:
-            def __init__(self, db):
-                calls["db"] = db
+        def _explode(*args, **kwargs):
+            raise ConnectionError("broker unreachable")
 
-            async def sync_platform(self, tenant_id, platform, days_back=30):
-                calls["args"] = (tenant_id, platform, days_back)
-                return SimpleNamespace(
-                    campaigns_synced=3, metrics_upserted=12, errors=[]
-                )
+        monkeypatch.setattr(sync_tasks.sync_platform_campaigns, "delay", _explode)
 
-        monkeypatch.setattr(orch_mod, "PlatformSyncOrchestrator", FakeOrchestrator)
+        callback_url = settings.cors_origins_list[0].rstrip("/")
+        start = await authenticated_client.post(
+            f"{_BASE}/meta/authorize",
+            json={"frontend_callback_url": callback_url},
+        )
+        state_token = start.json()["data"]["state"]
 
-        await oauth_ep._auto_sync_after_oauth(test_tenant["id"], AdPlatform.META)
-        assert calls["args"] == (test_tenant["id"], AdPlatform.META, 30)
+        meta = get_oauth_service("meta")
+        monkeypatch.setattr(
+            meta, "exchange_code_for_tokens", AsyncMock(return_value=_tokens())
+        )
 
-    async def test_auto_sync_swallows_errors(self, test_tenant, monkeypatch):
-        import app.services.sync.orchestrator as orch_mod
+        authenticated_client.headers.pop("Authorization", None)
+        authenticated_client.headers.pop("X-Tenant-ID", None)
+        resp = await authenticated_client.get(
+            f"{_BASE}/meta/callback",
+            params={"code": "authcode", "state": state_token},
+        )
 
-        class ExplodingOrchestrator:
-            def __init__(self, db):
-                pass
+        assert resp.status_code in _REDIRECT_CODES
+        assert "status=success" in resp.headers["location"]
 
-            async def sync_platform(self, tenant_id, platform, days_back=30):
-                raise ValueError("sync blew up")
 
-        monkeypatch.setattr(orch_mod, "PlatformSyncOrchestrator", ExplodingOrchestrator)
+class TestCallbackUrlAllowlist:
+    async def test_foreign_origin_rejected(
+        self, authenticated_client: AsyncClient, oauth_creds
+    ):
+        """The state's redirect_uri is used verbatim on the way back."""
+        resp = await authenticated_client.post(
+            f"{_BASE}/meta/authorize",
+            json={"frontend_callback_url": "https://evil.example.com"},
+        )
+        assert resp.status_code == 400
+        assert "not an allowed origin" in resp.text
 
-        # Must not raise — the helper is fire-and-forget.
-        await oauth_ep._auto_sync_after_oauth(test_tenant["id"], AdPlatform.META)
+    async def test_relative_url_rejected(
+        self, authenticated_client: AsyncClient, oauth_creds
+    ):
+        resp = await authenticated_client.post(
+            f"{_BASE}/meta/authorize",
+            json={"frontend_callback_url": "/connect"},
+        )
+        assert resp.status_code == 400
+        assert "absolute URL" in resp.text
+
+    async def test_omitted_url_falls_back_to_frontend_url(
+        self, authenticated_client: AsyncClient, oauth_creds
+    ):
+        resp = await authenticated_client.post(
+            f"{_BASE}/meta/authorize",
+            json={},
+        )
+        assert resp.status_code == 200, resp.text

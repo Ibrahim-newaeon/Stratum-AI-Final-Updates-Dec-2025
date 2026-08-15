@@ -89,6 +89,7 @@ from app.schemas.cdp import (
     IdentityGraphResponse,
     ProfileDeletionResponse,
     ProfileFunnelJourneysResponse,
+    ProfileLookupParams,
     ProfileMergeHistoryResponse,
     ProfileMergeRequest,
     ProfileMergeResponse,
@@ -856,24 +857,13 @@ def _build_profile_response(profile: CDPProfile) -> ProfileResponse:
     )
 
 
-@router.get(
-    "/profiles",
-    response_model=ProfileResponse,
-    summary="Lookup profile by identifier",
-    description="Find a profile by identifier type and value. Value is hashed before lookup.",
-)
-async def lookup_profile(
-    identifier_type: str = Query(
-        ..., description="Identifier type (email, phone, etc.)"
-    ),
-    identifier_value: str = Query(..., description="Identifier value to look up"),
-    db: AsyncSession = Depends(get_async_session),
-    current_user=Depends(get_current_user),
-    _rate_limit=Depends(check_profile_rate_limit),
-):
-    """Lookup profile by identifier with caching."""
-    tenant_id = current_user.tenant_id
-
+async def _lookup_profile_by_identifier(
+    identifier_type: str,
+    identifier_value: str,
+    db: AsyncSession,
+    tenant_id: int,
+) -> ProfileResponse:
+    """Shared lookup body for the GET and POST identifier-lookup endpoints."""
     # Normalize and hash the identifier
     normalized = normalize_identifier(identifier_type, identifier_value)
     ident_hash = hash_identifier(normalized)
@@ -920,6 +910,86 @@ async def lookup_profile(
     _profile_cache.set(tenant_id, str(ident.profile.id), response)
 
     return response
+
+
+@router.post(
+    "/profiles/lookup",
+    response_model=ProfileResponse,
+    summary="Lookup profile by identifier",
+    description=(
+        "Find a profile by identifier type and value. The identifier travels "
+        "in the request body so it never appears in a URL."
+    ),
+)
+async def lookup_profile_by_body(
+    params: ProfileLookupParams,
+    db: AsyncSession = Depends(get_async_session),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_profile_rate_limit),
+):
+    """Lookup a profile by identifier, with the identifier in the body.
+
+    The GET form puts a raw email or phone number in the query string, which
+    means it is written to every access log along the path. Stratum's own
+    middleware is careful — it logs ``request.url.path``, never ``request.url``
+    — but the reverse proxy in front of it is not: ``location /api/`` in
+    ``nginx/beta.conf`` uses the default ``combined`` format, whose ``$request``
+    field is the full request line including the query string.
+
+    That puts identifying PII on disk outside the Fernet boundary and outside
+    erasure: deleting the profile under Art. 17 does not touch the access log
+    that recorded the lookup. Browser history and ``Referer`` headers carry it
+    too.
+
+    A POST body is not encrypted, but it is not logged by default anywhere in
+    the path, which is the actual difference that matters here.
+    """
+    return await _lookup_profile_by_identifier(
+        params.identifier_type,
+        params.identifier_value,
+        db,
+        current_user.tenant_id,
+    )
+
+
+@router.get(
+    "/profiles",
+    response_model=ProfileResponse,
+    summary="Lookup profile by identifier (deprecated)",
+    description=(
+        "Deprecated — use POST /cdp/profiles/lookup. This form places the raw "
+        "identifier in the query string, where reverse-proxy access logs "
+        "record it."
+    ),
+    deprecated=True,
+)
+async def lookup_profile(
+    identifier_type: str = Query(
+        ..., description="Identifier type (email, phone, etc.)"
+    ),
+    identifier_value: str = Query(..., description="Identifier value to look up"),
+    db: AsyncSession = Depends(get_async_session),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_profile_rate_limit),
+):
+    """Deprecated identifier lookup — see :func:`lookup_profile_by_body`.
+
+    Kept so existing API consumers do not break, but every call is recorded so
+    the remaining users can be found and moved before it is removed. The
+    identifier itself is deliberately not logged.
+    """
+    logger.warning(
+        "cdp_profile_lookup_deprecated_get",
+        tenant_id=current_user.tenant_id,
+        identifier_type=identifier_type,
+        detail="Raw identifier in query string; use POST /cdp/profiles/lookup",
+    )
+    return await _lookup_profile_by_identifier(
+        identifier_type,
+        identifier_value,
+        db,
+        current_user.tenant_id,
+    )
 
 
 # =============================================================================

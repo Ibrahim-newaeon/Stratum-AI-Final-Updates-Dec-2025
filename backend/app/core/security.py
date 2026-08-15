@@ -359,6 +359,29 @@ def hash_api_key(api_key: str) -> str:
 
 TOKEN_BLACKLIST_PREFIX = "token_blacklist:"
 
+# Per-user revocation cutoff. The blacklist above is keyed by ``jti``, so it can
+# only revoke tokens you are holding — it cannot answer "end every session this
+# user has". Anonymising a user under GDPR, or offboarding one, needs the
+# latter: setting ``is_active = False`` is only enforced by endpoints that take
+# the get_current_user dependency, and most of the API authenticates from
+# request.state alone, so those sessions kept working until natural expiry.
+USER_REVOCATION_PREFIX = "user_revoked_at:"
+
+
+async def revoke_user_tokens(user_id: int) -> None:
+    """Invalidate every access token issued to ``user_id`` before now.
+
+    Stores a cutoff timestamp; :func:`is_token_blacklisted` rejects any token
+    whose ``iat`` predates it. The key expires after the access-token lifetime
+    because by then every token issued before the cutoff has expired anyway, so
+    the entry has nothing left to do.
+    """
+    key = f"{USER_REVOCATION_PREFIX}{user_id}"
+    ttl = settings.access_token_expire_minutes * 60
+
+    client = await get_redis_pool()
+    await client.setex(key, ttl, str(datetime.now(timezone.utc).timestamp()))
+
 
 async def blacklist_token(token: str, payload: dict[str, Any]) -> None:
     """
@@ -406,7 +429,27 @@ async def is_token_blacklisted(payload: dict[str, Any], token: str) -> bool:
 
     try:
         client = await get_redis_pool()
-        return await client.exists(key) == 1
+        if await client.exists(key) == 1:
+            return True
+
+        # Per-user cutoff (see revoke_user_tokens). Checked here rather than at
+        # the call sites so both enforcement points — TenantMiddleware and
+        # app.auth.deps.get_current_user — inherit it and cannot drift apart.
+        subject = payload.get("sub")
+        issued_at = payload.get("iat")
+        if subject is None or issued_at is None:
+            return False
+
+        cutoff = await client.get(f"{USER_REVOCATION_PREFIX}{subject}")
+        if not cutoff:
+            return False
+
+        try:
+            return float(issued_at) < float(cutoff)
+        except (TypeError, ValueError):
+            # Unparseable cutoff or iat: fail closed. A malformed marker must
+            # not be the reason a revoked session keeps working.
+            return True
     except (ConnectionError, TimeoutError, OSError) as exc:
         raise ConnectionError(
             f"Redis unavailable during token blacklist check: {type(exc).__name__}"
