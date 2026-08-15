@@ -1137,6 +1137,13 @@ async def _reset_async_engine() -> None:
 # none. Set SIGNAL_HEALTH_FRESHNESS_DAYS to tune.
 SIGNAL_HEALTH_FRESHNESS_DAYS = 2
 
+# How long an operator's soft-block confirmation stays valid. A confirmation is
+# a judgement about conditions at that moment, so it expires rather than
+# authorising an execution indefinitely. Deliberately shorter than the
+# enforcer's own 3600s confirmation-token lifetime: the token bounds how long
+# the operator has to *respond*, this bounds how long the answer stays good.
+ENFORCEMENT_CONFIRMATION_TTL_SECONDS = 900  # 15 minutes
+
 
 async def claim_action_for_execution(db: AsyncSession, action_id) -> bool:
     """Atomically claim an APPROVED action for execution (CEL-001).
@@ -1330,8 +1337,34 @@ def _confirmed_soft_block_override(action, enforcement) -> bool:
     POST /actions/{id}/confirm (which stamps enforcement_confirmed_at).
     Hard-blocks and subscription gates are absolute — a stale confirmation
     never bypasses them.
+
+    The stamp also has to be *recent*. Confirming a soft-block is a judgement
+    about conditions as they stand at that moment, and this previously accepted
+    the stamp forever: an action confirmed and then held — by a freeze, a retry
+    backoff, or a queue backlog — would execute days later on that same
+    approval, against metrics nobody had looked at.
     """
-    return bool(enforcement.requires_confirmation and action.enforcement_confirmed_at)
+    if not (enforcement.requires_confirmation and action.enforcement_confirmed_at):
+        return False
+
+    confirmed_at = action.enforcement_confirmed_at
+    if confirmed_at.tzinfo is None:
+        confirmed_at = confirmed_at.replace(tzinfo=timezone.utc)
+
+    age_seconds = (datetime.now(timezone.utc) - confirmed_at).total_seconds()
+    if age_seconds > ENFORCEMENT_CONFIRMATION_TTL_SECONDS:
+        logger.warning(
+            "enforcement_confirmation_expired",
+            extra={
+                "action_id": str(action.id),
+                "tenant_id": action.tenant_id,
+                "age_seconds": int(age_seconds),
+                "ttl_seconds": ENFORCEMENT_CONFIRMATION_TTL_SECONDS,
+            },
+        )
+        return False
+
+    return True
 
 
 # =============================================================================
@@ -1442,6 +1475,11 @@ def apply_actions_queue(self, tenant_id: Optional[int] = None):
                                 f"(confirmed_by="
                                 f"{action.enforcement_confirmed_by_user_id})"
                             )
+                            # Consume it: the model documents this override as
+                            # single-use. If execution fails and the action is
+                            # retried, it re-enters the gate and needs a fresh
+                            # confirmation rather than replaying this one.
+                            action.enforcement_confirmed_at = None
                         elif not enforcement.allowed:
                             mode = (
                                 enforcement.mode.value
@@ -1630,7 +1668,12 @@ def schedule_apply_actions_queue():
     max_retries=3,
     default_retry_delay=30,
 )
-def apply_single_action(self, action_id: str, user_id: Optional[int] = None):
+def apply_single_action(
+    self,
+    action_id: str,
+    user_id: Optional[int] = None,
+    tenant_id: Optional[int] = None,
+):
     """
     Apply a single action immediately.
 
@@ -1639,6 +1682,11 @@ def apply_single_action(self, action_id: str, user_id: Optional[int] = None):
     Args:
         action_id: UUID of the action to apply
         user_id: ID of user triggering the execution
+        tenant_id: Tenant the action must belong to. Optional for backward
+            compatibility with already-queued messages, but callers should
+            always pass it: without it this task trusts that whoever dispatched
+            it checked ownership, and a mis-dispatch would mutate another
+            tenant's ad account.
     """
     import asyncio
     from uuid import UUID
@@ -1649,9 +1697,13 @@ def apply_single_action(self, action_id: str, user_id: Optional[int] = None):
             try:
                 uuid_id = UUID(action_id)
 
-                result = await db.execute(
-                    select(FactActionsQueue).where(FactActionsQueue.id == uuid_id)
-                )
+                # Defence in depth: the dispatching endpoint already checks
+                # tenant ownership, but a task reachable from anywhere should
+                # not rely on its caller having done so.
+                stmt = select(FactActionsQueue).where(FactActionsQueue.id == uuid_id)
+                if tenant_id is not None:
+                    stmt = stmt.where(FactActionsQueue.tenant_id == tenant_id)
+                result = await db.execute(stmt)
                 action = result.scalar_one_or_none()
 
                 if not action:
@@ -1698,6 +1750,11 @@ def apply_single_action(self, action_id: str, user_id: Optional[int] = None):
                         f"despite soft-block (confirmed_by="
                         f"{action.enforcement_confirmed_by_user_id})"
                     )
+                    # Consume it: the model documents this override as
+                    # single-use. If execution fails and the action is retried,
+                    # it re-enters the gate and needs a fresh confirmation
+                    # rather than replaying this one.
+                    action.enforcement_confirmed_at = None
                 elif not enforcement.allowed:
                     mode = (
                         enforcement.mode.value
@@ -1821,7 +1878,12 @@ _INVERSE_ACTION: Dict[str, str] = {
 
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
-def rollback_action(self, action_id: str, user_id: Optional[int] = None):
+def rollback_action(
+    self,
+    action_id: str,
+    user_id: Optional[int] = None,
+    tenant_id: Optional[int] = None,
+):
     """Revert a previously APPLIED autopilot action (TRUST-006).
 
     Executes the inverse action (budget_increase<->decrease, pause<->enable, ...)
@@ -1833,6 +1895,9 @@ def rollback_action(self, action_id: str, user_id: Optional[int] = None):
     Args:
         action_id: UUID of the applied action to revert.
         user_id: ID of the user requesting the rollback.
+        tenant_id: Tenant the action must belong to. Optional for backward
+            compatibility with already-queued messages, but callers should
+            always pass it — see apply_single_action.
     """
     import asyncio
     from uuid import UUID
@@ -1842,9 +1907,13 @@ def rollback_action(self, action_id: str, user_id: Optional[int] = None):
         async with async_session_factory() as db:
             try:
                 uuid_id = UUID(action_id)
-                result = await db.execute(
-                    select(FactActionsQueue).where(FactActionsQueue.id == uuid_id)
-                )
+                # Defence in depth: the dispatching endpoint already checks
+                # tenant ownership, but a task reachable from anywhere should
+                # not rely on its caller having done so.
+                stmt = select(FactActionsQueue).where(FactActionsQueue.id == uuid_id)
+                if tenant_id is not None:
+                    stmt = stmt.where(FactActionsQueue.tenant_id == tenant_id)
+                result = await db.execute(stmt)
                 action = result.scalar_one_or_none()
 
                 if not action:
