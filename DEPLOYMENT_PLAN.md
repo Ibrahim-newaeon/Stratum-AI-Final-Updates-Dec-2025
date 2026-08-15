@@ -31,16 +31,25 @@ All frontend polishing is complete. The codebase is production-ready.
 ### Repository
 - **GitHub**: https://github.com/Ibrahim-newaeon/Stratum-AI-Final-Updates-Dec-2025
 - **Main Branch**: `main` (all latest code)
-- **GitHub Pages Branch**: `gh-pages` (synced Feb 12, 2026)
+- **GitHub Pages Branch**: `gh-pages` (last synced Feb 12, 2026; not
+  currently served — see GitHub Pages below)
 
 ---
 
 ## COMPLETED
 
 ### GitHub Pages (Landing Page)
-- **Status**: LIVE
+- **Status**: NOT LIVE — the URL below returns 404 "Site not found"
 - **URL**: https://ibrahim-newaeon.github.io/Stratum-AI-Final-Updates-Dec-2025/
-- **Branch**: `gh-pages` (synced with latest main)
+- **Branch**: `gh-pages` — still holds the site (529 files: `landing-en`,
+  `landing-ar`, dashboard demos, client onboarding, glossary). The content
+  exists; it is simply not being served.
+- **Why**: GitHub Pages is not enabled on the repository. `GET /repos/.../pages`
+  returns 404, which is also why the `Deploy Docs to GitHub Pages` workflow
+  failed on every run from at least 2026-04-28 until it was removed in #641.
+- **To publish**: Settings → Pages → Source. This is a **private** repository,
+  so serving Pages requires a plan that supports it, and publishing would make
+  the branch contents publicly readable.
 - **Cost**: FREE
 
 ---
@@ -277,12 +286,18 @@ This file contains all real API keys and credentials. Copy values from there int
 
 | Environment | URL | Status |
 |-------------|-----|--------|
-| Landing (GitHub Pages) | https://ibrahim-newaeon.github.io/Stratum-AI-Final-Updates-Dec-2025/ | LIVE |
+| Landing (GitHub Pages) | https://ibrahim-newaeon.github.io/Stratum-AI-Final-Updates-Dec-2025/ | NOT LIVE — 404, Pages not enabled |
 | Frontend (Production) | https://stratumai.app | Pending Railway deploy |
 | Backend API (Production) | https://api.stratumai.app | Pending Railway deploy |
 | API Health Check | https://api.stratumai.app/health | Pending Railway deploy |
 
 ---
 
-**Last Updated:** 2026-02-13
-**Status:** Landing page LIVE, Railway deploy fixes applied (nginx config, PORT handling)
+**Last Updated:** 2026-08-15
+**Status:** Landing page NOT live (Pages not enabled — content still on
+`gh-pages`). Railway deploy fixes applied (nginx config, PORT handling).
+
+> The 2026-02-13 revision of this file recorded the landing page as LIVE. It
+> was not, and had not been for some time — the URL 404s. Verify a deployment
+> URL before recording it here; a deployment document that is confidently
+> wrong is worse than one that is out of date.
