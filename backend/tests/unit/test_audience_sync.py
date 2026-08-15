@@ -1352,8 +1352,13 @@ class TestAudienceSyncCredentialEncryption:
     delegates to the real method implementations.
     """
 
-    def _make_cred_mock(self, access_enc=None, refresh_enc=None):
-        """Create an object that behaves like AudienceSyncCredential for method testing."""
+    def _make_cred_mock(self, access_enc=None, refresh_enc=None, tenant_id=1):
+        """Create an object that behaves like AudienceSyncCredential for method testing.
+
+        ``tenant_id`` is part of the stand-in because the accessors encrypt
+        under the owning tenant's key — a double that omits a column the real
+        methods read is a double that stops standing in for the model.
+        """
 
         class FakeCred:
             _access_token_encrypted = access_enc
@@ -1363,6 +1368,7 @@ class TestAudienceSyncCredentialEncryption:
             set_refresh_token = AudienceSyncCredential.set_refresh_token
             get_refresh_token = AudienceSyncCredential.get_refresh_token
 
+        FakeCred.tenant_id = tenant_id
         return FakeCred()
 
     def test_set_access_token_none(self):
@@ -1376,16 +1382,23 @@ class TestAudienceSyncCredentialEncryption:
         assert cred._refresh_token_encrypted is None
 
     def test_set_access_token_encrypts(self):
-        cred = self._make_cred_mock()
-        with patch("app.core.security.encrypt_pii", return_value="encrypted_value"):
+        cred = self._make_cred_mock(tenant_id=42)
+        with patch(
+            "app.core.security.encrypt_pii", return_value="encrypted_value"
+        ) as enc:
             cred.set_access_token("plain_token")
         assert cred._access_token_encrypted == "encrypted_value"
+        # The owning tenant must reach the key derivation, not just the value.
+        # Without this assertion the test passes even if tenant_id is dropped,
+        # which is exactly the regression it exists to catch.
+        enc.assert_called_once_with("plain_token", 42)
 
     def test_get_access_token_decrypts(self):
-        cred = self._make_cred_mock(access_enc="encrypted_value")
-        with patch("app.core.security.decrypt_pii", return_value="plain_token"):
+        cred = self._make_cred_mock(access_enc="encrypted_value", tenant_id=42)
+        with patch("app.core.security.decrypt_pii", return_value="plain_token") as dec:
             result = cred.get_access_token()
         assert result == "plain_token"
+        dec.assert_called_once_with("encrypted_value", 42)
 
     def test_get_access_token_none_when_empty(self):
         cred = self._make_cred_mock(access_enc=None)
