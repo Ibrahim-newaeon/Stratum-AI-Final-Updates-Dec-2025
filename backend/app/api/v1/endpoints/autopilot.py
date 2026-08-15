@@ -27,7 +27,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/tenant/{tenant_id}/autopilot", tags=["autopilot"])
 
 
-def _dispatch_single_action(action_id: str, user_id: Optional[int]) -> None:
+def _dispatch_single_action(
+    action_id: str,
+    user_id: Optional[int],
+    tenant_id: Optional[int] = None,
+) -> None:
     """Dispatch execution of a single approved action to the Celery worker.
 
     Import is local to avoid a circular import at module load (the task module
@@ -38,7 +42,7 @@ def _dispatch_single_action(action_id: str, user_id: Optional[int]) -> None:
     try:
         from app.tasks.apply_actions_queue import apply_single_action
 
-        apply_single_action.delay(action_id, user_id)
+        apply_single_action.delay(action_id, user_id, tenant_id)
     except Exception:  # pragma: no cover - defensive, backstop sweep recovers
         logger.exception(
             "Failed to dispatch apply_single_action for action %s; "
@@ -47,7 +51,11 @@ def _dispatch_single_action(action_id: str, user_id: Optional[int]) -> None:
         )
 
 
-def _dispatch_rollback(action_id: str, user_id: Optional[int]) -> None:
+def _dispatch_rollback(
+    action_id: str,
+    user_id: Optional[int],
+    tenant_id: Optional[int] = None,
+) -> None:
     """Dispatch a rollback of an applied action to the Celery worker (TRUST-006).
 
     Local import to avoid a circular import at module load; broker failures are
@@ -57,7 +65,7 @@ def _dispatch_rollback(action_id: str, user_id: Optional[int]) -> None:
     try:
         from app.tasks.apply_actions_queue import rollback_action
 
-        rollback_action.delay(action_id, user_id)
+        rollback_action.delay(action_id, user_id, tenant_id)
     except Exception:  # pragma: no cover - defensive
         logger.exception("Failed to dispatch rollback_action for action %s", action_id)
 
@@ -414,7 +422,7 @@ async def queue_action(
         action = await service.approve_action(action.id, tenant_id, user_id or 0)
         # Auto-approved actions execute immediately (trust gate already passed).
         if action:
-            _dispatch_single_action(str(action.id), user_id)
+            _dispatch_single_action(str(action.id), user_id, tenant_id)
 
     return APIResponse(
         success=True,
@@ -459,7 +467,7 @@ async def approve_action(
         )
 
     # Dispatch execution now that the action is approved and committed.
-    _dispatch_single_action(str(action.id), user_id)
+    _dispatch_single_action(str(action.id), user_id, tenant_id)
 
     return APIResponse(
         success=True,
@@ -508,7 +516,7 @@ async def rollback_applied_action(
             detail=f"Only applied actions can be rolled back (status={action.status})",
         )
 
-    _dispatch_rollback(str(action.id), user_id)
+    _dispatch_rollback(str(action.id), user_id, tenant_id)
     return APIResponse(
         success=True,
         data={"action_id": str(action.id), "message": "Rollback initiated"},
@@ -595,7 +603,7 @@ async def confirm_soft_blocked_action(
         action.status = ActionStatus.APPROVED.value
         action.error = None
         await db.commit()
-        _dispatch_single_action(str(action.id), user_id)
+        _dispatch_single_action(str(action.id), user_id, tenant_id)
         return APIResponse(
             success=False,
             data={
@@ -620,7 +628,7 @@ async def confirm_soft_blocked_action(
     await db.refresh(action)
 
     # Dispatch execution now that the override is committed.
-    _dispatch_single_action(str(action.id), user_id)
+    _dispatch_single_action(str(action.id), user_id, tenant_id)
 
     return APIResponse(
         success=True,

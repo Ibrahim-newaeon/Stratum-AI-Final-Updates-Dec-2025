@@ -358,6 +358,40 @@ MCP_TOOLS = [
     },
 ]
 
+# Tools whose handlers cannot be answered safely from this server, because a
+# truthful answer needs a database session and a tenant context that the MCP
+# surface does not have. They are filtered out of get_tools() so an LLM is
+# never offered them, and their handlers fail closed if invoked directly.
+#
+# execute_action is included deliberately: do not advertise a mutation you
+# cannot gate. Actions belong in the audited autopilot queue.
+UNAVAILABLE_TOOLS = frozenset(
+    {
+        "get_signal_health",
+        "check_trust_gate",
+        "execute_action",
+    }
+)
+
+_UNAVAILABLE_REASON = (
+    "This tool needs a tenant-scoped database session to answer truthfully. "
+    "The MCP server has no session or tenant context, so it reports "
+    "unavailable rather than returning a placeholder that cannot be "
+    "distinguished from a real measurement."
+)
+
+
+def _unavailable(tool: str, **context: Any) -> dict[str, Any]:
+    """Structured refusal for a tool that cannot be answered safely."""
+    logger.warning("mcp_tool_unavailable", extra={"tool": tool, **context})
+    return {
+        "available": False,
+        "tool": tool,
+        "error": f"{tool} is not available over MCP",
+        "reason": _UNAVAILABLE_REASON,
+        **{k: v for k, v in context.items() if v is not None},
+    }
+
 
 # =============================================================================
 # MCP SERVER IMPLEMENTATION
@@ -441,8 +475,13 @@ class StratumMCPServer:
         )
 
     def get_tools(self) -> list[dict[str, Any]]:
-        """Get MCP tool definitions."""
-        return MCP_TOOLS
+        """Get MCP tool definitions.
+
+        Tools in ``UNAVAILABLE_TOOLS`` are withheld: an LLM should not be
+        offered a capability this server cannot deliver safely. Their handlers
+        still fail closed for any caller that invokes them directly.
+        """
+        return [tool for tool in MCP_TOOLS if tool["name"] not in UNAVAILABLE_TOOLS]
 
     async def handle_tool_call(
         self, tool_name: str, arguments: dict[str, Any]
@@ -563,34 +602,23 @@ class StratumMCPServer:
         return {"platform": platform, "date_range": date_range, "metrics": metrics}
 
     async def _handle_get_signal_health(self, args: dict[str, Any]) -> dict[str, Any]:
-        """Handle get_signal_health tool call."""
-        platform = args["platform"]
-        account_id = args["account_id"]
-        campaign_id = args.get("campaign_id")
+        """Handle get_signal_health tool call.
 
-        # This would calculate actual signal health from the adapter data
-        # For now, return a sample structure
+        Refuses rather than answering. Signal health is computed from the
+        per-tenant rollup in the database (FactSignalHealthDaily), and this
+        server has neither a session nor a tenant context — see
+        ``_UNAVAILABLE_REASON``.
 
-        return {
-            "platform": platform,
-            "account_id": account_id,
-            "campaign_id": campaign_id,
-            "signal_health": {
-                "overall_score": 78,
-                "components": {
-                    "emq_score": 82,
-                    "data_freshness": 95,
-                    "variance_stability": 65,
-                    "anomaly_score": 70,
-                },
-                "trust_gate_status": "HEALTHY",
-                "autopilot_allowed": True,
-                "recommendations": [
-                    "Consider implementing CAPI for higher EMQ",
-                    "Review variance in last 3 days",
-                ],
-            },
-        }
+        This previously returned a fixed score of 78 with
+        ``trust_gate_status: HEALTHY`` and ``autopilot_allowed: true``,
+        regardless of the real state. A fabricated safety signal is worse than
+        no signal: a caller cannot tell it apart from a real measurement.
+        """
+        return _unavailable(
+            "get_signal_health",
+            platform=args.get("platform"),
+            account_id=args.get("account_id"),
+        )
 
     async def _handle_get_emq(self, args: dict[str, Any]) -> dict[str, Any]:
         """Handle get_emq_scores tool call."""
@@ -654,59 +682,59 @@ class StratumMCPServer:
         }
 
     async def _handle_check_trust_gate(self, args: dict[str, Any]) -> dict[str, Any]:
-        """Handle check_trust_gate tool call."""
-        platform = args["platform"]
-        action_type = args["action_type"]
-        entity_id = args["entity_id"]
-        parameters = args.get("parameters", {})
+        """Handle check_trust_gate tool call.
 
-        # Would check actual trust gate
-        return {
-            "platform": platform,
-            "action_type": action_type,
-            "entity_id": entity_id,
-            "parameters": parameters,
-            "evaluation": {
-                "decision": "APPROVED",
-                "signal_health_score": 82,
-                "threshold": 70,
-                "reason": "Signal health above threshold",
-                "warnings": [],
-            },
-        }
+        Refuses rather than answering, for the same reason as
+        ``_handle_get_signal_health``: a real evaluation needs the tenant's
+        rollup and enforcement settings, and neither is reachable from here.
 
-    async def _handle_execute_action(self, args: dict[str, Any]) -> dict[str, Any]:
-        """Handle execute_action tool call."""
-        platform = args["platform"]
-        action_type = args["action_type"]
-        entity_type = args["entity_type"]
-        entity_id = args["entity_id"]
-        parameters = args["parameters"]
-        reason = args.get("reason", "")
-
-        if platform not in self._adapters:
-            return {"error": f"Platform {platform} not configured"}
-
-        # Create action object
-        from app.stratum.models import AutomationAction, Platform
-
-        action = AutomationAction(
-            platform=Platform(platform.upper()),
-            entity_type=entity_type,
-            entity_id=entity_id,
-            action_type=action_type,
-            parameters=parameters,
+        This previously returned ``decision: APPROVED`` with a fixed
+        ``signal_health_score`` of 82 for every call — an unconditional yes
+        dressed as a measurement. That inverts the entire point of the gate.
+        """
+        return _unavailable(
+            "check_trust_gate",
+            platform=args.get("platform"),
+            action_type=args.get("action_type"),
+            entity_id=args.get("entity_id"),
         )
 
-        # Execute through adapter
-        result = await self._adapters[platform].execute_action(action)
+    async def _handle_execute_action(self, args: dict[str, Any]) -> dict[str, Any]:
+        """Refuse to mutate an ad account from the MCP surface.
 
+        This previously built an ``AutomationAction`` and called
+        ``adapter.execute_action`` directly — no signal-health check, no
+        enforcement gate, no tenant scoping, and no audit row. Paired with a
+        ``check_trust_gate`` that always answered APPROVED, an LLM could ask
+        whether a budget change was safe, be told yes on fabricated data, and
+        then move real spend.
+
+        Executing safely requires a database session for the tenant's signal
+        rollup and enforcement settings, plus an audit trail. None of that is
+        available here, so this fails closed rather than approximating it.
+
+        The supported path is the audited queue: actions are proposed, gated by
+        ``enforce_before_execute`` and ``check_signal_health``, approved, and
+        applied by ``tasks.apply_actions_queue`` — which also records the
+        before-value needed for rollback.
+        """
+        logger.warning(
+            "mcp_execute_action_refused",
+            extra={
+                "platform": args.get("platform"),
+                "action_type": args.get("action_type"),
+                "entity_id": args.get("entity_id"),
+            },
+        )
         return {
-            "success": result.status == "completed",
-            "action_id": result.action_id,
-            "status": result.status,
-            "result": result.result,
-            "error": result.error_message if result.status == "failed" else None,
+            "success": False,
+            "error": "execute_action is not available over MCP",
+            "reason": (
+                "Mutating an ad account requires a trust-gate evaluation, "
+                "enforcement check and audit trail, none of which this server "
+                "can perform. Propose the action through the autopilot queue "
+                "instead: POST /api/v1/autopilot/{tenant_id}/actions."
+            ),
         }
 
     async def _handle_track_conversion(self, args: dict[str, Any]) -> dict[str, Any]:
