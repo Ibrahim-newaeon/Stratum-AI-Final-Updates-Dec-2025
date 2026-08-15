@@ -631,21 +631,33 @@ jobs:
       - name: Validate nginx configs
         run: |
           set -euo pipefail
-          # The edge config expects TLS material that is provisioned on the
-          # host and never committed. Generate a throwaway pair so nginx can
-          # parse the ssl_* directives; nothing here is used outside this job.
+          # The configs expect TLS material provisioned on the host and never
+          # committed. Generate a throwaway pair so nginx can parse the ssl_*
+          # directives; nothing here is used outside this job.
           mkdir -p ci-certs
           openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
             -keyout ci-certs/origin.key -out ci-certs/origin.pem \
             -subj "/CN=api.stratumai.app" 2>/dev/null
           cp ci-certs/origin.pem ci-certs/cloudflare-origin-pull-ca.pem
+          # beta.conf reads certbot paths rather than /etc/nginx/certs.
+          mkdir -p ci-letsencrypt/live/beta.stratum-ai.com
+          cp ci-certs/origin.pem ci-letsencrypt/live/beta.stratum-ai.com/fullchain.pem
+          cp ci-certs/origin.key ci-letsencrypt/live/beta.stratum-ai.com/privkey.pem
 
+          # nginx resolves `server <host>:<port>` in an upstream block at
+          # PARSE time, so `server api:8000` aborts with "host not found in
+          # upstream" wherever the compose network does not exist — including
+          # here. Mapping the service names to loopback lets the parser finish;
+          # nothing is connected to, so the target is irrelevant.
           for conf in nginx/stratumai.conf nginx/beta.conf; do
             echo "::group::nginx -t $conf"
             docker run --rm \
+              --add-host api:127.0.0.1 \
+              --add-host frontend:127.0.0.1 \
               -v "$PWD/$conf:/etc/nginx/conf.d/default.conf:ro" \
               -v "$PWD/nginx/proxy_params.conf:/etc/nginx/conf.d/proxy_params.conf:ro" \
               -v "$PWD/ci-certs:/etc/nginx/certs:ro" \
+              -v "$PWD/ci-letsencrypt:/etc/letsencrypt:ro" \
               nginx:1.27-alpine nginx -t
             echo "::endgroup::"
           done
