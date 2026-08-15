@@ -79,9 +79,7 @@ def _ensure_wide_version_table(connection: Connection) -> None:
         "version_num VARCHAR(255) NOT NULL, "
         "CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num))"
     )
-    widen_sql = (
-        "ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(255)"
-    )
+    widen_sql = "ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(255)"
 
     connection.execute(text(create_sql))
     connection.execute(text(widen_sql))
