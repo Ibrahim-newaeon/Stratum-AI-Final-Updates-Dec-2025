@@ -79,7 +79,18 @@ async def test_valid_access_token_passes_through():
 
 
 @pytest.mark.asyncio
-async def test_redis_outage_fails_open_but_allows():
+async def test_redis_outage_fails_closed_with_503():
+    """A revocation check that cannot run must not be treated as a pass.
+
+    This previously asserted the opposite — that the request was allowed —
+    reasoning that a blacklist outage should not become a total auth outage.
+    That trade never paid off: get_current_user already fails closed with a
+    503 on the same error, so a Redis outage 503s the ~345 routes taking that
+    dependency regardless. All the open path added was a window where a
+    revoked token still worked on the ~422 routes that authenticate from
+    request.state alone — among them the autopilot endpoints that approve and
+    execute budget changes.
+    """
     token = create_access_token(
         subject=9, additional_claims={"tenant_id": 1, "role": "admin"}
     )
@@ -89,6 +100,7 @@ async def test_redis_outage_fails_open_but_allows():
         new=AsyncMock(side_effect=ConnectionError("redis down")),
     ):
         resp = await _mw().dispatch(_request(token), call_next)
-    # Blacklist unavailable must not become a total auth outage.
-    assert resp.status_code == 200
-    call_next.assert_awaited_once()
+
+    assert resp.status_code == 503
+    # The request must not reach the endpoint.
+    call_next.assert_not_awaited()
