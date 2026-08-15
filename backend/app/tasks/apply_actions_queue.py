@@ -17,7 +17,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from celery import shared_task
-from sqlalchemy import and_, select, update
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.autopilot.service import SAFE_ACTIONS, ActionStatus, ActionType
@@ -25,11 +25,7 @@ from app.core.config import settings
 from app.core.websocket import publish_action_status_update
 from app.db.session import async_session_factory
 from app.features.flags import AutopilotLevel, get_autopilot_caps
-from app.models.trust_layer import (
-    FactActionsQueue,
-    FactSignalHealthDaily,
-    SignalHealthStatus,
-)
+from app.models.trust_layer import FactActionsQueue
 
 logger = logging.getLogger(__name__)
 
@@ -1131,11 +1127,7 @@ async def _reset_async_engine() -> None:
     await dispose_stale_async_pool()
 
 
-# Autopilot must not execute on stale/absent signal data. The daily rollup
-# writes PRIOR-day rows (today has no rows during the live day), so we read the
-# most recent rollup within this freshness window and fail CLOSED if there is
-# none. Set SIGNAL_HEALTH_FRESHNESS_DAYS to tune.
-SIGNAL_HEALTH_FRESHNESS_DAYS = 2
+# Signal-health freshness now lives with the verdict, in app.autopilot.gate.
 
 
 async def claim_action_for_execution(db: AsyncSession, action_id) -> bool:
@@ -1170,40 +1162,14 @@ async def check_signal_health(db: AsyncSession, tenant_id: int) -> bool:
     missing data — the core trust-gate guarantee. (Previously this returned
     True on no-data, so during the normal live day — when today has no rows
     yet — the gate was a no-op and approved actions executed unverified.)
+
+    The verdict itself now lives in ``app.autopilot.gate`` so that every
+    execution path shares one implementation instead of re-deriving it. This
+    wrapper stays for its existing callers and tests.
     """
-    cutoff = datetime.now(timezone.utc).date() - timedelta(
-        days=SIGNAL_HEALTH_FRESHNESS_DAYS
-    )
-    result = await db.execute(
-        select(FactSignalHealthDaily).where(
-            and_(
-                FactSignalHealthDaily.tenant_id == tenant_id,
-                FactSignalHealthDaily.date >= cutoff,
-            )
-        )
-    )
-    records = result.scalars().all()
+    from app.autopilot.gate import evaluate_execution_gate
 
-    if not records:
-        # Fail closed — no recent signal data means we do NOT execute.
-        logger.warning(
-            "signal_health_no_recent_data_blocking",
-            extra={
-                "tenant_id": tenant_id,
-                "freshness_days": SIGNAL_HEALTH_FRESHNESS_DAYS,
-            },
-        )
-        return False
-
-    # Evaluate the most recent rollup date we have (per-platform rows share it).
-    latest_date = max(record.date for record in records)
-    for record in records:
-        if record.date != latest_date:
-            continue
-        if record.status in (SignalHealthStatus.DEGRADED, SignalHealthStatus.CRITICAL):
-            return False
-
-    return True
+    return (await evaluate_execution_gate(db, tenant_id)).allowed
 
 
 async def get_tenant_autopilot_level(db: AsyncSession, tenant_id: int) -> int:

@@ -59,6 +59,8 @@ Execution Modes
 """
 
 import asyncio
+import hashlib
+import json
 import logging
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -124,6 +126,62 @@ def async_task(func):
 # ACTION EXECUTION TASKS
 # ============================================================================
 
+# How long a claimed action stays claimed. Long enough that a retry storm
+# cannot slip past it, short enough that a genuinely new but identical action
+# (an operator applying the same +10% twice, deliberately) is not blocked
+# forever.
+EXECUTION_CLAIM_TTL_SECONDS = 3600
+EXECUTION_CLAIM_PREFIX = "automation_exec_claim:"
+
+
+def _idempotency_key(action_data: dict[str, Any]) -> str:
+    """Stable key for one logical action.
+
+    Prefers an explicit action_id when the caller supplies one. Otherwise
+    derives a key from the fields that make the mutation what it is, so a
+    retry of the same payload collides while a genuinely different action
+    does not.
+    """
+    explicit = action_data.get("action_id") or action_data.get("execution_id")
+    if explicit:
+        return f"{EXECUTION_CLAIM_PREFIX}{explicit}"
+
+    payload = json.dumps(
+        {
+            "tenant_id": action_data.get("tenant_id"),
+            "platform": action_data.get("platform"),
+            "entity_type": action_data.get("entity_type"),
+            "entity_id": action_data.get("entity_id"),
+            "action_type": action_data.get("action_type"),
+            "parameters": action_data.get("parameters"),
+        },
+        sort_keys=True,
+        default=str,
+    )
+    digest = hashlib.sha256(payload.encode()).hexdigest()[:32]
+    return f"{EXECUTION_CLAIM_PREFIX}{digest}"
+
+
+async def _claim_execution(key: str) -> bool:
+    """Claim an action for execution. False means someone already has it.
+
+    Fails CLOSED: if the claim cannot be recorded, the action is not executed.
+    An unverifiable claim is exactly the case where a retry would double-apply,
+    so refusing is the safe direction — the action stays pending rather than
+    risking a second budget change.
+    """
+    from app.core.security import get_redis_pool
+
+    try:
+        client = await get_redis_pool()
+        return bool(await client.set(key, "1", ex=EXECUTION_CLAIM_TTL_SECONDS, nx=True))
+    except (ConnectionError, TimeoutError, OSError) as exc:
+        logger.error(
+            "execution_claim_unavailable",
+            extra={"key": key, "error": str(exc)},
+        )
+        return False
+
 
 @shared_task(bind=True, max_retries=3)
 @async_task
@@ -163,6 +221,22 @@ async def execute_action(
         "status": "pending",
     }
 
+    # Single-flight guard. This task carries max_retries=3 and mutates a live
+    # ad account, but takes a plain dict rather than a queue row — so unlike
+    # apply_actions_queue there is no ActionStatus transition to stop a retry
+    # re-applying a change that already landed. Three retries of a +20% budget
+    # increase compound. Claim the action first; a duplicate is reported as
+    # skipped rather than executed twice.
+    idempotency_key = _idempotency_key(action_data)
+    claimed = await _claim_execution(idempotency_key)
+    if not claimed:
+        result["status"] = "skipped"
+        result["reason"] = "Action already executed or in flight (idempotency guard)"
+        logger.warning(
+            f"Action {execution_id} skipped: duplicate of {idempotency_key}"
+        )
+        return result
+
     try:
         platform = Platform(action_data["platform"])
 
@@ -177,25 +251,34 @@ async def execute_action(
             signal_health_at_creation=action_data.get("signal_health_at_creation", 0),
         )
 
-        # Final signal health check (ALWAYS enforced - no bypass)
-        # Default to 0 (fail-safe) when signal health data is missing
-        current_health = action_data.get("current_signal_health")
-        if current_health is None:
+        # Final gate (ALWAYS enforced - no bypass).
+        #
+        # This used to read `current_signal_health` straight out of action_data
+        # and block only below 40. Two problems: the score was whatever the
+        # caller put in the dict rather than anything measured, and 40 admitted
+        # the 40-69 DEGRADED band that policy says to hold ("Never auto-execute
+        # when signal_health < 70" — CLAUDE.md). It now measures the tenant's
+        # own rollup through the shared gate, which also applies the emergency
+        # freeze this path never checked.
+        tenant_id = action_data.get("tenant_id")
+        if tenant_id is None:
             result["status"] = "blocked"
             result["reason"] = (
-                "Signal health data missing - cannot execute without health verification"
+                "tenant_id missing - cannot verify signal health without it"
             )
-            logger.warning(f"Action {execution_id} blocked: missing signal health data")
+            logger.warning(f"Action {execution_id} blocked: no tenant_id in payload")
             return result
 
-        if current_health < 40:
+        from app.autopilot.gate import evaluate_execution_gate
+        from app.db.session import async_session_factory
+
+        async with async_session_factory() as gate_db:
+            decision = await evaluate_execution_gate(gate_db, tenant_id)
+
+        if not decision.allowed:
             result["status"] = "blocked"
-            result["reason"] = (
-                f"Signal health critical ({current_health}), action blocked"
-            )
-            logger.warning(
-                f"Action {execution_id} blocked due to critical signal health"
-            )
+            result["reason"] = decision.reason
+            logger.warning(f"Action {execution_id} blocked: {decision.reason}")
             return result
 
         # Initialize adapter and execute
