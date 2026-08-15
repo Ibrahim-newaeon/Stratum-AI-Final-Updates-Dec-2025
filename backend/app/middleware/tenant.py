@@ -91,7 +91,27 @@ class TenantMiddleware(BaseHTTPMiddleware):
                     "Invalid token type",
                     "This endpoint requires an access token",
                 )
-            if await self._is_revoked(jwt_payload, request):
+            try:
+                revoked = await self._is_revoked(jwt_payload, request)
+            except (ConnectionError, TimeoutError, OSError) as exc:
+                # Fail closed, matching app.auth.deps.get_current_user. A 503
+                # says "try again", where allowing the request would silently
+                # stop enforcing revocation.
+                logger.error(
+                    "token_blacklist_check_unavailable",
+                    error=str(exc),
+                    detail="Rejecting request; revocation cannot be verified",
+                )
+                return JSONResponse(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    content={
+                        "success": False,
+                        "error": "Authentication service temporarily unavailable",
+                        "message": "Please retry in a moment.",
+                    },
+                )
+
+            if revoked:
                 return self._reject(
                     "Token revoked",
                     "Your session has ended. Please sign in again.",
@@ -170,23 +190,32 @@ class TenantMiddleware(BaseHTTPMiddleware):
     async def _is_revoked(self, payload: dict, request: Request) -> bool:
         """Return True if this token has been blacklisted (AUTH-001).
 
-        Fails OPEN on Redis unavailability: a blacklist outage must not turn
-        into a total auth outage, and tokens still expire on their own. The
-        gap is logged so the degradation is visible rather than silent.
+        Fails CLOSED on Redis unavailability by letting the error propagate;
+        the caller turns it into a 503.
+
+        This used to fail open, reasoning that a blacklist outage must not
+        become a total auth outage. That reasoning did not hold, because
+        ``app.auth.deps.get_current_user`` already fails closed with a 503 on
+        the same error. Endpoints are split between the two: roughly 345 routes
+        take that dependency, while roughly 422 authenticate from
+        ``request.state`` alone — including the autopilot endpoints that
+        approve and execute budget changes, since there is no router-level auth
+        dependency.
+
+        So failing open bought no availability the system actually got: a Redis
+        outage already 503s half the API. What it bought was a window in which
+        a revoked access token kept working on the endpoints where that matters
+        most, for up to ``access_token_expire_minutes`` (30). Offboard a user,
+        force a sign-out, have Redis blip, and they could still approve
+        autopilot actions.
+
+        Both enforcement points now agree: no revocation check, no request.
         """
         from app.core.security import is_token_blacklisted
 
         auth_header = request.headers.get("Authorization", "")
         token = auth_header.split(" ", 1)[1] if " " in auth_header else ""
-        try:
-            return await is_token_blacklisted(payload, token)
-        except (ConnectionError, TimeoutError, OSError) as exc:
-            logger.warning(
-                "token_blacklist_check_unavailable",
-                error=str(exc),
-                detail="Allowing request; revocation not enforced this hop",
-            )
-            return False
+        return await is_token_blacklisted(payload, token)
 
     def _is_public_endpoint(self, path: str) -> bool:
         """Check if the endpoint is public (no tenant context needed)."""
