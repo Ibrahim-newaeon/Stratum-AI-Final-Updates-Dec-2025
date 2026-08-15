@@ -74,19 +74,17 @@ def _ensure_wide_version_table(connection: Connection) -> None:
     ourselves first means Alembic finds it already present and leaves it alone.
     The ALTER covers databases stamped before this fix.
     """
-    connection.execute(
-        text(
-            "CREATE TABLE IF NOT EXISTS alembic_version ("
-            "version_num VARCHAR(255) NOT NULL, "
-            "CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num))"
-        )
+    create_sql = (
+        "CREATE TABLE IF NOT EXISTS alembic_version ("
+        "version_num VARCHAR(255) NOT NULL, "
+        "CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num))"
     )
-    connection.execute(
-        text(
-            "ALTER TABLE alembic_version "
-            "ALTER COLUMN version_num TYPE VARCHAR(255)"
-        )
+    widen_sql = (
+        "ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(255)"
     )
+
+    connection.execute(text(create_sql))
+    connection.execute(text(widen_sql))
     connection.commit()
 
 
