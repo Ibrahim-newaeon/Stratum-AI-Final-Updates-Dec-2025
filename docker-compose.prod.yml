@@ -84,10 +84,14 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1G
+          # 1G killed every uvicorn worker on startup. Four workers each import
+          # the app and load the ML models, and the cgroup OOM killer took them
+          # one after another — uvicorn logged only "Child process died", with
+          # no traceback, so the cause was only visible in dmesg.
+          memory: 3G
           cpus: '2.0'
         reservations:
-          memory: 512M
+          memory: 1G
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -117,7 +121,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1G
+          # Same reasoning as api: celery forks load the same ML models.
+          memory: 2G
           cpus: '2.0'
         reservations:
           memory: 512M
