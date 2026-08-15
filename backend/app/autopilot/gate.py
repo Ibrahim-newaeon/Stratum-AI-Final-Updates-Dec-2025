@@ -101,25 +101,16 @@ def _decide_from_records(records, tenant_id: int) -> GateDecision:
     return GateDecision(allowed=True)
 
 
-async def evaluate_execution_gate(db: AsyncSession, tenant_id: int) -> GateDecision:
-    """Decide whether automation may execute for *tenant_id*.
+async def evaluate_signal_health(db: AsyncSession, tenant_id: int) -> GateDecision:
+    """Signal-health verdict only — deliberately no freeze check.
 
-    Checks the emergency freeze first, then signal health. Fails closed on any
-    missing data.
+    Kept separate because callers that already consult the freeze themselves
+    need exactly this and nothing more. Folding the freeze in here silently
+    widened what ``check_signal_health`` does: its unit tests mock a single
+    ``db.execute``, so the extra query returned a truthy MagicMock and blocked
+    healthy tenants. A function that says it checks signal health should issue
+    one query and answer that question.
     """
-    from app.models.autopilot import TenantEnforcementSettings
-
-    frozen = (
-        await db.execute(
-            select(TenantEnforcementSettings.autopilot_frozen).where(
-                TenantEnforcementSettings.tenant_id == tenant_id
-            )
-        )
-    ).scalar_one_or_none()
-
-    if bool(frozen):
-        return _blocked("Autopilot is frozen for this tenant", tenant_id)
-
     records = (
         (
             await db.execute(
@@ -136,6 +127,28 @@ async def evaluate_execution_gate(db: AsyncSession, tenant_id: int) -> GateDecis
     )
 
     return _decide_from_records(records, tenant_id)
+
+
+async def evaluate_execution_gate(db: AsyncSession, tenant_id: int) -> GateDecision:
+    """Full gate: emergency freeze, then signal health. Fails closed on both.
+
+    For callers that own the whole decision. Paths that already check the
+    freeze separately should call :func:`evaluate_signal_health`.
+    """
+    from app.models.autopilot import TenantEnforcementSettings
+
+    frozen = (
+        await db.execute(
+            select(TenantEnforcementSettings.autopilot_frozen).where(
+                TenantEnforcementSettings.tenant_id == tenant_id
+            )
+        )
+    ).scalar_one_or_none()
+
+    if bool(frozen):
+        return _blocked("Autopilot is frozen for this tenant", tenant_id)
+
+    return await evaluate_signal_health(db, tenant_id)
 
 
 def evaluate_execution_gate_sync(db: Session, tenant_id: int) -> GateDecision:

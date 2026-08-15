@@ -1167,9 +1167,12 @@ async def check_signal_health(db: AsyncSession, tenant_id: int) -> bool:
     execution path shares one implementation instead of re-deriving it. This
     wrapper stays for its existing callers and tests.
     """
-    from app.autopilot.gate import evaluate_execution_gate
+    from app.autopilot.gate import evaluate_signal_health
 
-    return (await evaluate_execution_gate(db, tenant_id)).allowed
+    # Signal health only — this function's callers check the freeze themselves
+    # via is_tenant_frozen, and widening it to the full gate would change its
+    # contract (and did, briefly).
+    return (await evaluate_signal_health(db, tenant_id)).allowed
 
 
 async def get_tenant_autopilot_level(db: AsyncSession, tenant_id: int) -> int:
