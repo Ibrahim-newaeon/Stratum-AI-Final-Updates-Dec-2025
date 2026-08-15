@@ -60,6 +60,10 @@ services:
     environment:
       - APP_ENV=production
       - DEBUG=false
+      # docker-compose.yml defaults this to true for local work, and Settings
+      # rejects app_env=production with it on — so without this override the
+      # production stack cannot start at all. Found on the first real deploy.
+      - USE_MOCK_AD_DATA=false
       - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-stratum_ai}?prepared_statement_cache_size=0
       - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-stratum_ai}
@@ -97,6 +101,7 @@ services:
     restart: always
     environment:
       - APP_ENV=production
+      - USE_MOCK_AD_DATA=false
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-stratum_ai}?prepared_statement_cache_size=0
       - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-stratum_ai}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/0
