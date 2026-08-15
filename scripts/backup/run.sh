@@ -94,9 +94,22 @@ prune_old() {
     # cycle — retention silently unenforced while backups accumulated.
     # Epoch arithmetic works on both: busybox takes -D %s, GNU takes @epoch.
     cutoff_epoch=$(( $(date -u +%s) - BACKUP_RETENTION_DAYS * 86400 ))
-    cutoff="$(date -u -D %s -d "$cutoff_epoch" +%Y-%m-%d 2>/dev/null \
-              || date -u -d "@$cutoff_epoch" +%Y-%m-%d 2>/dev/null)"
+    cutoff="$(date -u -d "@$cutoff_epoch" +%Y-%m-%d 2>/dev/null)"
+
+    # Only the @epoch form is used. busybox also accepts `-D %s -d <epoch>`,
+    # but it ignores the value and returns TODAY while exiting 0 — so trying it
+    # first meant the cutoff was always the current date, no error was raised,
+    # and a 30-day retention would have deleted everything but the same day's
+    # backups. A wrong answer that exits 0 is worse than a failure.
     [ -z "$cutoff" ] && { log "WARNING: cannot compute cutoff; skipping prune"; return 0; }
+
+    # Refuse a cutoff that is not actually in the past, whatever produced it.
+    today="$(date -u +%Y-%m-%d)"
+    if [ "$cutoff" \> "$today" ] || [ "$cutoff" = "$today" ]; then
+        log "WARNING: cutoff $cutoff is not in the past; skipping prune"
+        return 0
+    fi
+
     log "pruning objects older than $cutoff"
 
     aws s3 ls "s3://${R2_BUCKET}/postgres/" --endpoint-url "$R2_ENDPOINT" 2>/dev/null \
