@@ -482,6 +482,13 @@ function SyncHistoryPanel({ audienceId, audienceName, onClose }: SyncHistoryPane
                   </div>
                 )}
 
+                {job.profiles_suppressed > 0 && (
+                  <div className="mt-2 text-sm text-warning">
+                    {job.profiles_suppressed.toLocaleString()} profiles withheld — no
+                    advertising consent
+                  </div>
+                )}
+
                 {job.error_message && (
                   <div className="mt-2 p-2 rounded bg-red-500/10 text-red-500 text-sm">
                     {job.error_message}

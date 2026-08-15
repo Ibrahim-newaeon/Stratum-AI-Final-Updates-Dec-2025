@@ -93,6 +93,10 @@ class SyncJobResponse(BaseModel):
     profiles_added: int
     profiles_removed: int
     profiles_failed: int
+    # Segment members withheld for lack of advertising consent. Surfaced so a
+    # smaller-than-expected audience reads as a consent decision rather than a
+    # broken segment.
+    profiles_suppressed: int = 0
     error_message: Optional[str]
     triggered_by: Optional[str]
     created_at: datetime

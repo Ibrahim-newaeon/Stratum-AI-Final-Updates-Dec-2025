@@ -2450,6 +2450,8 @@ export interface SyncJob {
   profiles_added: number;
   profiles_removed: number;
   profiles_failed: number;
+  /** Segment members withheld from the platform for lack of advertising consent. */
+  profiles_suppressed: number;
   error_message: string | null;
   triggered_by: string | null;
   created_at: string;

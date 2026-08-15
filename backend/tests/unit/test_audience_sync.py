@@ -1091,6 +1091,7 @@ class TestAudienceSyncServiceExecuteSyncJob:
         # Mock _get_segment_profiles to return empty
         service._get_segment_profiles = AsyncMock(return_value=[])
         service._profiles_to_audience_users = AsyncMock(return_value=[])
+        service._count_consent_suppressed = AsyncMock(return_value=0)
 
         with pytest.raises(ValueError, match="No platform audience ID"):
             await service._execute_sync_job(
@@ -1112,6 +1113,7 @@ class TestAudienceSyncServiceExecuteSyncJob:
 
         service._get_segment_profiles = AsyncMock(return_value=[])
         service._profiles_to_audience_users = AsyncMock(return_value=[])
+        service._count_consent_suppressed = AsyncMock(return_value=0)
 
         with pytest.raises(ValueError, match="No platform audience ID"):
             await service._execute_sync_job(
@@ -1133,6 +1135,7 @@ class TestAudienceSyncServiceExecuteSyncJob:
 
         service._get_segment_profiles = AsyncMock(return_value=[])
         service._profiles_to_audience_users = AsyncMock(return_value=[])
+        service._count_consent_suppressed = AsyncMock(return_value=0)
 
         with pytest.raises(ValueError, match="No platform audience ID"):
             await service._execute_sync_job(
@@ -1153,6 +1156,7 @@ class TestAudienceSyncServiceExecuteSyncJob:
 
         service._get_segment_profiles = AsyncMock(return_value=[])
         service._profiles_to_audience_users = AsyncMock(return_value=[])
+        service._count_consent_suppressed = AsyncMock(return_value=0)
 
         with pytest.raises(ValueError, match="Unknown operation"):
             await service._execute_sync_job(
@@ -1173,6 +1177,7 @@ class TestAudienceSyncServiceExecuteSyncJob:
 
         service._get_segment_profiles = AsyncMock(return_value=[])
         service._profiles_to_audience_users = AsyncMock(return_value=[])
+        service._count_consent_suppressed = AsyncMock(return_value=0)
 
         mock_connector = AsyncMock()
         mock_connector.create_audience.return_value = AudienceSyncResult(
@@ -1206,6 +1211,7 @@ class TestAudienceSyncServiceExecuteSyncJob:
 
         service._get_segment_profiles = AsyncMock(return_value=[])
         service._profiles_to_audience_users = AsyncMock(return_value=[])
+        service._count_consent_suppressed = AsyncMock(return_value=0)
 
         mock_connector = AsyncMock()
         mock_connector.create_audience.return_value = AudienceSyncResult(
@@ -1237,6 +1243,7 @@ class TestAudienceSyncServiceExecuteSyncJob:
 
         service._get_segment_profiles = AsyncMock(return_value=[])
         service._profiles_to_audience_users = AsyncMock(return_value=[])
+        service._count_consent_suppressed = AsyncMock(return_value=0)
 
         mock_connector = AsyncMock()
         mock_connector.create_audience.return_value = AudienceSyncResult(

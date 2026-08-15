@@ -27,6 +27,50 @@ This document covers error handling, edge cases, and known limitations for the A
 
 ---
 
+### 1b. Segment Members Without Advertising Consent
+
+**Scenario**: A segment matches 10,000 profiles but only 400 hold a live `ads`
+or `all` consent.
+
+**Behavior**:
+- 400 profiles are sent; the other 9,600 are withheld
+- `profiles_total` = 400, `profiles_suppressed` = 9,600
+- The job still completes successfully — a lawful refusal is not a failure, so
+  the count is kept separate from `profiles_failed`
+- `audience_sync_consent_suppressed` logged with the segment and both counts
+
+**Why this looks like a bug and isn't**: a tenant who has never populated
+`cdp_consents` syncs **nothing**, because absent consent is treated as refusal
+(GDPR consent is affirmative). The `profiles_suppressed` counter — rendered in
+the sync-history UI — is what distinguishes this from a broken segment. Read it
+before investigating the segment rules.
+
+**Resolution**: populate consent through the event-ingestion path (`consent` on
+the event payload), which upserts `cdp_consents` per type.
+
+---
+
+### 1c. Erased Profile Still Present on a Platform
+
+**Scenario**: `DELETE /cdp/profiles/{id}` succeeds but the response carries
+`platform_removals_failed > 0`.
+
+**Behavior**:
+- Local erasure completed — it is never blocked by a platform outage
+- One or more `remove_users` calls failed (expired credential, platform 5xx)
+- Each failure is in `platform_removals[]` with the reason, logged as
+  `gdpr_platform_erasure_failed`, and persisted to `audit_logs`
+
+**Why it matters**: the subject's hashed identifier is still in that custom
+audience. Local deletion alone is not erasure under Art. 17(2).
+
+**Resolution**: fix the credential and remove the identifier from the named
+audience manually — the profile's hashes are gone locally, so the call cannot
+be replayed from Stratum. Prevention: keep sync credentials valid; an audience
+whose credentials have lapsed cannot be erased from.
+
+---
+
 ### 2. No Valid Identifiers
 
 **Scenario**: Segment has profiles but none with email/phone/MAID.

@@ -726,6 +726,21 @@ class ProfileDeletionResponse(BaseModel):
     consents_deleted: int
     segment_memberships_deleted: int
     deletion_timestamp: datetime
+    platform_removals: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description=(
+            "Per-audience outcome of removing this profile from the ad "
+            "platforms. Each entry carries platform, ad_account_id, "
+            "platform_audience_id, removed and error."
+        ),
+    )
+    platform_removals_failed: int = Field(
+        0,
+        description=(
+            "Audiences the profile could not be removed from. Non-zero means "
+            "erasure is incomplete off-platform and needs a retry."
+        ),
+    )
 
 
 # =============================================================================

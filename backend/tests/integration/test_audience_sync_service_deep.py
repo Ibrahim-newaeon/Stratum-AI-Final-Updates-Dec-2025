@@ -41,10 +41,12 @@ from app.models.audience_sync import (
     SyncStatus,
 )
 from app.models.cdp import (
+    CDPConsent,
     CDPProfile,
     CDPProfileIdentifier,
     CDPSegment,
     CDPSegmentMembership,
+    ConsentType,
 )
 from app.services.cdp.audience_sync.meta_connector import MetaAudienceConnector
 from app.services.cdp.audience_sync.service import AudienceSyncService
@@ -71,9 +73,22 @@ async def _seed_segment(db, tenant_id, name="High Value") -> CDPSegment:
 
 
 async def _seed_profile(
-    db, tenant_id, segment, identifiers=(), membership_active=True
+    db,
+    tenant_id,
+    segment,
+    identifiers=(),
+    membership_active=True,
+    consent=ConsentType.ADS.value,
+    consent_granted=True,
 ) -> CDPProfile:
-    """Create a profile with identifiers and a segment membership."""
+    """Create a profile with identifiers, a segment membership, and consent.
+
+    ``consent`` defaults to a granted ADS consent because that is the only
+    state in which a profile is syncable — the tests that predate the consent
+    gate are all about batching, ordering and tenant scoping, and would
+    otherwise be asserting against an empty set. Pass ``consent=None`` for the
+    no-record case or ``consent_granted=False`` for the revoked case.
+    """
     profile = CDPProfile(tenant_id=tenant_id, profile_data={}, computed_traits={})
     db.add(profile)
     await db.flush()
@@ -95,6 +110,19 @@ async def _seed_profile(
             is_active=membership_active,
         )
     )
+    if consent is not None:
+        now = datetime.now(UTC)
+        db.add(
+            CDPConsent(
+                tenant_id=tenant_id,
+                profile_id=profile.id,
+                consent_type=consent,
+                granted=consent_granted,
+                granted_at=now if consent_granted else None,
+                revoked_at=None if consent_granted else now,
+                source="test",
+            )
+        )
     await db.flush()
     return profile
 
@@ -822,6 +850,278 @@ class TestQuerySurfaces:
         assert google["ad_accounts"] == [
             {"ad_account_id": "goog_1", "ad_account_name": "google account"}
         ]
+
+
+# =============================================================================
+# Consent gating (GDPR-01)
+# =============================================================================
+
+
+class TestConsentGate:
+    """Only profiles holding advertising consent may leave for a platform.
+
+    The consent record already existed and was already written on ingest; it
+    was simply never read on the way out. These tests pin the four states that
+    decide whether a person's hashed email is handed to Meta.
+    """
+
+    async def test_no_consent_record_is_withheld(self, db_session, test_tenant, svc):
+        tenant_id = test_tenant["id"]
+        segment = await _seed_segment(db_session, tenant_id)
+        await _seed_profile(
+            db_session,
+            tenant_id,
+            segment,
+            [("email", "silent@example.com")],
+            consent=None,
+        )
+
+        assert await svc._get_segment_profiles(segment.id) == []
+        assert await svc._count_consent_suppressed(segment.id) == 1
+
+    async def test_revoked_consent_is_withheld(self, db_session, test_tenant, svc):
+        tenant_id = test_tenant["id"]
+        segment = await _seed_segment(db_session, tenant_id)
+        await _seed_profile(
+            db_session,
+            tenant_id,
+            segment,
+            [("email", "optout@example.com")],
+            consent_granted=False,
+        )
+
+        assert await svc._get_segment_profiles(segment.id) == []
+        assert await svc._count_consent_suppressed(segment.id) == 1
+
+    async def test_ads_and_all_consent_both_permit_sync(
+        self, db_session, test_tenant, svc
+    ):
+        tenant_id = test_tenant["id"]
+        segment = await _seed_segment(db_session, tenant_id)
+        ads = await _seed_profile(
+            db_session,
+            tenant_id,
+            segment,
+            [("email", "ads@example.com")],
+            consent=ConsentType.ADS.value,
+        )
+        blanket = await _seed_profile(
+            db_session,
+            tenant_id,
+            segment,
+            [("email", "all@example.com")],
+            consent=ConsentType.ALL.value,
+        )
+
+        fetched = await svc._get_segment_profiles(segment.id)
+        assert {p.id for p in fetched} == {ads.id, blanket.id}
+        assert await svc._count_consent_suppressed(segment.id) == 0
+
+    async def test_unrelated_consent_type_does_not_permit_sync(
+        self, db_session, test_tenant, svc
+    ):
+        """Consenting to analytics is not consenting to be sold to Meta."""
+        tenant_id = test_tenant["id"]
+        segment = await _seed_segment(db_session, tenant_id)
+        await _seed_profile(
+            db_session,
+            tenant_id,
+            segment,
+            [("email", "analytics-only@example.com")],
+            consent=ConsentType.ANALYTICS.value,
+        )
+
+        assert await svc._get_segment_profiles(segment.id) == []
+        assert await svc._count_consent_suppressed(segment.id) == 1
+
+    async def test_another_tenants_consent_does_not_leak(
+        self, db_session, test_tenant, svc
+    ):
+        """The consent subquery is tenant-scoped, like every other CDP read."""
+        tenant_id = test_tenant["id"]
+        segment = await _seed_segment(db_session, tenant_id)
+        profile = await _seed_profile(
+            db_session,
+            tenant_id,
+            segment,
+            [("email", "borrowed@example.com")],
+            consent=None,
+        )
+        other = await _seed_second_tenant(db_session)
+        db_session.add(
+            CDPConsent(
+                tenant_id=other.id,
+                profile_id=profile.id,
+                consent_type=ConsentType.ADS.value,
+                granted=True,
+                granted_at=datetime.now(UTC),
+                source="test",
+            )
+        )
+        await db_session.flush()
+
+        assert await svc._get_segment_profiles(segment.id) == []
+
+    async def test_suppressed_count_recorded_on_sync_job(
+        self, db_session, test_tenant, svc
+    ):
+        tenant_id = test_tenant["id"]
+        segment = await _seed_segment(db_session, tenant_id)
+        await _seed_profile(
+            db_session, tenant_id, segment, [("email", "yes@example.com")]
+        )
+        await _seed_profile(
+            db_session,
+            tenant_id,
+            segment,
+            [("email", "no@example.com")],
+            consent=None,
+        )
+        audience = await _seed_audience(db_session, tenant_id, segment)
+        await _seed_credential(db_session, tenant_id)
+
+        with respx.mock:
+            respx.post(f"{GRAPH}/aud_ext_1/users").mock(
+                return_value=httpx.Response(200, json={"num_received": 1})
+            )
+            respx.get(f"{GRAPH}/aud_ext_1").mock(
+                return_value=httpx.Response(200, json={"approximate_count": 10})
+            )
+            job = await svc.sync_platform_audience(
+                audience.id, operation=SyncOperation.UPDATE
+            )
+
+        assert job.profiles_total == 1
+        assert job.profiles_suppressed == 1
+
+
+# =============================================================================
+# Erasure propagation (GDPR-02)
+# =============================================================================
+
+
+class TestErasurePropagation:
+    """Deleting a profile locally must also pull it out of the ad platforms.
+
+    ``remove_users`` was implemented on all four connectors and called from
+    nowhere, so an erased subject's hashed email lived on in Meta indefinitely.
+    """
+
+    async def test_removes_from_every_audience_and_reports_success(
+        self, db_session, test_tenant, svc
+    ):
+        tenant_id = test_tenant["id"]
+        segment = await _seed_segment(db_session, tenant_id)
+        profile = await _seed_profile(
+            db_session,
+            tenant_id,
+            segment,
+            [("email", "erase@example.com"), ("phone", "+15550001111")],
+        )
+        # Distinct ad accounts: (tenant, segment, platform, ad_account) is
+        # unique, and two audiences on separate accounts is also the case worth
+        # covering — erasure must reach every account, not just the first.
+        first = await _seed_audience(db_session, tenant_id, segment)
+        second = await _seed_audience(
+            db_session,
+            tenant_id,
+            segment,
+            platform_audience_id="aud_ext_2",
+            ad_account_id="act_456",
+        )
+        await _seed_credential(db_session, tenant_id)
+        await _seed_credential(db_session, tenant_id, ad_account_id="act_456")
+
+        with respx.mock:
+            for audience in (first, second):
+                respx.delete(f"{GRAPH}/{audience.platform_audience_id}/users").mock(
+                    return_value=httpx.Response(200, json={"num_received": 1})
+                )
+            outcomes = await svc.erase_profile_from_platforms(profile.id)
+
+        assert len(outcomes) == 2
+        assert all(o["removed"] for o in outcomes)
+        assert {o["platform_audience_id"] for o in outcomes} == {
+            "aud_ext_1",
+            "aud_ext_2",
+        }
+
+    async def test_platform_failure_is_reported_not_raised(
+        self, db_session, test_tenant, svc
+    ):
+        """A dead platform must not block the local erasure that follows."""
+        tenant_id = test_tenant["id"]
+        segment = await _seed_segment(db_session, tenant_id)
+        profile = await _seed_profile(
+            db_session, tenant_id, segment, [("email", "erase2@example.com")]
+        )
+        audience = await _seed_audience(db_session, tenant_id, segment)
+        await _seed_credential(db_session, tenant_id)
+
+        with respx.mock:
+            respx.delete(f"{GRAPH}/{audience.platform_audience_id}/users").mock(
+                return_value=httpx.Response(500, json={"error": "boom"})
+            )
+            outcomes = await svc.erase_profile_from_platforms(profile.id)
+
+        assert len(outcomes) == 1
+        assert outcomes[0]["removed"] is False
+        assert outcomes[0]["error"]
+
+    async def test_missing_credentials_reported_not_raised(
+        self, db_session, test_tenant, svc
+    ):
+        tenant_id = test_tenant["id"]
+        segment = await _seed_segment(db_session, tenant_id)
+        profile = await _seed_profile(
+            db_session, tenant_id, segment, [("email", "erase3@example.com")]
+        )
+        await _seed_audience(db_session, tenant_id, segment)
+
+        outcomes = await svc.erase_profile_from_platforms(profile.id)
+
+        assert outcomes == [
+            {
+                "platform": "meta",
+                "ad_account_id": "act_123",
+                "platform_audience_id": "aud_ext_1",
+                "removed": False,
+                "error": "no active credentials",
+            }
+        ]
+
+    async def test_profile_with_no_syncable_identifiers_skips_platforms(
+        self, db_session, test_tenant, svc
+    ):
+        """Nothing uploadable was ever sent, so there is nothing to recall."""
+        tenant_id = test_tenant["id"]
+        segment = await _seed_segment(db_session, tenant_id)
+        profile = await _seed_profile(
+            db_session, tenant_id, segment, [("address", "1 Main St")]
+        )
+        await _seed_audience(db_session, tenant_id, segment)
+        await _seed_credential(db_session, tenant_id)
+
+        assert await svc.erase_profile_from_platforms(profile.id) == []
+
+    async def test_other_tenants_audiences_are_untouched(
+        self, db_session, test_tenant, svc
+    ):
+        tenant_id = test_tenant["id"]
+        segment = await _seed_segment(db_session, tenant_id)
+        profile = await _seed_profile(
+            db_session, tenant_id, segment, [("email", "erase4@example.com")]
+        )
+        other = await _seed_second_tenant(db_session)
+        foreign_segment = await _seed_segment(db_session, other.id, name="Foreign")
+        await _seed_audience(
+            db_session,
+            other.id,
+            foreign_segment,
+            platform_audience_id="aud_foreign",
+        )
+
+        assert await svc.erase_profile_from_platforms(profile.id) == []
 
 
 # =============================================================================

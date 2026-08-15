@@ -36,9 +36,12 @@ from app.models.audience_sync import (
     SyncStatus,
 )
 from app.models.cdp import (
+    CDPConsent,
     CDPProfile,
+    CDPProfileIdentifier,
     CDPSegment,
     CDPSegmentMembership,
+    ConsentType,
 )
 
 from .base import (
@@ -55,6 +58,11 @@ from .snapchat_connector import SnapchatAudienceConnector
 from .tiktok_connector import TikTokAudienceConnector
 
 logger = structlog.get_logger()
+
+
+# Consent types that authorise sending a profile's identifiers to an ad
+# platform. ADS is the specific grant; ALL is the global one.
+ADVERTISING_CONSENT_TYPES = (ConsentType.ADS.value, ConsentType.ALL.value)
 
 
 class AudienceSyncService:
@@ -279,6 +287,111 @@ class AudienceSyncService:
         return True
 
     # =========================================================================
+    # Erasure Propagation (GDPR Art. 17)
+    # =========================================================================
+
+    async def erase_profile_from_platforms(
+        self,
+        profile_id: UUID,
+    ) -> list[dict[str, Any]]:
+        """Remove one profile's identifiers from every platform audience.
+
+        Erasing a profile locally does not erase it from Meta, Google, TikTok
+        or Snapchat: the hashed email was uploaded to a custom audience and
+        stays there until it is explicitly removed. Art. 17(2) requires telling
+        the recipients, and ``remove_users`` — implemented by all four
+        connectors — is how. It was never called from anywhere until now.
+
+        Every audience for the tenant is attempted, not just those whose
+        segment the profile currently belongs to. Membership is deleted as part
+        of erasure, and ``add_users`` syncs never remove a profile that left a
+        segment, so a stale upload is exactly the case that needs cleaning.
+        Removing a hash that is not present is a no-op on all four platforms,
+        so the extra calls are safe.
+
+        This is best-effort by design and never raises: local erasure must
+        complete even when a platform is down or a credential has expired. The
+        per-audience outcome is returned so the caller can record it — an
+        unrecorded failure here is an invisible compliance breach.
+
+        Must be called BEFORE the local rows are deleted; it reads the
+        profile's identifier hashes.
+        """
+        result = await self.db.execute(
+            select(CDPProfileIdentifier).where(
+                CDPProfileIdentifier.profile_id == profile_id,
+                CDPProfileIdentifier.tenant_id == self.tenant_id,
+            )
+        )
+        identifiers: list[UserIdentifier] = []
+        for row in result.scalars().all():
+            mapped = self._map_identifier_type(row.identifier_type)
+            if mapped:
+                identifiers.append(
+                    UserIdentifier(
+                        identifier_type=mapped,
+                        hashed_value=row.identifier_hash,
+                    )
+                )
+
+        if not identifiers:
+            # Nothing was ever uploadable, so nothing can be on a platform.
+            return []
+
+        audiences_result = await self.db.execute(
+            select(PlatformAudience).where(
+                PlatformAudience.tenant_id == self.tenant_id,
+                PlatformAudience.platform_audience_id.isnot(None),
+            )
+        )
+        audiences = list(audiences_result.scalars().all())
+
+        user = AudienceUser(profile_id=str(profile_id), identifiers=identifiers)
+        outcomes: list[dict[str, Any]] = []
+
+        for audience in audiences:
+            outcome: dict[str, Any] = {
+                "platform": audience.platform,
+                "ad_account_id": audience.ad_account_id,
+                "platform_audience_id": audience.platform_audience_id,
+                "removed": False,
+                "error": None,
+            }
+            try:
+                credentials = await self._get_credentials(
+                    audience.platform,
+                    audience.ad_account_id,
+                )
+                if not credentials:
+                    outcome["error"] = "no active credentials"
+                else:
+                    connector = self._get_connector(audience.platform, credentials)
+                    removal = await connector.remove_users(
+                        audience.platform_audience_id, [user]
+                    )
+                    outcome["removed"] = bool(removal.success)
+                    if not removal.success:
+                        outcome["error"] = removal.error_message or "platform rejected"
+            except Exception as exc:
+                # Deliberately broad: a connector bug, an auth error or a
+                # network fault must not abort erasure of the other audiences,
+                # nor of the local rows. Recorded, not swallowed.
+                outcome["error"] = f"{type(exc).__name__}: {exc}"
+
+            if not outcome["removed"]:
+                self.logger.error(
+                    "gdpr_platform_erasure_failed",
+                    profile_id=str(profile_id),
+                    platform=audience.platform,
+                    platform_audience_id=audience.platform_audience_id,
+                    error=outcome["error"],
+                )
+
+            outcomes.append(outcome)
+
+        return outcomes
+
+    # =========================================================================
     # Sync Job Execution
     # =========================================================================
 
@@ -300,11 +413,23 @@ class AudienceSyncService:
         # Get connector
         connector = self._get_connector(platform_audience.platform, credentials)
 
-        # Get segment profiles
+        # Get segment profiles (consent-filtered — see _get_segment_profiles)
         profiles = await self._get_segment_profiles(segment.id)
         users = await self._profiles_to_audience_users(profiles)
 
+        suppressed = await self._count_consent_suppressed(segment.id)
+
         sync_job.profiles_total = len(users)
+        sync_job.profiles_suppressed = suppressed
+
+        if suppressed:
+            self.logger.info(
+                "audience_sync_consent_suppressed",
+                platform=platform_audience.platform,
+                segment_id=str(segment.id),
+                profiles_suppressed=suppressed,
+                profiles_eligible=len(users),
+            )
 
         # Execute operation
         result: AudienceSyncResult
@@ -508,16 +633,66 @@ class AudienceSyncService:
         )
         return result.scalar_one_or_none()
 
+    def _advertising_consent_subquery(self):
+        """Profile IDs that currently hold advertising consent for this tenant.
+
+        Both conditions are required, not either: the ingest path sets
+        ``granted=False`` *and* ``revoked_at`` on revocation, and clears
+        ``revoked_at`` on re-grant, so a row failing either test is not a live
+        grant. Checking both means a future writer that updates only one of
+        them suppresses the profile rather than leaking it.
+        """
+        return select(CDPConsent.profile_id).where(
+            CDPConsent.tenant_id == self.tenant_id,
+            CDPConsent.consent_type.in_(ADVERTISING_CONSENT_TYPES),
+            CDPConsent.granted.is_(True),
+            CDPConsent.revoked_at.is_(None),
+        )
+
+    async def _count_consent_suppressed(self, segment_id: UUID) -> int:
+        """Count segment members withheld from platform sync for lack of consent.
+
+        Reported on the sync job so a tenant seeing 40 profiles pushed where
+        they expected 10,000 can tell consent is the reason rather than a
+        broken segment.
+        """
+        result = await self.db.execute(
+            select(func.count())
+            .select_from(CDPProfile)
+            .join(CDPSegmentMembership)
+            .where(
+                CDPSegmentMembership.segment_id == segment_id,
+                CDPSegmentMembership.is_active == True,
+                CDPProfile.tenant_id == self.tenant_id,
+                CDPProfile.id.notin_(self._advertising_consent_subquery()),
+            )
+        )
+        return result.scalar() or 0
+
     async def _get_segment_profiles(
         self,
         segment_id: UUID,
         limit: int = 1000000,
         batch_size: int = 1000,
     ) -> list[CDPProfile]:
-        """Get all profiles in a segment using batched fetching to avoid OOM.
+        """Get the syncable profiles in a segment, batched to avoid OOM.
 
         Fetches profiles in batches of `batch_size` to keep memory usage
         bounded, up to `limit` total profiles.
+
+        Only profiles holding advertising consent are returned. Segment
+        membership answers "who matches these rules"; it does not answer "whose
+        email may we hand to Meta". Consent is recorded per profile in
+        ``cdp_consents`` — with grant/revoke timestamps, consent text and
+        version — and this is the one place in the codebase where honouring it
+        is the difference between a lawful transfer and an unlawful one.
+
+        Absence of consent is a refusal, not a maybe: GDPR consent is
+        affirmative, so a profile with no ``cdp_consents`` row at all is
+        withheld exactly like one that revoked. This means a tenant who has
+        never populated consent syncs nothing, which is the correct behaviour
+        and is surfaced through ``profiles_suppressed`` on the sync job rather
+        than failing silently.
         """
         all_profiles: list[CDPProfile] = []
         offset = 0
@@ -532,6 +707,7 @@ class AudienceSyncService:
                     CDPSegmentMembership.segment_id == segment_id,
                     CDPSegmentMembership.is_active == True,
                     CDPProfile.tenant_id == self.tenant_id,
+                    CDPProfile.id.in_(self._advertising_consent_subquery()),
                 )
                 .options(selectinload(CDPProfile.identifiers))
                 .order_by(CDPProfile.id)
