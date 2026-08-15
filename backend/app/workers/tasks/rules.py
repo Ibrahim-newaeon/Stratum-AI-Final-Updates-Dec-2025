@@ -16,6 +16,7 @@ from celery.utils.log import get_task_logger
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.autopilot.gate import evaluate_execution_gate_sync
 from app.db.session import SyncSessionLocal
 from app.models import (
     Campaign,
@@ -54,6 +55,27 @@ def evaluate_rules(self, tenant_id: int, rule_id: int):
             logger.warning(f"Rule {rule_id} not found or inactive")
             return {"status": "not_found"}
 
+        # Rules mutate campaign state — status and daily_budget_cents — which
+        # feeds pacing, ROAS, and the numbers an operator reads before deciding
+        # a real budget change. That makes it automation, so it answers to the
+        # same gate as every other execution path instead of running whatever
+        # the signal state happens to be.
+        #
+        # Mutating actions are held when the gate says no. Non-mutating ones
+        # (send_alert, apply_label) still run: an alert is precisely what a
+        # degraded tenant needs, and suppressing it would make the gate hide
+        # the problem it exists to surface.
+        gate = evaluate_execution_gate_sync(db, tenant_id)
+        if not gate.allowed:
+            logger.warning(
+                "rules_execution_gate_blocked",
+                extra={
+                    "tenant_id": tenant_id,
+                    "rule_id": rule_id,
+                    "reason": gate.reason,
+                },
+            )
+
         # Get campaigns matching rule scope
         campaigns = (
             db.execute(
@@ -76,8 +98,10 @@ def evaluate_rules(self, tenant_id: int, rule_id: int):
             if result["matched"]:
                 matches += 1
 
-                # Execute rule action
-                action_result = _execute_action(rule, campaign, db)
+                # Execute rule action, unless the gate is holding mutations.
+                action_result = _execute_action(
+                    rule, campaign, db, gate_allows_mutation=gate.allowed
+                )
 
                 # Log execution (columns per RuleExecution model:
                 # triggered/condition_result/action_result, not the old
@@ -252,9 +276,24 @@ def _compare_values(actual: Any, operator: RuleOperator, expected: Any) -> bool:
     return False
 
 
-def _execute_action(rule: Rule, campaign: Campaign, db: Session) -> dict[str, Any]:
+#: Rule actions that change campaign state. These answer to the execution
+#: gate; everything else (alerts, labels) is observational and always runs.
+_MUTATING_ACTIONS = frozenset({"pause_campaign", "adjust_budget"})
+
+
+def _execute_action(
+    rule: Rule,
+    campaign: Campaign,
+    db: Session,
+    gate_allows_mutation: bool = True,
+) -> dict[str, Any]:
     """
     Execute rule action on a campaign.
+
+    Args:
+        gate_allows_mutation: False when the execution gate is holding — the
+            tenant is frozen, or signal health is degraded or unreadable. State
+            changes are skipped and reported; observational actions still run.
 
     Returns:
         Dict with action details and result
@@ -267,6 +306,14 @@ def _execute_action(rule: Rule, campaign: Campaign, db: Session) -> dict[str, An
         "success": True,
         "timestamp": datetime.now(UTC).isoformat(),
     }
+
+    if action_type in _MUTATING_ACTIONS and not gate_allows_mutation:
+        result["success"] = False
+        result["skipped"] = True
+        result["error"] = (
+            "Execution gate held this action (see rules_execution_gate_blocked)"
+        )
+        return result
 
     try:
         if action_type == "apply_label":
