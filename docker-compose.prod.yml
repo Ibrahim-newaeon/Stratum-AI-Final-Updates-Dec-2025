@@ -196,6 +196,13 @@ services:
       # DATABASE_URL in this file points at pgbouncer:6432 and the healthcheck
       # probes 6432 — so it came up "unhealthy" and the API could not connect.
       LISTEN_PORT: 6432
+      # Postgres 14+ stores passwords as scram-sha-256. The image defaults
+      # AUTH_TYPE to md5, so pgbouncer held the credential in a form it could
+      # not present to the server:
+      #   ERROR cannot do SCRAM authentication: wrong password type
+      # Clients then timed out rather than being rejected, because the failure
+      # happened on the server side of the pool.
+      AUTH_TYPE: scram-sha-256
       POOL_MODE: transaction
       MAX_CLIENT_CONN: 200
       DEFAULT_POOL_SIZE: 25
