@@ -1,0 +1,36 @@
+// =============================================================================
+// Stratum AI - Cloudflare Workers static-asset deployment for the SPA
+// =============================================================================
+// The dashboard build ran `npx wrangler versions upload` with no config and
+// failed with "Missing entry-point to Worker script or to assets directory" —
+// there was nothing telling it what to publish.
+//
+// There is no Worker script here. This is a Vite SPA, so Workers serves the
+// built output as static assets and runs no server-side code.
+//
+// The Cloudflare project must ALSO be given a build command, or `dist` will not
+// exist when this config is read. In the dashboard, under Settings -> Build:
+//
+//   Build command:   npm --prefix frontend ci && npm --prefix frontend run build
+//   Deploy command:  npx wrangler versions upload
+//   Root directory:  /                 (leave at repo root — this file lives here)
+//
+// And under Settings -> Variables, for the build:
+//
+//   VITE_API_URL = https://api.stratumai.app/api/v1
+//
+// The SPA prefers window.__RUNTIME_CONFIG__.VITE_API_URL over the build-time
+// value, so that can be overridden later without a rebuild.
+// =============================================================================
+{
+  "name": "stratumai",
+  "compatibility_date": "2026-08-15",
+  "assets": {
+    "directory": "./frontend/dist",
+
+    // The app is client-routed: /dashboard, /settings and friends exist only in
+    // React Router, not on disk. Without this, a hard refresh or a shared deep
+    // link returns 404 instead of the app — the classic SPA hosting bug.
+    "not_found_handling": "single-page-application"
+  }
+}
