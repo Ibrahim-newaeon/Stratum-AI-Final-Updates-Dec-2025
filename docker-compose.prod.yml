@@ -179,7 +179,10 @@ services:
   # PgBouncer - Connection Pooling (memory audit Feb 2026)
   # ===========================================================================
   pgbouncer:
-    image: edoburu/pgbouncer:1.22
+    # edoburu/pgbouncer publishes patch-suffixed tags (1.22.1-p0), never a
+    # bare minor. `1.22` has never existed, so this file could not start as
+    # written — caught bringing the Hetzner host up for the first time.
+    image: edoburu/pgbouncer:1.22.1-p0
     container_name: stratum_pgbouncer
     restart: always
     environment:
