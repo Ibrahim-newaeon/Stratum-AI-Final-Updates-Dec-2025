@@ -930,12 +930,15 @@ export const cdpApi = {
     identifierType: IdentifierType,
     identifierValue: string
   ): Promise<CDPProfile> => {
-    const response = await apiClient.get<ApiResponse<CDPProfile>>('/cdp/profiles', {
-      params: {
+    // POST, not GET: the identifier is a raw email or phone number, and a
+    // query string is written to every access log along the request path.
+    const response = await apiClient.post<ApiResponse<CDPProfile>>(
+      '/cdp/profiles/lookup',
+      {
         identifier_type: identifierType,
         identifier_value: identifierValue,
-      },
-    });
+      }
+    );
     return response.data.data;
   },
 

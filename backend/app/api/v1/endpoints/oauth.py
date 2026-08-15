@@ -46,6 +46,48 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/oauth", tags=["oauth"])
 
 
+def _validate_callback_url(candidate: Optional[str]) -> str:
+    """Resolve the post-OAuth redirect target, rejecting foreign origins.
+
+    ``frontend_callback_url`` is caller-supplied, stored in the Redis state, and
+    used verbatim as the redirect target when the platform sends the user back.
+    Unvalidated that is an open redirect.
+
+    The exposure was bounded — no secret rides in that URL (only ``platform``
+    and ``status``), and creating the state needs an authenticated admin, so the
+    only person who could aim it was the victim. Bounded is not a reason to
+    keep it: the allowlist already exists as the CORS origin list, which is
+    exactly the set of front ends this deployment trusts.
+    """
+    if not candidate:
+        return settings.frontend_url
+
+    from urllib.parse import urlparse
+
+    parsed = urlparse(candidate)
+    if not parsed.scheme or not parsed.netloc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="frontend_callback_url must be an absolute URL",
+        )
+
+    origin = f"{parsed.scheme}://{parsed.netloc}"
+    allowed = {o.rstrip("/") for o in settings.cors_origins_list}
+
+    if origin.rstrip("/") not in allowed:
+        logger.warning(
+            "oauth_callback_url_rejected",
+            origin=origin,
+            detail="Not in the configured CORS origins",
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="frontend_callback_url is not an allowed origin",
+        )
+
+    return candidate.rstrip("/")
+
+
 def _audit_connection(
     db: AsyncSession,
     *,
@@ -217,12 +259,16 @@ async def start_oauth(
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
+    # Validate the return URL before it is stored — the callback redirects to
+    # whatever the state carries, so an unchecked value is an open redirect.
+    redirect_target = _validate_callback_url(request_data.frontend_callback_url)
+
     # Create OAuth state for CSRF protection
     try:
         state = await oauth_service.create_state(
             tenant_id=current_user.tenant_id,
             user_id=current_user.id,
-            redirect_uri=request_data.frontend_callback_url or settings.frontend_url,
+            redirect_uri=redirect_target,
         )
     except (
         ConnectionError,
@@ -425,11 +471,20 @@ async def oauth_callback(
             user_id=oauth_state.user_id,
         )
 
-        # Auto-sync campaigns from the newly connected platform (fire-and-forget)
+        # Auto-sync campaigns from the newly connected platform.
+        #
+        # Queued to Celery rather than asyncio.create_task. The old version had
+        # two faults: the task reference was not retained, so the event loop
+        # could garbage-collect the sync mid-flight; and it ran a 30-day
+        # campaign backfill inside the web worker, holding an event-loop slot
+        # and a database connection for however long the platform took to
+        # answer. sync_platform_campaigns already exists and is dispatched this
+        # way from the scheduler — this just stops the OAuth callback being the
+        # one caller that does it by hand.
         try:
-            import asyncio
+            from app.workers.tasks.sync import sync_platform_campaigns
 
-            asyncio.create_task(_auto_sync_after_oauth(oauth_state.tenant_id, platform))
+            sync_platform_campaigns.delay(oauth_state.tenant_id, platform.value)
             logger.info(
                 "auto_sync_triggered",
                 platform=platform.value,
@@ -1095,33 +1150,8 @@ async def disconnect_platform(
     )
 
 
-# =============================================================================
-# Auto-sync helper (fire-and-forget after OAuth)
-# =============================================================================
-
-
-async def _auto_sync_after_oauth(tenant_id: int, platform: AdPlatform) -> None:
-    """Run a campaign sync right after OAuth succeeds. Non-blocking."""
-    from app.db.session import AsyncSessionLocal
-
-    try:
-        async with AsyncSessionLocal() as db:
-            from app.services.sync.orchestrator import PlatformSyncOrchestrator
-
-            orchestrator = PlatformSyncOrchestrator(db)
-            result = await orchestrator.sync_platform(tenant_id, platform, days_back=30)
-            logger.info(
-                "auto_sync_completed",
-                platform=platform.value,
-                tenant=tenant_id,
-                campaigns=result.campaigns_synced,
-                metrics=result.metrics_upserted,
-                errors=len(result.errors),
-            )
-    except (ConnectionError, TimeoutError, OSError, ValueError, RuntimeError) as e:
-        logger.error(
-            "auto_sync_failed",
-            platform=platform.value,
-            tenant=tenant_id,
-            error=str(e),
-        )
+# The post-OAuth campaign sync used to live here as an in-process coroutine
+# spawned with asyncio.create_task. It is now dispatched to Celery via
+# sync_platform_campaigns, which already existed and is how the scheduler runs
+# the same work. Keeping a second, hand-rolled path around only invited someone
+# to call it again.

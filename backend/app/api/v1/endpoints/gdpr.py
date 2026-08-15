@@ -15,8 +15,9 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.deps import require_admin
 from app.core.logging import get_logger
-from app.core.security import anonymize_pii, decrypt_pii
+from app.core.security import anonymize_pii, decrypt_pii, revoke_user_tokens
 from app.db.session import get_async_session
 from app.models import (
     APIKey,
@@ -310,6 +311,22 @@ async def anonymize_user_data(
 
     await db.commit()
 
+    # End every session this user still holds. is_active=False is only enforced
+    # by endpoints taking the get_current_user dependency; most of the API
+    # authenticates from request.state alone, so without this an anonymised
+    # user keeps working for the remainder of their token's lifetime. Best
+    # effort — the anonymisation itself is already committed and must not be
+    # rolled back because Redis is down.
+    try:
+        await revoke_user_tokens(user.id)
+    except (ConnectionError, TimeoutError, OSError) as exc:
+        logger.error(
+            "gdpr_session_revocation_failed",
+            user_id=user.id,
+            error=str(exc),
+            detail="User anonymized but active sessions could not be ended",
+        )
+
     logger.info(
         "gdpr_user_anonymized",
         user_id=user.id,
@@ -331,7 +348,13 @@ async def anonymize_user_data(
 
 
 @router.get(
-    "/audit-logs", response_model=APIResponse[PaginatedResponse[AuditLogResponse]]
+    "/audit-logs",
+    response_model=APIResponse[PaginatedResponse[AuditLogResponse]],
+    # The tenant's audit trail is an admin artifact: it records every user's
+    # actions and their IP addresses. Tenant scoping alone let any member read
+    # it, and the default role for a token without an explicit claim is
+    # "analyst" — so this was effectively readable by everyone in the account.
+    dependencies=[Depends(require_admin())],
 )
 async def get_audit_logs(
     request: Request,
