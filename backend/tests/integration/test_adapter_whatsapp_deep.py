@@ -1,9 +1,10 @@
 """
 Deep integration tests for ``app/stratum/adapters/whatsapp_adapter.py`` [#342].
 
-The adapter talks to Meta's WhatsApp Cloud API through the synchronous
-``requests`` library, so tests mock at the ``requests.get/post/delete/request``
-boundary inside the adapter module namespace (respx would not intercept it).
+The adapter talks to Meta's WhatsApp Cloud API through ``httpx.AsyncClient``,
+opened per request. ``patch_http`` below stubs that boundary inside the adapter
+module namespace (respx would not intercept it) and yields the AsyncMock for
+the verb, so call assertions read the same as before.
 
 PRODUCTION BUGS FIXED under #540 (assertions below pin the corrected
 behavior — do not revert):
@@ -31,11 +32,12 @@ behavior — do not revert):
 
 import hashlib
 import hmac
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import httpx
 import pytest
-import requests
 
 from app.stratum.adapters.base import (
     AdapterError,
@@ -54,6 +56,10 @@ from app.stratum.adapters.whatsapp_adapter import (
 )
 from app.stratum.models import Platform
 
+# Without this marker the CI integration run (-m "integration") silently
+# deselects this entire module.
+pytestmark = pytest.mark.integration
+
 MOD = "app.stratum.adapters.whatsapp_adapter"
 
 BASE_CREDS = {
@@ -66,7 +72,7 @@ BASE_CREDS = {
 
 
 def _resp(json_data, status_code=200):
-    """Build a mock successful requests.Response."""
+    """Build a mock successful httpx.Response."""
     m = MagicMock()
     m.status_code = status_code
     m.json.return_value = json_data
@@ -81,10 +87,28 @@ def _err_resp(error_json=None):
         err_response.json.side_effect = ValueError("no json body")
     else:
         err_response.json.return_value = error_json
-    http_error = requests.HTTPError("400 Client Error", response=err_response)
+    # httpx.HTTPStatusError needs a real Request/Response pair; the adapter only
+    # reads .response, so attach it to a plain HTTPError instead.
+    http_error = httpx.HTTPError("400 Client Error")
+    http_error.response = err_response
     m = MagicMock()
     m.raise_for_status.side_effect = http_error
     return m
+
+
+@contextmanager
+def patch_http(verb, return_value=None, side_effect=None):
+    """Stub ``async with httpx.AsyncClient(...) as c: await c.<verb>(...)``.
+
+    Yields the AsyncMock standing in for the verb so existing call assertions
+    keep working. __aexit__ is pinned to False — a truthy value would swallow
+    the transport errors the failure-path tests rely on.
+    """
+    handler = AsyncMock(return_value=return_value, side_effect=side_effect)
+    with patch(f"{MOD}.httpx.AsyncClient") as mock_cls:
+        setattr(mock_cls.return_value.__aenter__.return_value, verb, handler)
+        mock_cls.return_value.__aexit__.return_value = False
+        yield handler
 
 
 @pytest.fixture
@@ -168,7 +192,7 @@ class TestLifecycle:
             "verified_name": "Stratum Test",
             "quality_rating": "GREEN",
         }
-        with patch(f"{MOD}.requests.get", return_value=_resp(info)) as mock_get:
+        with patch_http("get", return_value=_resp(info)) as mock_get:
             await a.initialize()
 
         assert a._initialized is True
@@ -183,22 +207,22 @@ class TestLifecycle:
     async def test_initialize_success_with_missing_fields(self):
         """Defaults to 'Unknown' when the API omits phone info fields."""
         a = WhatsAppAdapter(dict(BASE_CREDS))
-        with patch(f"{MOD}.requests.get", return_value=_resp({})):
+        with patch_http("get", return_value=_resp({})):
             await a.initialize()
         assert a._initialized is True
 
     async def test_initialize_requests_error_wrapped_as_authentication_error(self):
         """BUG #4 (P2) FIXED: API failures surface as AuthenticationError.
 
-        ``_make_request`` converts ``requests.ConnectionError`` into
+        ``_make_request`` converts ``httpx.ConnectError`` into
         ``PlatformError``; ``initialize()`` now catches that and re-wraps it
         as the documented ``AuthenticationError``, keeping the original
         message.
         """
         a = WhatsAppAdapter(dict(BASE_CREDS))
-        with patch(
-            f"{MOD}.requests.get",
-            side_effect=requests.ConnectionError("connection refused"),
+        with patch_http(
+            "get",
+            side_effect=httpx.ConnectError("connection refused"),
         ):
             with pytest.raises(
                 AuthenticationError, match="connection refused"
@@ -210,13 +234,13 @@ class TestLifecycle:
     async def test_initialize_oserror_wrapped_as_authentication_error(self):
         """Non-requests transport errors do hit the AuthenticationError wrap."""
         a = WhatsAppAdapter(dict(BASE_CREDS))
-        with patch(f"{MOD}.requests.get", side_effect=TimeoutError("slow")):
+        with patch_http("get", side_effect=TimeoutError("slow")):
             with pytest.raises(AuthenticationError, match="Failed to initialize"):
                 await a.initialize()
 
     async def test_initialize_parse_error_wrapped_as_authentication_error(self):
         a = WhatsAppAdapter(dict(BASE_CREDS))
-        with patch(f"{MOD}.requests.get", side_effect=ValueError("bad payload")):
+        with patch_http("get", side_effect=ValueError("bad payload")):
             with pytest.raises(AuthenticationError, match="Failed to parse"):
                 await a.initialize()
 
@@ -240,7 +264,7 @@ class TestSendTextMessage:
 
     async def test_send_text_success(self, adapter):
         resp = _resp({"messages": [{"id": "wamid.abc"}]})
-        with patch(f"{MOD}.requests.post", return_value=resp) as mock_post:
+        with patch_http("post", return_value=resp) as mock_post:
             msg = await adapter.send_text_message(
                 "+1 (555) 000-1111", "hello there", preview_url=True
             )
@@ -263,7 +287,7 @@ class TestSendTextMessage:
 
     async def test_send_text_reply_to_sets_context(self, adapter):
         resp = _resp({"messages": [{"id": "wamid.reply"}]})
-        with patch(f"{MOD}.requests.post", return_value=resp) as mock_post:
+        with patch_http("post", return_value=resp) as mock_post:
             msg = await adapter.send_text_message(
                 "15550001111", "replying", reply_to="wamid.orig"
             )
@@ -273,7 +297,7 @@ class TestSendTextMessage:
 
     async def test_send_text_empty_messages_response(self, adapter):
         """A malformed success response yields an empty message_id."""
-        with patch(f"{MOD}.requests.post", return_value=_resp({})):
+        with patch_http("post", return_value=_resp({})):
             msg = await adapter.send_text_message("15550001111", "x")
         assert msg.message_id == ""
 
@@ -292,7 +316,7 @@ class TestSendTemplateMessage:
                 "parameters": [{"type": "text", "text": "John"}],
             }
         ]
-        with patch(f"{MOD}.requests.post", return_value=resp) as mock_post:
+        with patch_http("post", return_value=resp) as mock_post:
             msg = await adapter.send_template_message(
                 "+15550001111",
                 "order_confirmation",
@@ -313,7 +337,7 @@ class TestSendTemplateMessage:
 
     async def test_send_template_without_components(self, adapter):
         resp = _resp({"messages": [{"id": "wamid.tpl2"}]})
-        with patch(f"{MOD}.requests.post", return_value=resp) as mock_post:
+        with patch_http("post", return_value=resp) as mock_post:
             msg = await adapter.send_template_message("15550001111", "hello_world")
         payload = mock_post.call_args.kwargs["json"]
         assert "components" not in payload["template"]
@@ -335,7 +359,7 @@ class TestSendInteractiveMessage:
     async def test_send_interactive_full(self, adapter):
         resp = _resp({"messages": [{"id": "wamid.int"}]})
         action = {"buttons": [{"type": "reply", "reply": {"id": "b1", "title": "Yes"}}]}
-        with patch(f"{MOD}.requests.post", return_value=resp) as mock_post:
+        with patch_http("post", return_value=resp) as mock_post:
             msg = await adapter.send_interactive_message(
                 "15550001111",
                 interactive_type="button",
@@ -358,7 +382,7 @@ class TestSendInteractiveMessage:
 
     async def test_send_interactive_minimal(self, adapter):
         resp = _resp({"messages": [{"id": "wamid.int2"}]})
-        with patch(f"{MOD}.requests.post", return_value=resp) as mock_post:
+        with patch_http("post", return_value=resp) as mock_post:
             await adapter.send_interactive_message(
                 "15550001111",
                 interactive_type="list",
@@ -388,7 +412,7 @@ class TestSendMediaMessage:
         ``Message`` instead of raising ``ValueError``.
         """
         resp = _resp({"messages": [{"id": "wamid.media"}]})
-        with patch(f"{MOD}.requests.post", return_value=resp) as mock_post:
+        with patch_http("post", return_value=resp) as mock_post:
             msg = await adapter.send_media_message(
                 "15550001111", "image", media_id="MEDIA-1", caption="pic"
             )
@@ -406,7 +430,7 @@ class TestSendMediaMessage:
     async def test_send_media_by_url_document_filename(self, adapter):
         """Document payload uses link + filename; caption ignored for docs."""
         resp = _resp({"messages": [{"id": "wamid.doc"}]})
-        with patch(f"{MOD}.requests.post", return_value=resp) as mock_post:
+        with patch_http("post", return_value=resp) as mock_post:
             msg = await adapter.send_media_message(
                 "15550001111",
                 "document",
@@ -432,9 +456,7 @@ class TestUploadMedia:
     async def test_upload_media_success(self, adapter, tmp_path):
         f = tmp_path / "photo.jpg"
         f.write_bytes(b"\xff\xd8fakejpeg")
-        with patch(
-            f"{MOD}.requests.post", return_value=_resp({"id": "MEDIA-42"})
-        ) as mock_post:
+        with patch_http("post", return_value=_resp({"id": "MEDIA-42"})) as mock_post:
             media_id = await adapter.upload_media(str(f), "image")
 
         assert media_id == "MEDIA-42"
@@ -449,9 +471,7 @@ class TestUploadMedia:
     async def test_upload_media_unknown_type_falls_back(self, adapter, tmp_path):
         f = tmp_path / "blob.bin"
         f.write_bytes(b"data")
-        with patch(
-            f"{MOD}.requests.post", return_value=_resp({"id": "MEDIA-43"})
-        ) as mock_post:
+        with patch_http("post", return_value=_resp({"id": "MEDIA-43"})) as mock_post:
             media_id = await adapter.upload_media(str(f), "weird")
         assert media_id == "MEDIA-43"
         kwargs = mock_post.call_args.kwargs
@@ -472,9 +492,7 @@ class TestUploadMedia:
 class TestUploadCreative:
     async def test_upload_image_posts_bytes_and_returns_id(self, adapter):
         """BUG #1 FIXED: upload_image hits the Cloud API /media endpoint."""
-        with patch(
-            f"{MOD}.requests.post", return_value=_resp({"id": "IMG-1"})
-        ) as mock_post:
+        with patch_http("post", return_value=_resp({"id": "IMG-1"})) as mock_post:
             media_id = await adapter.upload_image("acct", b"\xff\xd8jpeg", "logo.png")
 
         assert media_id == "IMG-1"
@@ -490,17 +508,13 @@ class TestUploadCreative:
 
     async def test_upload_image_unknown_extension_uses_default_mime(self, adapter):
         """Unguessable extension falls back to the image/jpeg default."""
-        with patch(
-            f"{MOD}.requests.post", return_value=_resp({"id": "IMG-2"})
-        ) as mock_post:
+        with patch_http("post", return_value=_resp({"id": "IMG-2"})) as mock_post:
             media_id = await adapter.upload_image("acct", b"data", "blob")
         assert media_id == "IMG-2"
         assert mock_post.call_args.kwargs["data"]["type"] == "image/jpeg"
 
     async def test_upload_video_posts_bytes_and_returns_id(self, adapter):
-        with patch(
-            f"{MOD}.requests.post", return_value=_resp({"id": "VID-1"})
-        ) as mock_post:
+        with patch_http("post", return_value=_resp({"id": "VID-1"})) as mock_post:
             media_id = await adapter.upload_video("acct", b"movie", "promo.mp4")
         assert media_id == "VID-1"
         assert mock_post.call_args.kwargs["data"]["type"] == "video/mp4"
@@ -508,7 +522,7 @@ class TestUploadCreative:
 
     async def test_upload_video_missing_id_returns_empty(self, adapter):
         """A malformed success response yields an empty media id."""
-        with patch(f"{MOD}.requests.post", return_value=_resp({})):
+        with patch_http("post", return_value=_resp({})):
             assert await adapter.upload_video("acct", b"x", "clip.mp4") == ""
 
     async def test_upload_image_requires_initialization(self):
@@ -551,7 +565,7 @@ class TestTemplates:
                 {"name": "bare"},
             ]
         }
-        with patch(f"{MOD}.requests.get", return_value=_resp(data)) as mock_get:
+        with patch_http("get", return_value=_resp(data)) as mock_get:
             templates = await adapter.get_templates()
 
         url = mock_get.call_args.args[0]
@@ -581,13 +595,13 @@ class TestTemplates:
         assert bare.quality_score is None
 
     async def test_get_templates_empty(self, adapter):
-        with patch(f"{MOD}.requests.get", return_value=_resp({})):
+        with patch_http("get", return_value=_resp({})):
             assert await adapter.get_templates() == []
 
     async def test_create_template(self, adapter):
         components = [{"type": "BODY", "text": "Hello {{1}}"}]
-        with patch(
-            f"{MOD}.requests.post",
+        with patch_http(
+            "post",
             return_value=_resp({"id": "tpl-new", "status": "PENDING"}),
         ) as mock_post:
             result = await adapter.create_template(
@@ -1002,8 +1016,8 @@ class TestMarkConversion:
         assert conv.conversion_time is not None
 
     async def test_capi_success(self, capi_adapter):
-        with patch(
-            f"{MOD}.requests.post", return_value=_resp({"events_received": 1})
+        with patch_http(
+            "post", return_value=_resp({"events_received": 1})
         ) as mock_post:
             result = await capi_adapter.mark_conversion("15550005555", 42.0)
 
@@ -1028,17 +1042,17 @@ class TestMarkConversion:
         capi_adapter._conversations["15550006666"] = Conversation(
             conversation_id="c1", wa_id="15550006666", ad_id="ad-777"
         )
-        with patch(
-            f"{MOD}.requests.post", return_value=_resp({"events_received": 1})
+        with patch_http(
+            "post", return_value=_resp({"events_received": 1})
         ) as mock_post:
             await capi_adapter.mark_conversion("15550006666", 10.0)
         event = mock_post.call_args.kwargs["json"]["data"][0]
         assert event["user_data"]["fbc"] == "fb.1.ad-777"
 
     async def test_capi_failure_returns_error(self, capi_adapter):
-        with patch(
-            f"{MOD}.requests.post",
-            side_effect=requests.ConnectionError("capi down"),
+        with patch_http(
+            "post",
+            side_effect=httpx.ConnectError("capi down"),
         ):
             result = await capi_adapter.mark_conversion("15550007777", 5.0)
         assert result["tracked_locally"] is True
@@ -1055,8 +1069,8 @@ class TestAnalytics:
     async def test_get_analytics(self, adapter):
         start = datetime(2026, 6, 1, tzinfo=timezone.utc)
         end = datetime(2026, 6, 30, tzinfo=timezone.utc)
-        with patch(
-            f"{MOD}.requests.get", return_value=_resp({"analytics": {"sent": 5}})
+        with patch_http(
+            "get", return_value=_resp({"analytics": {"sent": 5}})
         ) as mock_get:
             result = await adapter.get_analytics(start, end, granularity="MONTH")
         assert result == {"analytics": {"sent": 5}}
@@ -1071,8 +1085,8 @@ class TestAnalytics:
     async def test_get_conversation_analytics(self, adapter):
         start = datetime(2026, 6, 1, tzinfo=timezone.utc)
         end = datetime(2026, 6, 2, tzinfo=timezone.utc)
-        with patch(
-            f"{MOD}.requests.get", return_value=_resp({"conversation_analytics": {}})
+        with patch_http(
+            "get", return_value=_resp({"conversation_analytics": {}})
         ) as mock_get:
             result = await adapter.get_conversation_analytics(start, end)
         assert result == {"conversation_analytics": {}}
@@ -1101,43 +1115,39 @@ class TestHelpers:
     def test_normalize_phone(self, adapter, raw, expected):
         assert adapter._normalize_phone(raw) == expected
 
-    def test_make_request_delete(self, adapter):
-        with patch(
-            f"{MOD}.requests.delete", return_value=_resp({"success": True})
-        ) as mock_delete:
-            result = adapter._make_request("DELETE", "/thing/1")
+    async def test_make_request_delete(self, adapter):
+        with patch_http("delete", return_value=_resp({"success": True})) as mock_delete:
+            result = await adapter._make_request("DELETE", "/thing/1")
         assert result == {"success": True}
         assert mock_delete.call_args.args[0].endswith("/thing/1")
 
-    def test_make_request_other_method(self, adapter):
-        with patch(
-            f"{MOD}.requests.request", return_value=_resp({"patched": True})
-        ) as mock_req:
-            result = adapter._make_request("PATCH", "/thing/2", data={"a": 1})
+    async def test_make_request_other_method(self, adapter):
+        with patch_http("request", return_value=_resp({"patched": True})) as mock_req:
+            result = await adapter._make_request("PATCH", "/thing/2", data={"a": 1})
         assert result == {"patched": True}
         assert mock_req.call_args.args[:2] == ("PATCH",) + (
             f"{WhatsAppAdapter.BASE_URL}/thing/2",
         )
         assert mock_req.call_args.kwargs["json"] == {"a": 1}
 
-    def test_make_request_http_error_extracts_api_message(self, adapter):
+    async def test_make_request_http_error_extracts_api_message(self, adapter):
         err = _err_resp({"error": {"message": "Invalid OAuth access token"}})
-        with patch(f"{MOD}.requests.get", return_value=err):
+        with patch_http("get", return_value=err):
             with pytest.raises(PlatformError, match="Invalid OAuth access token"):
-                adapter._make_request("GET", "/me")
+                await adapter._make_request("GET", "/me")
 
-    def test_make_request_http_error_non_json_body(self, adapter):
-        with patch(f"{MOD}.requests.get", return_value=_err_resp(None)):
+    async def test_make_request_http_error_non_json_body(self, adapter):
+        with patch_http("get", return_value=_err_resp(None)):
             with pytest.raises(PlatformError, match="400 Client Error"):
-                adapter._make_request("GET", "/me")
+                await adapter._make_request("GET", "/me")
 
-    def test_make_request_connection_error_no_response(self, adapter):
-        with patch(
-            f"{MOD}.requests.post",
-            side_effect=requests.ConnectionError("dns failure"),
+    async def test_make_request_connection_error_no_response(self, adapter):
+        with patch_http(
+            "post",
+            side_effect=httpx.ConnectError("dns failure"),
         ):
             with pytest.raises(PlatformError, match="dns failure"):
-                adapter._make_request("POST", "/messages", data={})
+                await adapter._make_request("POST", "/messages", data={})
 
 
 # ============================================================================
@@ -1155,9 +1165,7 @@ class TestBaseInterface:
     async def test_get_metrics_delegates_to_analytics(self, adapter):
         start = datetime(2026, 6, 1, tzinfo=timezone.utc)
         end = datetime(2026, 6, 7, tzinfo=timezone.utc)
-        with patch(
-            f"{MOD}.requests.get", return_value=_resp({"metrics": True})
-        ) as mock_get:
+        with patch_http("get", return_value=_resp({"metrics": True})) as mock_get:
             result = await adapter.get_metrics("acct", "campaign", ["c1"], start, end)
         assert result == {"metrics": True}
         assert mock_get.call_args.args[0].endswith("/analytics")
@@ -1173,7 +1181,7 @@ class TestBaseInterface:
                 {"name": "tpl_b", "components": []},
             ]
         }
-        with patch(f"{MOD}.requests.get", return_value=_resp(data)):
+        with patch_http("get", return_value=_resp(data)):
             scores = await adapter.get_emq_scores("acct")
         assert scores == [
             {"template": "tpl_a", "quality": "GREEN"},

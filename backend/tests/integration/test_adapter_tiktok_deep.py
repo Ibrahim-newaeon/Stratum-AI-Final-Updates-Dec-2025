@@ -3,9 +3,9 @@
 # =============================================================================
 """Deep coverage tests for ``app.stratum.adapters.tiktok_adapter``.
 
-The TikTok adapter speaks to TikTok's Business API through a synchronous
-``requests.Session`` (NOT httpx), so these tests stub the session boundary
-with an in-memory fake instead of respx. Covers: credential validation,
+The TikTok adapter speaks to TikTok's Business API through a long-lived
+``httpx.AsyncClient`` held on ``self.session``, so these tests stub the client
+boundary with an in-memory async fake instead of respx. Covers: credential validation,
 initialize/cleanup lifecycle, account/campaign/adgroup/ad fetch + unified
 model mapping, reporting metrics parsing, EMQ estimation, budget/status/create
 mutations via ``execute_action``, creative uploads, ``_make_request`` error
@@ -26,8 +26,8 @@ Behaviors pinned here (fixed under #540):
 
 from datetime import UTC, datetime
 
+import httpx
 import pytest
-import requests
 
 from app.stratum.adapters.base import (
     AdapterError,
@@ -41,12 +41,12 @@ pytestmark = pytest.mark.integration
 
 
 # =============================================================================
-# Fakes for the requests.Session transport boundary
+# Fakes for the httpx transport boundary
 # =============================================================================
 
 
 class FakeResponse:
-    """Minimal stand-in for requests.Response."""
+    """Minimal stand-in for httpx.Response."""
 
     def __init__(self, payload=None, status_code=200, headers=None):
         self._payload = payload if payload is not None else {}
@@ -58,13 +58,13 @@ class FakeResponse:
 
     def raise_for_status(self):
         if self.status_code >= 400:
-            raise requests.HTTPError(f"HTTP {self.status_code}")
+            raise httpx.HTTPError(f"HTTP {self.status_code}")
 
 
-class FakeSession:
-    """Queue-driven fake of requests.Session recording every call."""
+class FakeAsyncClient:
+    """Queue-driven fake of httpx.AsyncClient recording every call."""
 
-    def __init__(self, queue=None):
+    def __init__(self, queue=None, **kwargs):
         self.queue = list(queue or [])
         self.calls = []
         self.headers = {}
@@ -79,14 +79,25 @@ class FakeSession:
             raise item
         return item
 
-    def get(self, url, params=None, **kwargs):
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc_info):
+        return False
+
+    async def get(self, url, params=None, **kwargs):
         return self._next("GET", url, params=params)
 
-    def post(self, url, json=None, **kwargs):
+    async def post(self, url, json=None, **kwargs):
         return self._next("POST", url, json=json)
 
-    def close(self):
+    async def aclose(self):
         self.closed = True
+
+
+# Backwards-compatible alias: the tests below were written against the
+# requests.Session-era name.
+FakeSession = FakeAsyncClient
 
 
 CREDS = {
@@ -137,7 +148,7 @@ class TestInitAndLifecycle:
     async def test_initialize_success(self, monkeypatch):
         fake = FakeSession([ok({"list": [{"advertiser_id": "adv-1"}]})])
         monkeypatch.setattr(
-            "app.stratum.adapters.tiktok_adapter.requests.Session", lambda: fake
+            "app.stratum.adapters.tiktok_adapter.httpx.AsyncClient", lambda **kw: fake
         )
         adapter = TikTokAdapter(dict(CREDS))
         await adapter.initialize()
@@ -151,7 +162,7 @@ class TestInitAndLifecycle:
     async def test_initialize_bad_token_raises_authentication_error(self, monkeypatch):
         fake = FakeSession([err(40105, "invalid token")])
         monkeypatch.setattr(
-            "app.stratum.adapters.tiktok_adapter.requests.Session", lambda: fake
+            "app.stratum.adapters.tiktok_adapter.httpx.AsyncClient", lambda **kw: fake
         )
         adapter = TikTokAdapter(dict(CREDS))
         with pytest.raises(AuthenticationError, match="invalid token"):
@@ -165,7 +176,7 @@ class TestInitAndLifecycle:
         # {"code": -1} -> AuthenticationError (not a network AdapterError).
         fake = FakeSession([FakeResponse({}, status_code=401)])
         monkeypatch.setattr(
-            "app.stratum.adapters.tiktok_adapter.requests.Session", lambda: fake
+            "app.stratum.adapters.tiktok_adapter.httpx.AsyncClient", lambda **kw: fake
         )
         adapter = TikTokAdapter(dict(CREDS))
         with pytest.raises(AuthenticationError):
@@ -176,7 +187,7 @@ class TestInitAndLifecycle:
     ):
         fake = FakeSession([])
         monkeypatch.setattr(
-            "app.stratum.adapters.tiktok_adapter.requests.Session", lambda: fake
+            "app.stratum.adapters.tiktok_adapter.httpx.AsyncClient", lambda **kw: fake
         )
         creds = {k: v for k, v in CREDS.items() if k != "advertiser_id"}
         adapter = TikTokAdapter(creds)
@@ -185,11 +196,11 @@ class TestInitAndLifecycle:
         assert fake.calls == []
 
     async def test_initialize_session_failure_raises_adapter_error(self, monkeypatch):
-        def boom():
-            raise requests.ConnectionError("no route")
+        def boom(**kwargs):
+            raise httpx.ConnectError("no route")
 
         monkeypatch.setattr(
-            "app.stratum.adapters.tiktok_adapter.requests.Session", boom
+            "app.stratum.adapters.tiktok_adapter.httpx.AsyncClient", boom
         )
         adapter = TikTokAdapter(dict(CREDS))
         with pytest.raises(AdapterError, match="Failed to connect"):
@@ -816,15 +827,15 @@ class TestUploads:
 
 
 class TestHelpers:
-    def test_make_request_maps_request_exception_to_error_envelope(self):
-        adapter = make_adapter([requests.ConnectionError("dns fail")])
-        result = adapter._make_request("GET", "/campaign/get/")
+    async def test_make_request_maps_request_exception_to_error_envelope(self):
+        adapter = make_adapter([httpx.ConnectError("dns fail")])
+        result = await adapter._make_request("GET", "/campaign/get/")
         assert result["code"] == -1
         assert "dns fail" in result["message"]
 
-    def test_make_request_post_uses_json_body(self):
+    async def test_make_request_post_uses_json_body(self):
         adapter = make_adapter([ok()])
-        adapter._make_request("POST", "/x/", data={"a": 1})
+        await adapter._make_request("POST", "/x/", data={"a": 1})
         call = adapter.session.calls[0]
         assert call["method"] == "POST"
         assert call["json"] == {"a": 1}

@@ -63,7 +63,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
 
-import requests
+import httpx
 
 from app.stratum.adapters.base import (
     AdapterError,
@@ -304,7 +304,7 @@ class WhatsAppAdapter(BaseAdapter):
         try:
             # Verify credentials by fetching phone number info
             await self.rate_limiter.acquire()
-            response = self._make_request(
+            response = await self._make_request(
                 "GET",
                 f"/{self.phone_number_id}",
                 params={"fields": "display_phone_number,verified_name,quality_rating"},
@@ -325,7 +325,7 @@ class WhatsAppAdapter(BaseAdapter):
             raise
         except (
             PlatformError,
-            requests.RequestException,
+            httpx.HTTPError,
             ConnectionError,
             TimeoutError,
             OSError,
@@ -380,7 +380,7 @@ class WhatsAppAdapter(BaseAdapter):
             payload["context"] = {"message_id": reply_to}
 
         await self.rate_limiter.acquire()
-        response = self._make_request(
+        response = await self._make_request(
             "POST", f"/{self.phone_number_id}/messages", data=payload
         )
 
@@ -442,7 +442,7 @@ class WhatsAppAdapter(BaseAdapter):
             payload["template"]["components"] = components
 
         await self.rate_limiter.acquire()
-        response = self._make_request(
+        response = await self._make_request(
             "POST", f"/{self.phone_number_id}/messages", data=payload
         )
 
@@ -511,7 +511,7 @@ class WhatsAppAdapter(BaseAdapter):
         }
 
         await self.rate_limiter.acquire()
-        response = self._make_request(
+        response = await self._make_request(
             "POST", f"/{self.phone_number_id}/messages", data=payload
         )
 
@@ -575,7 +575,7 @@ class WhatsAppAdapter(BaseAdapter):
         }
 
         await self.rate_limiter.acquire()
-        response = self._make_request(
+        response = await self._make_request(
             "POST", f"/{self.phone_number_id}/messages", data=payload
         )
 
@@ -634,9 +634,10 @@ class WhatsAppAdapter(BaseAdapter):
             url = f"{self.BASE_URL}/{self.phone_number_id}/media"
             headers = {"Authorization": f"Bearer {self.access_token}"}
 
-            response = requests.post(
-                url, data=data, files=files, headers=headers, timeout=60
-            )
+            async with httpx.AsyncClient(timeout=60) as client:
+                response = await client.post(
+                    url, data=data, files=files, headers=headers
+                )
             response.raise_for_status()
 
             return response.json().get("id", "")
@@ -650,7 +651,7 @@ class WhatsAppAdapter(BaseAdapter):
         self._ensure_initialized()
 
         await self.rate_limiter.acquire()
-        response = self._make_request(
+        response = await self._make_request(
             "GET",
             f"/{self.business_account_id}/message_templates",
             params={"limit": 100},
@@ -705,7 +706,7 @@ class WhatsAppAdapter(BaseAdapter):
         }
 
         await self.rate_limiter.acquire()
-        response = self._make_request(
+        response = await self._make_request(
             "POST", f"/{self.business_account_id}/message_templates", data=payload
         )
 
@@ -960,7 +961,8 @@ class WhatsAppAdapter(BaseAdapter):
         params = {"access_token": self.access_token}
 
         try:
-            response = requests.post(url, params=params, json=capi_payload, timeout=30)
+            async with httpx.AsyncClient(timeout=30) as client:
+                response = await client.post(url, params=params, json=capi_payload)
             response.raise_for_status()
             result = response.json()
 
@@ -971,7 +973,7 @@ class WhatsAppAdapter(BaseAdapter):
                 "events_received": result.get("events_received", 0),
             }
 
-        except requests.RequestException as e:
+        except httpx.HTTPError as e:
             logger.error(f"Failed to send WhatsApp conversion to CAPI: {e}")
             return {"tracked_locally": True, "sent_to_capi": False, "error": str(e)}
 
@@ -993,7 +995,7 @@ class WhatsAppAdapter(BaseAdapter):
         self._ensure_initialized()
 
         await self.rate_limiter.acquire()
-        response = self._make_request(
+        response = await self._make_request(
             "GET",
             f"/{self.business_account_id}/analytics",
             params={
@@ -1021,7 +1023,7 @@ class WhatsAppAdapter(BaseAdapter):
         self._ensure_initialized()
 
         await self.rate_limiter.acquire()
-        response = self._make_request(
+        response = await self._make_request(
             "GET",
             f"/{self.business_account_id}/conversation_analytics",
             params={
@@ -1052,14 +1054,19 @@ class WhatsAppAdapter(BaseAdapter):
         # WhatsApp expects no leading +
         return digits
 
-    def _make_request(
+    async def _make_request(
         self,
         method: str,
         endpoint: str,
         params: Optional[dict] = None,
         data: Optional[dict] = None,
     ) -> dict[str, Any]:
-        """Make HTTP request to WhatsApp API."""
+        """Make HTTP request to WhatsApp API.
+
+        Async because all nine call sites are ``async def``. This was
+        previously a synchronous helper invoked without a thread, so every
+        call blocked the event loop for the length of the request.
+        """
         url = f"{self.BASE_URL}{endpoint}"
         headers = {
             "Authorization": f"Bearer {self.access_token}",
@@ -1067,26 +1074,27 @@ class WhatsAppAdapter(BaseAdapter):
         }
 
         try:
-            if method == "GET":
-                response = requests.get(url, headers=headers, params=params, timeout=30)
-            elif method == "POST":
-                response = requests.post(
-                    url, headers=headers, json=data, params=params, timeout=30
-                )
-            elif method == "DELETE":
-                response = requests.delete(
-                    url, headers=headers, params=params, timeout=30
-                )
-            else:
-                response = requests.request(
-                    method, url, headers=headers, json=data, timeout=30
-                )
+            async with httpx.AsyncClient(timeout=30) as client:
+                if method == "GET":
+                    response = await client.get(url, headers=headers, params=params)
+                elif method == "POST":
+                    response = await client.post(
+                        url, headers=headers, json=data, params=params
+                    )
+                elif method == "DELETE":
+                    response = await client.delete(url, headers=headers, params=params)
+                else:
+                    response = await client.request(
+                        method, url, headers=headers, json=data
+                    )
 
             response.raise_for_status()
             return response.json()
 
-        except requests.RequestException as e:
+        except httpx.HTTPError as e:
             error_data = {}
+            # httpx.HTTPStatusError carries .response; transport errors such as
+            # ConnectError do not, hence the hasattr guard.
             if hasattr(e, "response") and e.response is not None:
                 with contextlib.suppress(json.JSONDecodeError, ValueError):
                     error_data = e.response.json()
@@ -1170,9 +1178,8 @@ class WhatsAppAdapter(BaseAdapter):
         url = f"{self.BASE_URL}/{self.phone_number_id}/media"
         headers = {"Authorization": f"Bearer {self.access_token}"}
 
-        response = requests.post(
-            url, data=data, files=files, headers=headers, timeout=60
-        )
+        async with httpx.AsyncClient(timeout=60) as client:
+            response = await client.post(url, data=data, files=files, headers=headers)
         response.raise_for_status()
 
         return response.json().get("id", "")

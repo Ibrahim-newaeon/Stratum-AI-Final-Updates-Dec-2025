@@ -39,7 +39,7 @@ from datetime import UTC, datetime, timedelta, timezone
 from enum import Enum
 from typing import Any, Optional
 
-import requests
+import httpx
 
 logger = logging.getLogger("stratum.google")
 
@@ -564,7 +564,7 @@ class GA4MeasurementProtocol:
             user_properties: User-scoped properties
             timestamp_micros: Event timestamp in microseconds
         """
-        import requests
+        import httpx
 
         url = f"{self.endpoint}?measurement_id={self.measurement_id}&api_secret={self.api_secret}"
 
@@ -585,7 +585,8 @@ class GA4MeasurementProtocol:
             payload["timestamp_micros"] = timestamp_micros
 
         try:
-            response = requests.post(url, json=payload, timeout=30)
+            async with httpx.AsyncClient(timeout=30) as client:
+                response = await client.post(url, json=payload)
 
             # MP returns 204 on success, 200 with validation on debug
             if response.status_code == 204:
@@ -598,7 +599,7 @@ class GA4MeasurementProtocol:
                 logger.warning(f"GA4 MP: Unexpected status {response.status_code}")
                 return {"success": False, "status": response.status_code}
 
-        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             logger.error(f"GA4 MP network error: {e}")
             return {"success": False, "error": str(e)}
         except (ValueError, KeyError, TypeError) as e:
