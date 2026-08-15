@@ -27,14 +27,27 @@ log() {
     echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) [backup] $*"
 }
 
-# Install the Postgres client once at start; the aws-cli image does not carry
-# it. Pinned to the same major version as the server image.
-if ! command -v pg_dump >/dev/null 2>&1; then
-    log "installing postgresql client"
-    yum install -y postgresql15 >/dev/null 2>&1 \
-        || microdnf install -y postgresql15 >/dev/null 2>&1 \
-        || log "WARNING: could not install postgresql client"
+# The image supplies pg_dump and gzip; only the AWS CLI has to be added.
+# Failing here must be loud and fatal — an earlier version logged a warning and
+# carried on, which produced a "backup" whose every tool was missing:
+#     pg_dump: command not found
+#     gzip: command not found
+# and an upload of nothing at all.
+if ! command -v aws >/dev/null 2>&1; then
+    log "installing aws-cli"
+    apk add --no-cache aws-cli >/dev/null 2>&1 || {
+        log "FATAL: could not install aws-cli"
+        exit 1
+    }
 fi
+
+for tool in pg_dump gzip aws; do
+    command -v "$tool" >/dev/null 2>&1 || {
+        log "FATAL: $tool is missing; refusing to pretend to back up"
+        exit 1
+    }
+done
+log "tools present: $(pg_dump --version | head -1)"
 
 run_backup() {
     stamp="$(date -u +%Y%m%dT%H%M%SZ)"

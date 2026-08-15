@@ -91,7 +91,11 @@ services:
   # jurisdiction — which keeps personal data inside the same boundary as the
   # Falkenstein host.
   backup:
-    image: amazon/aws-cli:2.17.0
+    # postgres:16-alpine, not amazon/aws-cli: the dump needs pg_dump at the
+    # same major version as the server, and the aws-cli image carries neither
+    # pg_dump nor gzip. Going the other way — Postgres client plus the AWS CLI
+    # from Alpine's repos — is one apk install instead of two missing tools.
+    image: postgres:16-alpine
     container_name: stratum_backup
     restart: always
     entrypoint: ["/bin/sh", "/opt/backup/run.sh"]
@@ -100,7 +104,7 @@ services:
       AWS_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?R2_SECRET_ACCESS_KEY is required}
       AWS_DEFAULT_REGION: auto
       R2_ENDPOINT: ${R2_ENDPOINT:?R2_ENDPOINT is required}
-      R2_BUCKET: ${R2_BUCKET:-stratum-backups}
+      R2_BUCKET: ${R2_BUCKET:?R2_BUCKET is required}
       PGHOST: db
       PGUSER: ${POSTGRES_USER:?POSTGRES_USER is required}
       PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
