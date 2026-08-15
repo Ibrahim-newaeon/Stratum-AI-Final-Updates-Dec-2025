@@ -76,7 +76,10 @@ services:
       - LOG_FORMAT=json
       - SENTRY_DSN=${SENTRY_DSN:-}
     volumes:
-      - ./ml_service/models:/app/ml_service/models:ro
+      # Writable: the app auto-trains missing models on startup and the
+      # read-only mount made that fail with [Errno 30], leaving predictions
+      # permanently unavailable. Models are regenerated artefacts, not config.
+      - ./ml_service/models:/app/ml_service/models
     depends_on:
       - pgbouncer
     command: >
@@ -106,6 +109,11 @@ services:
     environment:
       - APP_ENV=production
       - USE_MOCK_AD_DATA=false
+      # Settings validates CORS_ORIGINS at import for every process, not just
+      # the HTTP one. Without this the worker falls back to the code default
+      # (localhost) and the production validator refuses to import celery_app
+      # at all — the worker is not serving CORS, but it still has to satisfy it.
+      - CORS_ORIGINS=${CORS_ORIGINS:?CORS_ORIGINS is required}
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-stratum_ai}?prepared_statement_cache_size=0
       - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-stratum_ai}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/0
@@ -114,7 +122,10 @@ services:
       - LOG_LEVEL=WARNING
       - SENTRY_DSN=${SENTRY_DSN:-}
     volumes:
-      - ./ml_service/models:/app/ml_service/models:ro
+      # Writable: the app auto-trains missing models on startup and the
+      # read-only mount made that fail with [Errno 30], leaving predictions
+      # permanently unavailable. Models are regenerated artefacts, not config.
+      - ./ml_service/models:/app/ml_service/models
     depends_on:
       - pgbouncer
     command: celery -A app.workers.celery_app worker --loglevel=warning --concurrency=2
@@ -139,6 +150,8 @@ services:
     restart: always
     environment:
       - APP_ENV=production
+      - USE_MOCK_AD_DATA=false
+      - CORS_ORIGINS=${CORS_ORIGINS:?CORS_ORIGINS is required}
       - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-stratum_ai}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/0
       - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/1
