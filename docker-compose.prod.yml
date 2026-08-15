@@ -57,6 +57,14 @@ services:
   # ===========================================================================
   api:
     restart: always
+    # Inject the whole .env, as docker-compose.beta.yml already does.
+    # Compose reads .env for *interpolation* but does not pass it into the
+    # containers, so every Settings field carrying a production validator had
+    # to be listed per service — and each omission surfaced one restart at a
+    # time (CORS_ORIGINS, then FRONTEND_URL, ...). The explicit environment:
+    # entries below still take precedence over the file.
+    env_file:
+      - .env
     environment:
       - APP_ENV=production
       - DEBUG=false
@@ -106,6 +114,14 @@ services:
   # ===========================================================================
   worker:
     restart: always
+    # Inject the whole .env, as docker-compose.beta.yml already does.
+    # Compose reads .env for *interpolation* but does not pass it into the
+    # containers, so every Settings field carrying a production validator had
+    # to be listed per service — and each omission surfaced one restart at a
+    # time (CORS_ORIGINS, then FRONTEND_URL, ...). The explicit environment:
+    # entries below still take precedence over the file.
+    env_file:
+      - .env
     environment:
       - APP_ENV=production
       - USE_MOCK_AD_DATA=false
@@ -148,6 +164,14 @@ services:
   # ===========================================================================
   scheduler:
     restart: always
+    # Inject the whole .env, as docker-compose.beta.yml already does.
+    # Compose reads .env for *interpolation* but does not pass it into the
+    # containers, so every Settings field carrying a production validator had
+    # to be listed per service — and each omission surfaced one restart at a
+    # time (CORS_ORIGINS, then FRONTEND_URL, ...). The explicit environment:
+    # entries below still take precedence over the file.
+    env_file:
+      - .env
     environment:
       - APP_ENV=production
       - USE_MOCK_AD_DATA=false
