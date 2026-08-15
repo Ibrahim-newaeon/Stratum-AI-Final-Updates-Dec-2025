@@ -9,7 +9,7 @@ Uses synchronous migrations for simplicity and reliability.
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import pool, create_engine
+from sqlalchemy import pool, create_engine, text
 from sqlalchemy.engine import Connection
 
 from app.core.config import settings
@@ -55,14 +55,50 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
+def _ensure_wide_version_table(connection: Connection) -> None:
+    """Make ``alembic_version.version_num`` wide enough for our revision ids.
+
+    Alembic hardcodes that column as ``VARCHAR(32)`` and offers no supported
+    way to change it — ``version_num_width`` was passed to ``context.configure``
+    here for exactly this reason, but no such option exists. ``configure()``
+    takes ``**kw`` and drops unknown keys silently, so it neither worked nor
+    complained.
+
+    Several revision ids are longer than 32 characters
+    (``041_add_superadmin_to_userrole_enum`` is 35), so ``upgrade head`` against
+    a fresh database died partway with::
+
+        StringDataRightTruncation: value too long for type character varying(32)
+
+    and rolled the whole run back, leaving no schema at all. Creating the table
+    ourselves first means Alembic finds it already present and leaves it alone.
+    The ALTER covers databases stamped before this fix.
+    """
+    connection.execute(
+        text(
+            "CREATE TABLE IF NOT EXISTS alembic_version ("
+            "version_num VARCHAR(255) NOT NULL, "
+            "CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num))"
+        )
+    )
+    connection.execute(
+        text(
+            "ALTER TABLE alembic_version "
+            "ALTER COLUMN version_num TYPE VARCHAR(255)"
+        )
+    )
+    connection.commit()
+
+
 def do_run_migrations(connection: Connection) -> None:
     """Run migrations with the given connection."""
+    _ensure_wide_version_table(connection)
+
     context.configure(
         connection=connection,
         target_metadata=target_metadata,
         compare_type=True,
         compare_server_default=True,
-        version_num_width=128,
     )
 
     with context.begin_transaction():
