@@ -40,12 +40,18 @@ class MockCurrentUser:
 
 
 @pytest_asyncio.fixture(scope="function")
-async def cdp_client(app, db_session, test_tenant) -> AsyncClient:
+async def cdp_client(app, db_session, test_tenant, test_user) -> AsyncClient:
     """
     Create an async HTTP client for CDP API testing with mocked auth.
 
     Adds a JWT token so TenantMiddleware can extract tenant context
     before the request reaches endpoint-level auth dependencies.
+
+    The mock user carries ``test_user``'s real id rather than a hardcoded 1.
+    GDPR profile erasure writes an ``audit_logs`` row whose ``user_id`` is FK'd
+    to ``users``, so a synthetic id fails the constraint — and a fixture that
+    cannot represent the acting user is a fixture that cannot exercise any
+    endpoint recording who acted.
     """
     from app.auth.deps import get_current_user
     from app.core.security import create_access_token
@@ -57,14 +63,14 @@ async def cdp_client(app, db_session, test_tenant) -> AsyncClient:
 
     # Mock auth to return a user with the test tenant
     async def mock_get_current_user():
-        return MockCurrentUser(user_id=1, tenant_id=test_tenant["id"])
+        return MockCurrentUser(user_id=test_user["id"], tenant_id=test_tenant["id"])
 
     app.dependency_overrides[get_async_session] = get_test_session
     app.dependency_overrides[get_current_user] = mock_get_current_user
 
     # Create a JWT so TenantMiddleware can extract tenant_id
     token = create_access_token(
-        subject=1,
+        subject=test_user["id"],
         additional_claims={
             "email": "test@example.com",
             "tenant_id": test_tenant["id"],

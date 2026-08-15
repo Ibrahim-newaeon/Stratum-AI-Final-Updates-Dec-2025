@@ -1018,11 +1018,19 @@ class TestErasurePropagation:
             segment,
             [("email", "erase@example.com"), ("phone", "+15550001111")],
         )
+        # Distinct ad accounts: (tenant, segment, platform, ad_account) is
+        # unique, and two audiences on separate accounts is also the case worth
+        # covering — erasure must reach every account, not just the first.
         first = await _seed_audience(db_session, tenant_id, segment)
         second = await _seed_audience(
-            db_session, tenant_id, segment, platform_audience_id="aud_ext_2"
+            db_session,
+            tenant_id,
+            segment,
+            platform_audience_id="aud_ext_2",
+            ad_account_id="act_456",
         )
         await _seed_credential(db_session, tenant_id)
+        await _seed_credential(db_session, tenant_id, ad_account_id="act_456")
 
         with respx.mock:
             for audience in (first, second):
