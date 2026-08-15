@@ -26,6 +26,15 @@ from app.services.knowledge_graph.models import (
     SignalStatus,
 )
 
+# Without this marker the CI integration run (-m "integration") silently
+# deselects the whole module, so these tests had never executed. Nothing
+# reports a file that is collected and then filtered out — it just looks like
+# coverage that is not there.
+#
+# They need no database despite living under tests/integration: the module
+# docstring says so, and the fixtures below build plain model objects.
+pytestmark = pytest.mark.integration
+
 # =============================================================================
 # Fixtures
 # =============================================================================
