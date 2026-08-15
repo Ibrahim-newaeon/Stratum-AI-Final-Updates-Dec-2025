@@ -232,9 +232,7 @@ async def execute_action(
     if not claimed:
         result["status"] = "skipped"
         result["reason"] = "Action already executed or in flight (idempotency guard)"
-        logger.warning(
-            f"Action {execution_id} skipped: duplicate of {idempotency_key}"
-        )
+        logger.warning(f"Action {execution_id} skipped: duplicate of {idempotency_key}")
         return result
 
     try:

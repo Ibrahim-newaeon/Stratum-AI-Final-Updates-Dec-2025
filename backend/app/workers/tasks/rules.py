@@ -311,8 +311,7 @@ def _execute_action(
         result["success"] = False
         result["skipped"] = True
         result["error"] = (
-            "Execution gate held this action "
-            "(see rules_execution_gate_blocked)"
+            "Execution gate held this action (see rules_execution_gate_blocked)"
         )
         return result
 
