@@ -52,6 +52,10 @@ from app.services.crm.hubspot_client import HubSpotClient
 from app.services.crm.hubspot_sync import HubSpotSyncService
 from app.services.crm.hubspot_writeback import HubSpotWritebackService
 from app.services.crm.identity_matching import IdentityMatcher
+from app.services.crm.oauth_state import (
+    consume_crm_oauth_state,
+    create_crm_oauth_state,
+)
 
 router = APIRouter(prefix="/integrations", tags=["integrations"])
 
@@ -203,25 +207,22 @@ async def hubspot_connect(
     _verify_tenant_access(http_request, tenant_id)
     client = HubSpotClient(db, tenant_id)
 
-    # Generate state token for CSRF protection
-    import secrets
-
-    state = secrets.token_urlsafe(32)
-
-    # Store state in session/cache (simplified - in production use Redis)
-    # For now, we'll include tenant_id in state
-    state_with_tenant = f"{tenant_id}:{state}"
+    # The tenant is bound to this token in Redis, not encoded into it. The
+    # previous form was f"{tenant_id}:{secrets.token_urlsafe(32)}" with the
+    # random half stored nowhere, so the callback could only read the tenant
+    # back out of a value the caller controls.
+    state = await create_crm_oauth_state("hubspot", tenant_id)
 
     auth_url = client.get_authorization_url(
         redirect_uri=request.redirect_uri,
-        state=state_with_tenant,
+        state=state,
     )
 
     return APIResponse(
         success=True,
         data=HubSpotConnectResponse(
             authorization_url=auth_url,
-            state=state_with_tenant,
+            state=state,
         ),
     )
 
@@ -241,12 +242,22 @@ async def hubspot_callback(
     Handle HubSpot OAuth callback.
     Exchanges authorization code for tokens and stores connection.
     """
-    # Extract tenant_id from state
-    try:
-        tenant_id_str, _ = state.split(":", 1)
-        tenant_id = int(tenant_id_str)
-    except (ValueError, AttributeError):
-        raise HTTPException(status_code=400, detail="Invalid state parameter")
+    # Resolve the tenant from Redis, never from the state string itself. This
+    # endpoint is unauthenticated by necessity — HubSpot redirects the user's
+    # browser here with no JWT — so `state` is the ONLY thing establishing
+    # which tenant is being connected. Parsing it out of the parameter meant
+    # anyone could complete a flow with state="<victim_tenant>:x" and bind
+    # their own HubSpot portal to that tenant.
+    #
+    # consume_crm_oauth_state fails closed: unknown token, replayed token, or
+    # Redis unavailable all return None.
+    tenant_id = await consume_crm_oauth_state("hubspot", state)
+    if tenant_id is None:
+        logger.warning("hubspot_callback_invalid_state")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid or expired state parameter — restart the connection",
+        )
 
     client = HubSpotClient(db, tenant_id)
 
@@ -372,18 +383,35 @@ async def hubspot_webhook(
     """
     body = await request.body()
 
-    # Validate webhook signature (v3 preferred)
-    if settings.hubspot_client_secret:
-        if x_hubspot_signature_v3:
-            # V3 signature validation
-            expected = hmac.new(
-                settings.hubspot_client_secret.encode(),
-                body,
-                hashlib.sha256,
-            ).hexdigest()
-            if not hmac.compare_digest(expected, x_hubspot_signature_v3):
-                logger.warning("hubspot_webhook_invalid_signature")
-                raise HTTPException(status_code=401, detail="Invalid signature")
+    # Validate the webhook signature. Fails closed on every branch.
+    #
+    # This previously nested two ifs with no else, so an unset client secret OR
+    # a missing v3 header meant the payload was processed unverified — and this
+    # endpoint takes no authentication, because HubSpot calls it directly. Both
+    # gaps were unreachable only for as long as the route itself 401'd in
+    # middleware; making the route work made them live.
+    if not settings.hubspot_client_secret:
+        logger.error("hubspot_webhook_secret_not_configured")
+        raise HTTPException(
+            status_code=503,
+            detail="Webhook processing is not configured",
+        )
+
+    if not x_hubspot_signature_v3:
+        logger.warning(
+            "hubspot_webhook_missing_signature",
+            detail="Only the v3 signature is accepted",
+        )
+        raise HTTPException(status_code=401, detail="Missing signature")
+
+    expected = hmac.new(
+        settings.hubspot_client_secret.encode(),
+        body,
+        hashlib.sha256,
+    ).hexdigest()
+    if not hmac.compare_digest(expected, x_hubspot_signature_v3):
+        logger.warning("hubspot_webhook_invalid_signature")
+        raise HTTPException(status_code=401, detail="Invalid signature")
 
     # Parse payload
     try:
