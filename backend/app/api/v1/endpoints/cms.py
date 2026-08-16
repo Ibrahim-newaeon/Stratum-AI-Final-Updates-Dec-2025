@@ -29,6 +29,7 @@ from sqlalchemy.orm import selectinload
 
 from app.base_models import User
 from app.core.logging import get_logger
+from app.core.security import mask_email
 from app.db.session import get_async_session
 from app.models.cms import (
     CMSAuthor,
@@ -505,7 +506,7 @@ async def submit_contact_form(
     db.add(submission)
     await db.commit()
 
-    logger.info(f"Contact form submitted: {body.email}")
+    logger.info("contact_form_submitted", email=mask_email(body.email))
 
     return APIResponse(
         success=True,
