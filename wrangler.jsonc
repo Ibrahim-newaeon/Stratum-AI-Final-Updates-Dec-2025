@@ -47,6 +47,31 @@
     { "pattern": "stratumai.app", "custom_domain": true }
   ],
 
+  // Mirrors the dashboard. Cloudflare warns that settings absent from this file
+  // are not guaranteed to survive a deploy: wrangler treats it as the source of
+  // truth, so anything configured only through the UI can be reset by the next
+  // `wrangler deploy`.
+  //
+  // Logs on, traces off. This Worker runs no server-side code, so traces would
+  // describe nothing, while invocation logs are the only request-level
+  // telemetry the frontend has — Prometheus and Grafana watch the API and see
+  // nothing that terminates at the edge.
+  "observability": {
+    "enabled": false,
+    "head_sampling_rate": 1,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "persist": true,
+      "invocation_logs": true
+    },
+    "traces": {
+      "enabled": false,
+      "persist": true,
+      "head_sampling_rate": 1
+    }
+  },
+
   "assets": {
     "directory": "./frontend/dist",
 

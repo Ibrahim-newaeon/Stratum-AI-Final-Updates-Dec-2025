@@ -16,7 +16,9 @@ services:
     restart: unless-stopped
     environment:
       - DOCKER_ENV=true
-      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8000}
+      # See docker-compose.yml: the frontend reads VITE_API_URL, never
+      # VITE_API_BASE_URL, and the value must carry the /api/v1 path.
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000/api/v1}
       - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8000}
       - VITE_DEFAULT_LOCALE=${VITE_DEFAULT_LOCALE:-en}
       - VITE_SENTRY_DSN=${VITE_SENTRY_DSN:-}

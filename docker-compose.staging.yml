@@ -157,10 +157,16 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       target: production
+      # Build args, not `environment:`. This target is nginx serving a static
+      # bundle, and Vite inlines import.meta.env at build time — a runtime
+      # environment variable reaches the container and changes nothing. The
+      # name was wrong as well (the frontend reads VITE_API_URL, never
+      # VITE_API_BASE_URL), so staging was failing for two reasons at once.
+      args:
+        - VITE_API_URL=${VITE_API_URL:-https://staging-api.stratum.ai/api/v1}
     container_name: stratum_staging_frontend
     restart: unless-stopped
     environment:
-      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-https://staging-api.stratum.ai}
       - VITE_SENTRY_DSN=${VITE_SENTRY_DSN:-}
     ports:
       - "3000:80"
