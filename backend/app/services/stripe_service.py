@@ -83,6 +83,28 @@ class SubscriptionState(str, Enum):
     PAUSED = "paused"
 
 
+# The only states that entitle a tenant to the plan they subscribed to.
+# Everything absent from this set downgrades to free, so a state added to
+# Stripe later fails closed rather than silently granting access.
+#
+# PAST_DUE is included deliberately: it means an invoice failed and Stripe is
+# still retrying under the dunning schedule. Cutting a customer off the moment
+# a card expires is the wrong trade, and app.core.subscription already carries
+# GRACE_PERIOD_DAYS for exactly this window. When Stripe gives up it moves the
+# subscription to unpaid or canceled, and both downgrade here.
+#
+# INCOMPLETE is excluded, and is the one that leaked: Stripe emits
+# customer.subscription.created with status=incomplete as soon as checkout
+# finishes, whether or not the first payment ever succeeded.
+ENTITLING_STATES = frozenset(
+    {
+        SubscriptionState.ACTIVE,
+        SubscriptionState.TRIALING,
+        SubscriptionState.PAST_DUE,
+    }
+)
+
+
 @dataclass
 class StripeCustomer:
     """Stripe customer data."""
@@ -792,23 +814,46 @@ async def sync_tenant_subscription(
     Sync Stripe subscription data to tenant record.
 
     Updates the tenant's plan and plan_expires_at based on Stripe subscription.
+    Only the states in ENTITLING_STATES grant the paid plan; every other state
+    downgrades to free.
     """
     from app.base_models import Tenant
 
-    # Map subscription status to plan
-    plan = subscription.tier.value
+    entitled = subscription.status in ENTITLING_STATES
 
-    # Determine expiry date
-    if subscription.status in [SubscriptionState.ACTIVE, SubscriptionState.TRIALING]:
+    if entitled:
+        # An entitling state without a recognised tier means the price on the
+        # subscription is not one of STRIPE_*_PRICE_ID. Guessing would either
+        # over-grant or strip a paying customer's plan, so change nothing and
+        # make noise. Previously this raised AttributeError on `.tier.value`,
+        # which is neither of those tuples the webhook catches — so Stripe got
+        # a 500 and retried the same event forever.
+        if subscription.tier is None:
+            logger.error(
+                "stripe_subscription_unmapped_price",
+                tenant_id=tenant_id,
+                subscription_id=subscription.id,
+                price_id=subscription.price_id,
+                status=subscription.status.value,
+                detail="price is not any of STRIPE_{STARTER,PROFESSIONAL,"
+                "ENTERPRISE}_PRICE_ID; tenant plan left unchanged",
+            )
+            return
+
+        plan = subscription.tier.value
         plan_expires_at = subscription.current_period_end
-    elif subscription.status == SubscriptionState.CANCELED:
-        # If canceled, use the period end or canceled_at
-        plan_expires_at = subscription.canceled_at or subscription.current_period_end
     else:
-        # Past due, unpaid, etc. - keep current period end
-        plan_expires_at = subscription.current_period_end
+        # unpaid / incomplete / incomplete_expired / paused / canceled.
+        #
+        # This branch used to assign the paid tier as well — the old code read
+        # `plan = subscription.tier.value` before looking at status at all, and
+        # the status check only chose an expiry date. So a subscription whose
+        # first payment never completed still granted the plan it was for:
+        # Stripe emits customer.subscription.created with status=incomplete as
+        # soon as checkout finishes, payment or no payment.
+        plan = "free"
+        plan_expires_at = subscription.canceled_at or subscription.current_period_end
 
-    # Update tenant
     await db.execute(
         update(Tenant)
         .where(Tenant.id == tenant_id)
@@ -823,6 +868,8 @@ async def sync_tenant_subscription(
         "tenant_subscription_synced",
         tenant_id=tenant_id,
         plan=plan,
+        entitled=entitled,
+        subscription_status=subscription.status.value,
         plan_expires_at=plan_expires_at.isoformat(),
     )
 
