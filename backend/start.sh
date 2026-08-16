@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-echo "=== Railway Container Starting ==="
+echo "=== Stratum API container starting ==="
 echo "PORT=${PORT:-not set}"
 echo "PWD=$(pwd)"
 echo "Python: $(python --version 2>&1)"
