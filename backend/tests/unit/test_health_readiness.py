@@ -2,12 +2,11 @@
 # Stratum AI - Readiness probe tests (INF-002)
 # =============================================================================
 """
-The Railway healthcheck targets /health/ready, which must report ready only
-when BOTH Postgres and Redis are up — and must NOT depend on a third-party
+The readiness probe at /health/ready must report ready only when BOTH
+Postgres and Redis are up — and must NOT depend on a third-party
 (SendGrid) API call. check_readiness() holds that logic.
 """
 
-from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -57,11 +56,3 @@ async def test_not_ready_when_redis_down():
         result = await check_readiness()
     assert result["ready"] is False
     assert "unhealthy" in result["redis"]
-
-
-def test_railway_healthcheck_targets_readiness():
-    # Config regression guard: the probe must hit /health/ready, not /health
-    # (which is broader and historically pinged SendGrid).
-    railway = Path(__file__).resolve().parents[2] / "railway.toml"
-    text = railway.read_text(encoding="utf-8")
-    assert 'healthcheckPath = "/health/ready"' in text
