@@ -242,9 +242,12 @@ api_router.include_router(
 )
 
 # Superadmin Analytics (Platform-wide analytics)
+# NOTE: superadmin_analytics.router already declares prefix="/superadmin".
+# Adding one here as well served every route at
+# /api/v1/superadmin/analytics/superadmin/<route>, while the frontend calls
+# /api/v1/superadmin/<route> — so all four endpoints 404'd.
 api_router.include_router(
     superadmin_analytics.router,
-    prefix="/superadmin/analytics",
     tags=["Superadmin Analytics"],
 )
 
@@ -339,9 +342,11 @@ api_router.include_router(
 )
 
 # Audit Services (EMQ, Offline Conversions, A/B Testing, LTV, etc.)
+# NOTE: audit_services.router already declares prefix="/audit-services".
+# Adding "/audit" here served all 40 routes at /api/v1/audit/audit-services/…
+# while the frontend calls /api/v1/audit-services/… — the entire surface 404'd.
 api_router.include_router(
     audit_services.router,
-    prefix="/audit",
     tags=["Audit Services"],
 )
 
@@ -503,9 +508,12 @@ api_router.include_router(
 )
 
 # AI Intelligence (Gap #3)
+# NOTE: intelligence.router already declares prefix="/analytics/insights".
+# No frontend calls these, so nothing was visibly broken — but they were served
+# at /api/v1/intelligence/analytics/insights/…, which is not a path anyone
+# would write on purpose.
 api_router.include_router(
     intelligence.router,
-    prefix="/intelligence",
     tags=["AI Intelligence"],
 )
 
@@ -518,9 +526,11 @@ api_router.include_router(
 )
 
 # Compliance (Gap #5)
+# NOTE: compliance.router already declares prefix="/admin/compliance".
+# As above — no frontend callers, but the served path was
+# /api/v1/compliance/admin/compliance/….
 api_router.include_router(
     compliance.router,
-    prefix="/compliance",
     tags=["Compliance"],
 )
 
