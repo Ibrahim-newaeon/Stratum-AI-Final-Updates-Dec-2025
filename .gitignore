@@ -80,3 +80,4 @@ CLAUDE.local.md
 dump.rdb
 *.rdb
 infrastructure/prometheus/metrics_api_key
+infrastructure/prometheus/alertmanager.generated.yml

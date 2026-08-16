@@ -295,6 +295,57 @@ observability() {
     chown 65534:65534 "$key_file"
     chmod 400 "$key_file"
 
+    # Alertmanager config is rendered, not mounted directly, because the Slack
+    # webhook is a credential and belongs in .env rather than in git.
+    # Alertmanager does no environment substitution of its own, and a config
+    # naming a receiver with an empty api_url fails to load — so the choice
+    # between "notify Slack" and "UI only" is made here, at render time.
+    local am_src am_out slack_url slack_url_critical
+    am_out="infrastructure/prometheus/alertmanager.generated.yml"
+    slack_url="$(grep -m1 '^SLACK_WEBHOOK_URL=' "$ENV_FILE" | cut -d= -f2-)"
+    slack_url_critical="$(grep -m1 '^SLACK_WEBHOOK_URL_CRITICAL=' "$ENV_FILE" | cut -d= -f2-)"
+
+    # A Slack webhook is bound to one channel, so two channels means two
+    # webhooks. With only one configured, both severities share it rather than
+    # the critical receiver silently losing its destination.
+    if [ -z "$slack_url_critical" ] && [ -n "$slack_url" ]; then
+        log_warn "SLACK_WEBHOOK_URL_CRITICAL unset — critical alerts share the default channel"
+        slack_url_critical="$slack_url"
+    fi
+
+    if [ -n "$slack_url" ]; then
+        am_src="infrastructure/prometheus/alertmanager.slack.yml"
+        log_info "Rendering Alertmanager config with Slack notifications"
+        # Explicit variable list: the template also contains Go templating
+        # ({{ .Status }}), which must reach Alertmanager untouched.
+        SLACK_WEBHOOK_URL="$slack_url" \
+        SLACK_WEBHOOK_URL_CRITICAL="$slack_url_critical" \
+            envsubst '${SLACK_WEBHOOK_URL} ${SLACK_WEBHOOK_URL_CRITICAL}' \
+            < "$am_src" > "$am_out"
+    else
+        am_src="infrastructure/prometheus/alertmanager.yml"
+        log_warn "SLACK_WEBHOOK_URL is not set — alerts will be visible in the"
+        log_warn "Alertmanager UI over the tunnel, and will page nobody."
+        cp "$am_src" "$am_out"
+    fi
+    # Same ownership dance as the scrape key above, and for the same reason:
+    # prom/alertmanager runs as nobody(65534), so a root-owned 0600 file is
+    # unreadable to it. Left that way, amtool reports
+    # "FAILED: open /am.yml: permission denied" — which reads like a broken
+    # config rather than a broken mode.
+    chown 65534:65534 "$am_out"
+    chmod 400 "$am_out"
+
+    # Fail before starting rather than after: amtool reports the line, a
+    # crash-looping container reports only that it restarted.
+    if command -v docker >/dev/null 2>&1; then
+        docker run --rm -v "$PWD/$am_out:/am.yml:ro" \
+            --entrypoint amtool prom/alertmanager:v0.27.0 \
+            check-config /am.yml >/dev/null 2>&1 || {
+                log_error "Rendered Alertmanager config is invalid: $am_out"
+                exit 1; }
+    fi
+
     log_info "Starting observability stack (loopback only)"
     docker compose $COMPOSE_FILES -f docker-compose.observability.yml \
         up -d prometheus alertmanager grafana
