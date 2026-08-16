@@ -143,6 +143,7 @@ async def api_client(test_app, mock_db) -> AsyncGenerator[AsyncClient, None]:
     from fastapi import HTTPException, Request
 
     from app.auth.deps import CurrentUser, get_current_user
+    from app.auth.permissions import is_superadmin_role, require_super_admin
     from app.base_models import UserRole
     from app.core.security import decode_token
     from app.db.session import get_async_session, get_db
@@ -189,9 +190,40 @@ async def api_client(test_app, mock_db) -> AsyncGenerator[AsyncClient, None]:
             user=fake_user, email=payload.get("email", ""), full_name=None
         )
 
+    async def override_require_super_admin(request: Request) -> None:
+        """Apply the super-admin gate without the database hop.
+
+        Same reason `get_current_user` is overridden above. The real
+        `require_super_admin` loads the User row and treats it as
+        authoritative — deliberately, so a token minted before a demotion
+        cannot outlive it. Against the mocked session that lookup returns
+        None, so every super-admin request 403s here whatever the token says.
+
+        The role check is preserved, so tests asserting that a tenant admin is
+        refused still mean something. What this does not exercise is the
+        database being the source of truth; that is covered directly in
+        tests/unit/test_permissions_mfa.py, which drives require_super_admin
+        against a fake session — including a token claiming superadmin over a
+        row that says admin, a deactivated super-admin, and a soft-deleted one.
+        """
+        user_id = getattr(request.state, "user_id", None)
+        if not user_id:
+            raise HTTPException(
+                status_code=401,
+                detail="Authentication required",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        auth = request.headers.get("Authorization", "")
+        payload = (
+            decode_token(auth.split(" ", 1)[1]) if auth.startswith("Bearer ") else None
+        )
+        if not payload or not is_superadmin_role(payload.get("role")):
+            raise HTTPException(status_code=403, detail="Super admin access required")
+
     test_app.dependency_overrides[get_async_session] = override_session
     test_app.dependency_overrides[get_db] = override_session
     test_app.dependency_overrides[get_current_user] = override_current_user
+    test_app.dependency_overrides[require_super_admin] = override_require_super_admin
 
     async with AsyncClient(
         transport=ASGITransport(app=test_app),

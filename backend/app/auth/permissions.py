@@ -17,7 +17,9 @@ Permissions are granular and can be checked individually or in combination.
 from enum import Enum
 from typing import TYPE_CHECKING, Callable, List, Optional, Set
 
-from fastapi import HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request, status
+
+from app.db.session import get_async_session as _get_session_dep
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -690,24 +692,64 @@ def require_role(roles: List[str]) -> Callable:
     return role_checker
 
 
-async def require_super_admin(request: Request) -> None:
+async def require_super_admin(
+    request: Request,
+    db: "AsyncSession" = Depends(_get_session_dep),
+) -> None:
     """
-    FastAPI dependency that requires super admin role.
+    FastAPI dependency requiring super admin, verified against the DATABASE.
 
-    This is a convenience dependency for routes that should only
-    be accessible to super admins (platform-level operations).
+    Deliberately not ``_authenticated_role(request)`` like the other
+    dependencies in this module. That reads ``request.state.role``, which the
+    middleware copies from the JWT — a snapshot taken at login. Demote a
+    superadmin, deactivate them, or soft-delete them, and their existing token
+    keeps asserting ``role: superadmin`` for the rest of its lifetime
+    (``access_token_expire_minutes``, 30 by default). On the platform-wide
+    surface — every tenant's data, billing, subscription actions, data
+    seeding — half an hour of stale authority is the wrong trade.
+
+    Equally deliberately NOT ``Depends(get_current_user)``, which is the
+    obvious way to reach the database. That dependency assigns
+    ``request.state.tenant_id = user.tenant_id`` as a side effect, and this
+    guard runs on routes where a superadmin legitimately acts on *another*
+    tenant (``?tenant_id=X``). Overwriting the tenant context with the
+    superadmin's own made ``_verify_tenant_access`` reject them with "Access
+    denied" — an authorization fix that broke authorization. This reads the
+    row and mutates nothing.
+
+    The cost is one primary-key lookup per request.
 
     Usage:
-        @router.get("/system/health")
-        async def system_health(
-            request: Request,
-            _: None = Depends(require_super_admin)
-        ):
+        @router.get("/system/health", dependencies=[Depends(require_super_admin)])
+        async def system_health():
             ...
     """
-    role = _authenticated_role(request)
+    user_id = getattr(request.state, "user_id", None)
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-    if not is_superadmin_role(role):
+    from sqlalchemy import select
+
+    from app.models import User
+
+    result = await db.execute(
+        select(User).where(User.id == user_id, User.is_deleted.is_(False))
+    )
+    user = result.scalar_one_or_none()
+
+    # Deleted or deactivated is not superadmin, whatever the token says — this
+    # is the half of the check a JWT claim can never make.
+    if user is None or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Super admin access required",
+        )
+
+    if not is_superadmin_role(getattr(user.role, "value", user.role)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Super admin access required",

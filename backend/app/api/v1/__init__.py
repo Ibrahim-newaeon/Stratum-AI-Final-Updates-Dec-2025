@@ -214,17 +214,24 @@ api_router.include_router(
 )
 
 # Super Admin Dashboard (Platform-level management)
+# Gated at the router so every route inherits the DATABASE-backed superadmin
+# check. The handlers each call a module-local require_superadmin(request) that
+# reads request.state.role — the JWT claim — so a demoted, deactivated or
+# deleted superadmin kept full platform access until their token expired.
 api_router.include_router(
     superadmin.router,
     prefix="/superadmin",
     tags=["Super Admin"],
+    dependencies=[Depends(require_super_admin)],
 )
 
 # Launch Readiness (Go-Live wizard)
+# Same reason — it carries its own copy of the claim-based helper.
 api_router.include_router(
     launch_readiness.router,
     prefix="/superadmin/launch-readiness",
     tags=["Launch Readiness"],
+    dependencies=[Depends(require_super_admin)],
 )
 
 # Dashboard (Overview metrics, signal health, campaigns, settings)
@@ -242,13 +249,21 @@ api_router.include_router(
 )
 
 # Superadmin Analytics (Platform-wide analytics)
-# NOTE: superadmin_analytics.router already declares prefix="/superadmin".
+# These four routes carried two independent faults.
+#
+# Mounting: superadmin_analytics.router already declares prefix="/superadmin".
 # Adding one here as well served every route at
 # /api/v1/superadmin/analytics/superadmin/<route>, while the frontend calls
 # /api/v1/superadmin/<route> — so all four endpoints 404'd.
+#
+# Authorization: each one inlined `getattr(request.state, "is_superadmin",
+# False)`, the middleware's own copy of the JWT claim. The dependency below
+# loads the User row instead, so a token minted before a demotion cannot
+# outlive it.
 api_router.include_router(
     superadmin_analytics.router,
     tags=["Superadmin Analytics"],
+    dependencies=[Depends(require_super_admin)],
 )
 
 # Autopilot (Automated campaign optimization)

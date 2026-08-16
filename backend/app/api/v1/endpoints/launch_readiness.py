@@ -49,7 +49,13 @@ router = APIRouter()
 # Dependencies
 # =============================================================================
 def require_superadmin(request: Request) -> int:
-    """Verify user has superadmin role. Returns the acting user id."""
+    """Return the acting user's id. NOT the authorization check.
+
+    Authorization is the DATABASE-backed ``require_super_admin`` applied at
+    this router's mount. This reads ``request.state.role``, which comes from
+    the JWT and so reflects login time rather than the current row — see the
+    matching note in ``endpoints/superadmin.py``.
+    """
     user_role = getattr(request.state, "role", None)
     user_id = getattr(request.state, "user_id", None)
 
