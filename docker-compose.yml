@@ -157,7 +157,12 @@ services:
       - SMTP_TLS=${SMTP_TLS:-true}
       - SMTP_SSL=${SMTP_SSL:-false}
       - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-Stratum AI}
-      - EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS:-noreply@stratumhq.com}
+      # stratumhq.com was a previous product name and is not a domain this
+      # project controls. Any provider that verifies the sending domain —
+      # Resend, SendGrid, SES — rejects a From address it cannot attribute, so
+      # the fallback guaranteed a bounce while looking like a provider fault.
+      # config.py already defaults to stratumai.app; this now agrees with it.
+      - EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS:-noreply@stratumai.app}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
     volumes:
       - ./backend:/app

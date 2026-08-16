@@ -515,7 +515,7 @@ The onboarding flow is a structured 5-step wizard that guides new tenants from i
 | **Email (SMTP)** | | | |
 | `SMTP_HOST` / `SMTP_PORT` | No | -- / `587` | SMTP server configuration |
 | `SMTP_USER` / `SMTP_PASSWORD` | No | -- | SMTP authentication |
-| `EMAIL_FROM_ADDRESS` | No | `noreply@stratumhq.com` | Sender email address |
+| `EMAIL_FROM_ADDRESS` | No | `noreply@stratumai.app` | Sender email address |
 | **Stripe (Optional)** | | | |
 | `STRIPE_SECRET_KEY` | No | -- | Stripe API secret key |
 | `STRIPE_PUBLISHABLE_KEY` | No | -- | Stripe publishable key |
