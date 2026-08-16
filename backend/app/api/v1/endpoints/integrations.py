@@ -49,13 +49,13 @@ from app.models.crm import (
 )
 from app.schemas.response import APIResponse
 from app.services.crm.hubspot_client import HubSpotClient
+from app.services.crm.hubspot_sync import HubSpotSyncService
+from app.services.crm.hubspot_writeback import HubSpotWritebackService
+from app.services.crm.identity_matching import IdentityMatcher
 from app.services.crm.oauth_state import (
     consume_crm_oauth_state,
     create_crm_oauth_state,
 )
-from app.services.crm.hubspot_sync import HubSpotSyncService
-from app.services.crm.hubspot_writeback import HubSpotWritebackService
-from app.services.crm.identity_matching import IdentityMatcher
 
 router = APIRouter(prefix="/integrations", tags=["integrations"])
 
