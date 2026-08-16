@@ -1,0 +1,142 @@
+# =============================================================================
+# Stratum AI - Observability (Prometheus + Alertmanager + Grafana)
+# =============================================================================
+# Usage:
+#   docker compose -f docker-compose.yml \
+#                  -f docker-compose.prod.yml \
+#                  -f docker-compose.hetzner.yml \
+#                  -f docker-compose.observability.yml up -d
+#
+# Layered on the Hetzner target rather than replacing docker-compose.monitoring
+# .yml, which is the dev overlay: that one publishes 9090 and 3001 on every
+# interface, which on a public host means an unauthenticated Prometheus and a
+# Grafana login page open to the internet.
+#
+# Everything here binds to 127.0.0.1 only. Reach it with an SSH tunnel:
+#
+#   ssh -L 9090:127.0.0.1:9090 \
+#       -L 9093:127.0.0.1:9093 \
+#       -L 3001:127.0.0.1:3001 root@<host>
+#
+# then open http://localhost:3001. No DNS record, no Cloudflare Access, no
+# second auth surface to keep patched — the SSH key already in use is the
+# whole access-control story.
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # Prometheus — scrape + rule evaluation
+  # ===========================================================================
+  prometheus:
+    image: prom/prometheus:v2.53.3
+    container_name: stratum_prometheus
+    restart: unless-stopped
+    volumes:
+      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infrastructure/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      # Written by `deploy-hetzner.sh observability` from METRICS_API_KEY.
+      # /metrics carries tenant_id-labeled series, so the scrape authenticates.
+      - ./infrastructure/prometheus/metrics_api_key:/etc/prometheus/metrics_api_key:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      # Second bound: the host has 136G free today, but retention by time alone
+      # has no ceiling if series count grows.
+      - '--storage.tsdb.retention.size=8GB'
+      - '--web.enable-lifecycle'
+      - '--web.external-url=http://localhost:9090'
+    ports:
+      - "127.0.0.1:9090:9090"
+    networks:
+      - stratum_network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+
+  # ===========================================================================
+  # Alertmanager — routing and deduplication
+  # ===========================================================================
+  # infrastructure/prometheus/alertmanager.yml has existed since the repo was
+  # laid out, but nothing ever ran it and prometheus.yml pointed at an empty
+  # alertmanagers list, so every rule in alerts.yml evaluated into the void.
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: stratum_alertmanager
+    restart: unless-stopped
+    volumes:
+      - ./infrastructure/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+    ports:
+      - "127.0.0.1:9093:9093"
+    networks:
+      - stratum_network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9093/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+
+  # ===========================================================================
+  # Grafana — dashboards
+  # ===========================================================================
+  grafana:
+    image: grafana/grafana:11.3.1
+    container_name: stratum_grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:?GRAFANA_ADMIN_USER must be set}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD must be set}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      # Served through an SSH tunnel, so the browser's address is localhost.
+      # Getting this wrong breaks OAuth redirects and shareable panel links.
+      - GF_SERVER_ROOT_URL=http://localhost:3001
+      # No outbound calls: the host has no reason to reach grafana.com, and
+      # version-check traffic from a production box is noise in egress logs.
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./infrastructure/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    ports:
+      - "127.0.0.1:3001:3000"
+    networks:
+      - stratum_network
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+
+volumes:
+  prometheus_data:
+  alertmanager_data:
+  grafana_data:
