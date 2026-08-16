@@ -229,7 +229,10 @@ verify() {
     # The audit trail is the consumer that matters. A Cloudflare address here
     # means the real_ip block is not doing its job — see issue #652.
     local logged
-    logged="$(dc exec -T edge tail -n 1 /var/log/nginx/access.log 2>/dev/null | awk '{print $1}')"
+    # Read the container's stream, not the file. access.log is a symlink to
+    # /dev/stdout, so `tail` on it never returns — that hang is what stopped
+    # this check running at all the first time it was needed.
+    logged="$(dc logs --tail 40 edge 2>/dev/null | grep -E 'GET|POST' | tail -n 1 | awk '{print $1}')"
     case "$logged" in
         172.6[4-9].*|104.1[6-9].*|162.15[89].*|103.2*|141.101.*|108.162.*)
             log_error "    edge logged a Cloudflare address ($logged)"; fail=1 ;;
