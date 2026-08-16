@@ -44,7 +44,7 @@ no-op on re-run.
    is `$0.02 / 1M tokens`. Re-indexing the curated corpus once costs
    well under a penny.
 
-## Step 3 — Set Railway env vars
+## Step 3 — Set the env vars
 
 | Variable                      | Value                         |
 | ----------------------------- | ----------------------------- |
@@ -56,7 +56,7 @@ no-op on re-run.
 
 ## Step 4 — Index the curated corpus
 
-From inside the backend container or Railway shell:
+From inside the backend container (`docker exec -it stratum_api sh`):
 
 ```
 python -m app.scripts.index_copilot_docs

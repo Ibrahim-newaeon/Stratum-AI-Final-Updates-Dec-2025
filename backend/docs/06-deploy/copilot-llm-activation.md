@@ -1,7 +1,7 @@
 # Activation Checklist — Copilot LLM Bridge (Phase D)
 
 The Copilot LLM bridge was shipped as code in commit `58e9856`. It's
-**off by default** until three Railway env vars are set on the backend
+**off by default** until three env vars are set on the backend
 service. This checklist covers turning it on safely.
 
 ## What ships in the code
@@ -44,10 +44,9 @@ In the Anthropic console:
    typical input ≈ 2000 tokens means a Haiku call costs ~$0.003.
    $50 ≈ 16,000 calls.
 
-## Step 3 — Set Railway env vars on the backend service
+## Step 3 — Set the env vars on the backend
 
-Railway dashboard → your project → **backend** service → **Variables**
-tab → **+ New Variable**. Add three:
+Add all three to `/opt/stratum/.env` (mode 600) on the Hetzner origin:
 
 | Variable              | Value                                |
 | --------------------- | ------------------------------------ |
@@ -55,7 +54,7 @@ tab → **+ New Variable**. Add three:
 | `COPILOT_LLM_ENABLED` | `true`                               |
 | `COPILOT_LLM_MODEL`   | `claude-haiku-4-5-20251001`          |
 
-Click **Deploy** if Railway doesn't redeploy automatically.
+Then `bash ./scripts/deploy-hetzner.sh update` to restart with them.
 
 > **Model choice:** `claude-haiku-4-5` is the cheap+fast default.
 > If responses feel weak, switch to `claude-sonnet-4-5-20251001` —
@@ -70,7 +69,7 @@ Click **Deploy** if Railway doesn't redeploy automatically.
    live numbers (e.g. "Your composite score is 87. EMQ is at 0.95
    which is healthy; event loss is the weakest input at…").
    Pre-LLM template is short and templated; post-LLM is prose.
-4. Check Railway logs for `copilot_llm_response` events including
+4. Check `docker logs stratum_api` for `copilot_llm_response` events including
    `input_tokens` and `output_tokens` per call.
 
 ## Step 5 — Verify the fallback works
@@ -78,7 +77,7 @@ Click **Deploy** if Railway doesn't redeploy automatically.
 Disable temporarily to confirm the keyword path still works:
 
 ```
-COPILOT_LLM_ENABLED=false   # Railway → save → wait for redeploy
+COPILOT_LLM_ENABLED=false   # edit .env, then deploy-hetzner.sh update
 ```
 
 Send the same question. The response should still answer (template-
@@ -92,7 +91,7 @@ If something goes wrong on production:
 COPILOT_LLM_ENABLED=false
 ```
 
-Save → Railway redeploys → Copilot reverts to keyword classifier with
+Edit .env → redeploy → Copilot reverts to the keyword classifier with
 zero code changes. The bridge is fail-open by design; this just makes
 the bypass explicit.
 
@@ -133,5 +132,5 @@ labels.
 
 Operator setting these env vars must have **superadmin** role on the
 Stratum platform. The Anthropic key itself is workspace-scoped and
-not bound to a Stratum user — anyone with Railway access to the
+not bound to a Stratum user — anyone with host access to the
 backend service can rotate it.

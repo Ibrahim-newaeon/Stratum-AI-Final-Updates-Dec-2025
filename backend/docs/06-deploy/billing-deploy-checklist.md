@@ -35,11 +35,13 @@ Open a PR `claude/fix-overview-404-fallback` → `main`. Squash or
 merge-commit are both fine — the 5 commits are individually
 reviewable so squash is cleaner.
 
-## Migration on Railway
+## Migration on the Hetzner origin
 
-After main builds, the migration `048_autopilot_outcome_columns`
-auto-runs via `start.sh`'s `make migrate` step. Sanity-check on the
-Railway logs:
+After main is deployed, the migration `048_autopilot_outcome_columns`
+auto-runs from the api service command — `alembic upgrade head` is the
+first half of it in `docker-compose.prod.yml`, which is why
+`deploy-hetzner.sh update` restarts the API before the workers. Check the
+logs:
 
 ```
 alembic upgrade head
@@ -88,7 +90,7 @@ stripe_webhook.py` line 63 if the deployed router prefix has
      - `invoice.payment_failed`
    - Copy the signing secret (`whsec_...`)
 
-### 2. Railway env vars (backend service)
+### 2. Environment (backend)
 
 ```
 STRIPE_SECRET_KEY=sk_live_...
@@ -99,11 +101,17 @@ STRIPE_PROFESSIONAL_PRICE_ID=price_1NY...
 STRIPE_ENTERPRISE_PRICE_ID=          # leave blank
 ```
 
-The pydantic settings expect lower-case-with-underscore Python field
-names; Railway will translate `STRIPE_SECRET_KEY` → `stripe_secret_key`
-automatically (case-insensitive, env-var convention).
+Set these in `/opt/stratum/.env` (mode 600) and re-run
+`deploy-hetzner.sh update`. The pydantic settings expect
+lower-case-with-underscore Python field names; pydantic-settings matches
+`STRIPE_SECRET_KEY` → `stripe_secret_key` case-insensitively, so the
+env-var convention above is what to write.
 
-### 3. Railway env vars (frontend service)
+Until these are set `STRIPE_CONFIGURED` is false, every `/payments/*`
+endpoint returns 503, and the webhook refuses deliveries — which is the
+current state of production.
+
+### 3. Environment (frontend)
 
 The frontend uses `STRIPE_PUBLISHABLE_KEY` only if it ever calls Stripe
 Elements directly. Currently it doesn't — checkout is server-side
