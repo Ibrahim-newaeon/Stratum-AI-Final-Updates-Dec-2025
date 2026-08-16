@@ -2,7 +2,7 @@
 # Stratum AI - Audit Services Endpoint Integration Tests
 # =============================================================================
 """Integration tests for the audit-services surface under
-``/api/v1/audit/audit-services/...``. This is a large ML-service router; these
+``/api/v1/audit-services/...``. This is a large ML-service router; these
 tests cover the stable read/info/admin endpoints (health, info, metrics, and
 the admin config/status/rate-limit views) plus the auth + admin gates.
 """
@@ -12,7 +12,7 @@ from httpx import AsyncClient
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
-_BASE = "/api/v1/audit/audit-services"
+_BASE = "/api/v1/audit-services"
 
 # GET endpoints that don't require request bodies, ML execution, or seeded data.
 _SMOKE_GETS = [
