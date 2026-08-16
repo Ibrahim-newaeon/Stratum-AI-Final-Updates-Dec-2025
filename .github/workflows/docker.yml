@@ -112,8 +112,17 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
+          # Wrong on both counts before: VITE_API_BASE_URL is a name the
+          # frontend never reads, so the Dockerfile's ARG VITE_API_URL kept its
+          # default; and api.stratum.ai is not this product's host — the API is
+          # api.stratumai.app. The published image therefore carried neither the
+          # intended URL nor an obviously broken one.
+          #
+          # This comment sits outside the block scalar deliberately: everything
+          # inside `build-args: |` is literal text, so a # line there is passed
+          # through as a build argument rather than ignored.
           build-args: |
-            VITE_API_BASE_URL=https://api.stratum.ai
+            VITE_API_URL=https://api.stratumai.app/api/v1
 
   # ===========================================================================
   # Docker Compose Integration Test

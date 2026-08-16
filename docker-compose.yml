@@ -347,7 +347,15 @@ services:
     container_name: stratum_frontend
     restart: unless-stopped
     environment:
-      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8000}
+      # VITE_API_URL, not VITE_API_BASE_URL. The frontend reads
+      # import.meta.env.VITE_API_URL in a dozen places and VITE_API_BASE_URL in
+      # none, so the old name reached Vite under a key nothing looked up and
+      # every client fell through to the relative '/api/v1'.
+      #
+      # The value carries the /api/v1 path because it becomes axios' baseURL
+      # (api/client.ts:16) — without it, requests go to /auth/refresh rather
+      # than /api/v1/auth/refresh.
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000/api/v1}
       - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8000}
       - VITE_DEFAULT_LOCALE=${VITE_DEFAULT_LOCALE:-en}
     volumes:

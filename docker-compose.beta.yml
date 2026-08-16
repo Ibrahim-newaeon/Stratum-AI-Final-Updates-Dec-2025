@@ -123,7 +123,10 @@ services:
       dockerfile: Dockerfile
       target: production
       args:
-        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-https://beta.stratum-ai.com}
+        # The Dockerfile declares ARG VITE_API_URL. An undeclared
+        # VITE_API_BASE_URL build arg is accepted and then ignored, so the
+        # image silently kept the Dockerfile's default host.
+        - VITE_API_URL=${VITE_API_URL:-https://beta.stratum-ai.com/api/v1}
     container_name: stratum_frontend
     restart: always
     networks:
