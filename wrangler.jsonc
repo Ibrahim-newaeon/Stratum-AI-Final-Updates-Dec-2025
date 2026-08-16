@@ -25,6 +25,28 @@
 {
   "name": "stratumai",
   "compatibility_date": "2026-08-15",
+
+  // Custom domains, not routes. A route matches traffic already heading to an
+  // origin and needs its own proxied DNS record alongside it; a custom domain
+  // terminates AT the Worker and manages the record itself. Nothing sits
+  // behind this Worker — it *is* the site — so custom domain is the binding.
+  //
+  // app.stratumai.app was bound by hand in the dashboard. It is listed here so
+  // the config states what is actually deployed, instead of leaving one of the
+  // two hostnames discoverable only by clicking through the UI.
+  //
+  // stratumai.app had no DNS record at all — NODATA, unreachable — even though
+  // the API already accepts it as a browser origin:
+  //   CORS_ORIGINS=https://app.stratumai.app,https://stratumai.app
+  //
+  // www.stratumai.app is deliberately absent. It is equally unbound today, but
+  // binding it without adding it to CORS_ORIGINS would produce a site that
+  // loads and whose every API call then fails — worse than not existing.
+  "routes": [
+    { "pattern": "app.stratumai.app", "custom_domain": true },
+    { "pattern": "stratumai.app", "custom_domain": true }
+  ],
+
   "assets": {
     "directory": "./frontend/dist",
 
