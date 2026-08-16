@@ -15,6 +15,7 @@ Handles:
 """
 
 from datetime import UTC, datetime
+from typing import Optional
 
 import stripe
 from fastapi import APIRouter, HTTPException, Request, status
@@ -24,7 +25,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.base_models import Tenant, User
 from app.core.config import settings
 from app.core.logging import get_logger
-from app.core.security import decrypt_pii, mask_email
+from app.core.security import decrypt_pii, get_redis_pool, mask_email
 from app.db.session import async_session_maker
 from app.services import stripe_service
 from app.services.email_service import get_email_service
@@ -32,10 +33,67 @@ from app.services.email_service import get_email_service
 logger = get_logger(__name__)
 router = APIRouter(tags=["stripe-webhook"])
 
-# Simple in-memory idempotency cache for processed webhook events.
-# In production with multiple workers, use Redis instead.
-_processed_events: set[str] = set()
-_MAX_PROCESSED_EVENTS = 10000
+# Idempotency lives in Redis, not in the process.
+#
+# This was a module-level `set()` carrying the comment "in production with
+# multiple workers, use Redis instead" — and production runs
+# `uvicorn --workers 4`. A Stripe retry had a 3-in-4 chance of landing on a
+# worker that had never seen the event, the set was lost on every restart, and
+# eviction was `.clear()`, dropping all 10,000 entries at once despite the
+# comment claiming it evicted the oldest.
+#
+# Stripe retries a failing endpoint for up to ~3 days; the key outlives that,
+# so even a late retry is still recognised as a duplicate.
+_EVENT_KEY_PREFIX = "stripe:event:"
+_EVENT_TTL_SECONDS = 7 * 24 * 60 * 60
+
+
+async def _claim_event(event_id: str) -> Optional[bool]:
+    """Claim an event for processing.
+
+    True when this worker won the claim, False when another worker has already
+    handled it, None when Redis could not be reached.
+
+    SET NX is what makes this safe when two workers receive the same retry
+    concurrently: the loser sees False instead of both proceeding.
+    """
+    try:
+        redis = await get_redis_pool()
+        won = await redis.set(
+            f"{_EVENT_KEY_PREFIX}{event_id}", "1", nx=True, ex=_EVENT_TTL_SECONDS
+        )
+        return bool(won)
+    except (ConnectionError, TimeoutError, OSError) as exc:
+        # Deliberately fail open. The handlers re-fetch state from Stripe and
+        # are idempotent, so a duplicate is close to harmless; refusing the
+        # event instead would leave subscription state stale for as long as
+        # Redis is down, which is the worse failure.
+        logger.error(
+            "stripe_webhook_idempotency_unavailable",
+            event_id=event_id,
+            error=str(exc),
+            detail="processing without a duplicate guard",
+        )
+        return None
+
+
+async def _release_event(event_id: str) -> None:
+    """Drop a claim so a Stripe retry is not mistaken for a duplicate.
+
+    Without this, a handler that fails after claiming would have its retry
+    skipped as "already processed" — losing the event precisely when it did
+    not succeed.
+    """
+    try:
+        redis = await get_redis_pool()
+        await redis.delete(f"{_EVENT_KEY_PREFIX}{event_id}")
+    except (ConnectionError, TimeoutError, OSError) as exc:
+        logger.error(
+            "stripe_webhook_claim_release_failed",
+            event_id=event_id,
+            error=str(exc),
+            detail="a retry of this event may be skipped as a duplicate",
+        )
 
 
 async def get_tenant_by_customer_id(
@@ -117,8 +175,10 @@ async def stripe_webhook(request: Request):
     event_type = event.type
     event_data = event.data.object
 
-    # Idempotency check — skip already-processed events
-    if event.id in _processed_events:
+    # Claim before processing, not after. Claiming afterwards leaves a window
+    # in which two workers handling the same retry both run the handlers.
+    claimed = await _claim_event(event.id)
+    if claimed is False:
         logger.info("stripe_webhook_duplicate_skipped", event_id=event.id)
         return {"status": "already_processed", "event_type": event_type}
 
@@ -157,32 +217,34 @@ async def stripe_webhook(request: Request):
 
             await db.commit()
 
-            # Mark event as processed for idempotency
-            _processed_events.add(event.id)
-            if len(_processed_events) > _MAX_PROCESSED_EVENTS:
-                # Evict oldest entries to prevent unbounded growth
-                _processed_events.clear()
-
-        except (ValueError, KeyError, TypeError) as e:
+        except Exception as e:
+            # Every handler failure now asks Stripe to retry.
+            #
+            # This used to swallow ValueError/KeyError/TypeError and return
+            # 200 — "prevent retries for our app logic errors". For billing
+            # that is the wrong trade: a KeyError on an unexpected payload
+            # shape permanently discarded the event while telling Stripe it
+            # had been processed. Lose invoice.payment_failed and a delinquent
+            # account keeps full access; lose customer.subscription.deleted
+            # and a cancelled customer never downgrades. Either way nothing
+            # surfaces, because Stripe considers the delivery successful.
+            #
+            # A 5xx costs a few days of retries and leaves the event visible
+            # as failed in the Stripe dashboard, which is the signal wanted.
             logger.error(
                 "stripe_webhook_handler_error",
                 event_type=event_type,
+                event_id=event.id,
                 error=str(e),
+                error_type=type(e).__name__,
             )
             await db.rollback()
-            # Don't raise - return 200 to Stripe to prevent retries for our app logic errors
-            # Stripe will retry on 5xx errors
-        except OSError as e:
-            logger.error(
-                "stripe_webhook_os_error",
-                event_type=event_type,
-                error=str(e),
-            )
-            await db.rollback()
-            # Re-raise DB/connection errors as 500 so Stripe retries
+            # Only this worker's claim is released, and only when it holds one.
+            if claimed:
+                await _release_event(event.id)
             raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Database connection error",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Webhook handler failed",
             ) from e
 
     return {"status": "received", "event_type": event_type}
