@@ -40,8 +40,13 @@ route:
 receivers:
   - name: 'default'
     slack_configs:
+      # No `channel:` override. A Slack incoming webhook is bound to one
+      # channel when it is created, and modern webhooks ignore the field
+      # entirely — so naming a channel here would read like routing while
+      # doing nothing. The destination is whichever channel the webhook
+      # below belongs to; the split between the two receivers is the split
+      # between the two webhooks.
       - api_url: '${SLACK_WEBHOOK_URL}'
-        channel: '#stratum-alerts'
         # Resolution notices matter as much as the alert: without them the
         # channel fills with problems that were fixed hours ago.
         send_resolved: true
@@ -53,8 +58,10 @@ receivers:
 
   - name: 'critical'
     slack_configs:
-      - api_url: '${SLACK_WEBHOOK_URL}'
-        channel: '#stratum-critical'
+      # Its own webhook, so critical alerts land in their own channel. When
+      # SLACK_WEBHOOK_URL_CRITICAL is unset the deploy renders this with the
+      # same value as above, and both severities share one channel.
+      - api_url: '${SLACK_WEBHOOK_URL_CRITICAL}'
         send_resolved: true
         title: '[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}'
         text: >-
