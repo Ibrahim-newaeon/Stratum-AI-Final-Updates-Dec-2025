@@ -23,6 +23,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.permissions import Permission, require_permissions
 from app.base_models import Tenant
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -176,6 +177,7 @@ def validate_tier(tier_str: str) -> SubscriptionTier:
 async def get_billing_overview(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
+    _: None = Depends(require_permissions([Permission.BILLING_READ])),
 ):
     """
     Get complete billing overview for the current tenant.
@@ -267,6 +269,7 @@ async def create_checkout(
     body: CreateCheckoutRequest,
     request: Request,
     db: AsyncSession = Depends(get_async_session),
+    _: None = Depends(require_permissions([Permission.BILLING_WRITE])),
 ):
     """
     Create a Stripe Checkout session for subscribing to a plan.
@@ -336,6 +339,7 @@ async def create_portal_session(
     body: CreatePortalRequest,
     request: Request,
     db: AsyncSession = Depends(get_async_session),
+    _: None = Depends(require_permissions([Permission.BILLING_WRITE])),
 ):
     """
     Create a Stripe Customer Portal session.
@@ -369,6 +373,7 @@ async def create_portal_session(
 async def get_subscription(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
+    _: None = Depends(require_permissions([Permission.BILLING_READ])),
 ):
     """
     Get current subscription status for the tenant.
@@ -416,6 +421,7 @@ async def upgrade_subscription(
     body: UpgradeRequest,
     request: Request,
     db: AsyncSession = Depends(get_async_session),
+    _: None = Depends(require_permissions([Permission.BILLING_WRITE])),
 ):
     """
     Upgrade or downgrade subscription to a different tier.
@@ -478,6 +484,7 @@ async def cancel_subscription(
     request: Request,
     at_period_end: bool = True,
     db: AsyncSession = Depends(get_async_session),
+    _: None = Depends(require_permissions([Permission.BILLING_WRITE])),
 ):
     """
     Cancel subscription.
@@ -540,6 +547,7 @@ async def cancel_subscription(
 async def reactivate_subscription(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
+    _: None = Depends(require_permissions([Permission.BILLING_WRITE])),
 ):
     """
     Reactivate a subscription that was scheduled for cancellation.
@@ -602,6 +610,7 @@ async def get_invoices(
     request: Request,
     limit: int = 10,
     db: AsyncSession = Depends(get_async_session),
+    _: None = Depends(require_permissions([Permission.BILLING_READ])),
 ):
     """
     Get invoice history for the tenant.
@@ -643,6 +652,7 @@ async def get_invoices(
 async def get_payment_methods(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
+    _: None = Depends(require_permissions([Permission.BILLING_READ])),
 ):
     """
     Get payment methods for the tenant.
