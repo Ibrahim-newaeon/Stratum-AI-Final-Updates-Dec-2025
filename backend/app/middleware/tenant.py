@@ -238,6 +238,22 @@ class TenantMiddleware(BaseHTTPMiddleware):
             return True
         if path.startswith("/api/v1/stripe/webhooks/"):
             return True
+        # HubSpot calls these directly: the OAuth callback arrives as a browser
+        # redirect carrying no JWT, and webhooks are POSTed by HubSpot's
+        # servers. Without this both 401'd here, so the integration could never
+        # complete a connection or receive an event.
+        #
+        # Exact paths, not a /api/v1/integrations/ prefix or a provider
+        # wildcard. The rest of that router is superadmin-gated management, and
+        # a wildcard would silently exempt the next provider's callback before
+        # anyone had checked that it validates its state server-side — an
+        # exempt callback authenticates itself, so that is a decision to make
+        # per route rather than a pattern to inherit.
+        if path in (
+            "/api/v1/integrations/hubspot/callback",
+            "/api/v1/integrations/hubspot/webhook",
+        ):
+            return True
         # Programmatic API — authenticates via the X-API-Key header, not a JWT.
         # The api-key dependency (get_api_key_principal) validates the key and
         # sets request.state.tenant_id from the key's tenant, so JWT-based tenant

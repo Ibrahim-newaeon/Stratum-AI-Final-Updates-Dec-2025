@@ -79,3 +79,4 @@ CLAUDE.local.md
 # Redis local snapshots (test harness)
 dump.rdb
 *.rdb
+infrastructure/prometheus/metrics_api_key

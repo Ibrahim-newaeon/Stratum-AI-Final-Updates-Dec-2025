@@ -80,7 +80,15 @@ services:
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
       - PII_ENCRYPTION_KEY=${PII_ENCRYPTION_KEY:?PII_ENCRYPTION_KEY is required}
       - CORS_ORIGINS=${CORS_ORIGINS:-https://app.yourdomain.com}
-      - LOG_LEVEL=WARNING
+      # Interpolated, not hardcoded. dev and staging already use
+      # ${LOG_LEVEL:-INFO}; production pinned the literal WARNING, so raising
+      # verbosity during an incident meant editing compose and restarting the
+      # API — the one moment you want more detail, not a redeploy. INFO is the
+      # default here because WARNING discards 817 logger.info call sites,
+      # including campaign/asset/rule/webhook deletions, password resets, and
+      # the audience_sync_consent_suppressed diagnostic. Set LOG_LEVEL=WARNING
+      # in .env to restore the old behaviour.
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - LOG_FORMAT=json
       - SENTRY_DSN=${SENTRY_DSN:-}
     volumes:
@@ -135,7 +143,7 @@ services:
       - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/0
       - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/1
       - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-}@redis:6379/2
-      - LOG_LEVEL=WARNING
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - SENTRY_DSN=${SENTRY_DSN:-}
     volumes:
       # Writable: the app auto-trains missing models on startup and the
@@ -144,7 +152,9 @@ services:
       - ./ml_service/models:/app/ml_service/models
     depends_on:
       - pgbouncer
-    command: celery -A app.workers.celery_app worker --loglevel=warning --concurrency=2
+    # Celery keeps its own logger, so LOG_LEVEL above does not reach it. Track
+    # the same variable here or the worker stays quiet while the app is verbose.
+    command: celery -A app.workers.celery_app worker --loglevel=${LOG_LEVEL:-INFO} --concurrency=2
     deploy:
       resources:
         limits:
@@ -181,6 +191,17 @@ services:
       - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/1
       - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-}@redis:6379/2
     volumes: []
+    # beat persists its last-run times to a gdbm file, by default in the
+    # working directory. Dev gets away with that because docker-compose.yml
+    # bind-mounts ./backend over /app; here `volumes: []` drops that mount, so
+    # /app is the image layer — root-owned, while the container runs as
+    # uid 1000. beat crashed on startup with
+    #   _gdbm.error: [Errno 13] Permission denied: 'celerybeat-schedule'
+    # and, because restart: always, did so 3749 times without ever running a
+    # single periodic task. Point it somewhere the runtime user owns.
+    command: >
+      celery -A app.workers.celery_app beat --loglevel=info
+      --schedule=/home/appuser/celerybeat-schedule
     deploy:
       resources:
         limits:
@@ -189,10 +210,14 @@ services:
         reservations:
           memory: 128M
     healthcheck:
-      test: ["CMD", "python", "-c", "import os; exit(0 if os.path.exists('celerybeat-schedule') else 1)"]
+      # Glob, because the gdbm backend may append a suffix to the name it is
+      # given. start_period covers the gap before beat first writes the file —
+      # without it the container is marked unhealthy during normal startup.
+      test: ["CMD", "python", "-c", "import glob,sys; sys.exit(0 if glob.glob('/home/appuser/celerybeat-schedule*') else 1)"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 60s
 
   # ===========================================================================
   # React Frontend - Production (Nginx)

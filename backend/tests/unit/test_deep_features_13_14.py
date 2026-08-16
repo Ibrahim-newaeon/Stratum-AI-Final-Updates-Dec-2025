@@ -1177,7 +1177,7 @@ class TestSuperAdminChurnRisks:
 #
 # superadmin_analytics.py router has prefix="/superadmin" and is mounted
 # at /api/v1/superadmin/analytics, giving:
-#   /api/v1/superadmin/analytics/superadmin/<endpoint>
+#   /api/v1/superadmin/<endpoint>
 #
 # Auth check: getattr(request.state, "is_superadmin", False)
 # TenantMiddleware sets request.state.role but NOT is_superadmin.
@@ -1187,9 +1187,9 @@ class TestSuperAdminChurnRisks:
 
 
 class TestSuperAdminAnalyticsPlatformOverview:
-    """GET /api/v1/superadmin/analytics/superadmin/platform-overview."""
+    """GET /api/v1/superadmin/platform-overview."""
 
-    _URL = "/api/v1/superadmin/analytics/superadmin/platform-overview"
+    _URL = "/api/v1/superadmin/platform-overview"
 
     async def test_no_auth(self, api_client):
         r = await api_client.get(self._URL)
@@ -1226,9 +1226,9 @@ class TestSuperAdminAnalyticsPlatformOverview:
 
 
 class TestSuperAdminAnalyticsTenantProfitability:
-    """GET /api/v1/superadmin/analytics/superadmin/tenant-profitability."""
+    """GET /api/v1/superadmin/tenant-profitability."""
 
-    _URL = "/api/v1/superadmin/analytics/superadmin/tenant-profitability"
+    _URL = "/api/v1/superadmin/tenant-profitability"
 
     async def test_no_auth(self, api_client):
         r = await api_client.get(self._URL)
@@ -1259,9 +1259,9 @@ class TestSuperAdminAnalyticsTenantProfitability:
 
 
 class TestSuperAdminAnalyticsSignalHealthTrends:
-    """GET /api/v1/superadmin/analytics/superadmin/signal-health-trends."""
+    """GET /api/v1/superadmin/signal-health-trends."""
 
-    _URL = "/api/v1/superadmin/analytics/superadmin/signal-health-trends"
+    _URL = "/api/v1/superadmin/signal-health-trends"
 
     async def test_no_auth(self, api_client):
         r = await api_client.get(self._URL)
@@ -1291,9 +1291,9 @@ class TestSuperAdminAnalyticsSignalHealthTrends:
 
 
 class TestSuperAdminAnalyticsActionsAnalytics:
-    """GET /api/v1/superadmin/analytics/superadmin/actions-analytics."""
+    """GET /api/v1/superadmin/actions-analytics."""
 
-    _URL = "/api/v1/superadmin/analytics/superadmin/actions-analytics"
+    _URL = "/api/v1/superadmin/actions-analytics"
 
     async def test_no_auth(self, api_client):
         r = await api_client.get(self._URL)

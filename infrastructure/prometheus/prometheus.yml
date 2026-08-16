@@ -4,9 +4,15 @@
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
+  external_labels:
+    environment: production
 
+# Rules evaluated into a live Alertmanager. This list was empty, so every
+# rule in alerts.yml computed a result and then discarded it.
 alerting:
-  alertmanagers: []
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
 
 rule_files:
   - /etc/prometheus/alerts.yml
@@ -20,12 +26,14 @@ scrape_configs:
   # Stratum API
   - job_name: 'stratum-api'
     metrics_path: '/metrics'
-    # /metrics carries tenant_id-labeled series. When the API sets
-    # METRICS_API_KEY (required in production), uncomment and supply the
-    # same key so scrapes send "Authorization: Bearer <key>":
-    # authorization:
-    #   type: Bearer
-    #   credentials_file: /etc/prometheus/metrics_api_key
+    # /metrics carries tenant_id-labeled series and is tenant-exempt, so the
+    # scrape authenticates. The key file is written at deploy time from
+    # METRICS_API_KEY; the API rejects unauthenticated scrapes whenever that
+    # variable is set. Scraping goes direct to api:8000 over the compose
+    # network, so it never passes the edge — which denies /metrics outright.
+    authorization:
+      type: Bearer
+      credentials_file: /etc/prometheus/metrics_api_key
     static_configs:
       - targets: ['api:8000']
     relabel_configs:
@@ -33,15 +41,16 @@ scrape_configs:
         target_label: instance
         replacement: 'stratum-api'
 
-  # Celery Workers (if metrics exposed)
-  - job_name: 'stratum-worker'
-    metrics_path: '/metrics'
-    static_configs:
-      - targets: ['worker:8000']
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: instance
-        replacement: 'stratum-worker'
+  # The celery worker used to be scraped at worker:8000. It runs
+  # `celery ... worker` and serves no HTTP at all, so that target could never
+  # come up: `up{job="stratum-worker"}` sat at 0 permanently and the WorkerDown
+  # rule fired forever. An alert that is always firing is worse than no alert —
+  # it is the one that teaches you to ignore the others.
+  #
+  # Worker liveness is tracked instead through the heartbeat the worker writes
+  # to Redis, which the API reads (app/workers/tasks/monitoring.py:
+  # worker_is_alive) and reports on /health. Exposing that as a gauge so it can
+  # carry an alert is a follow-up; until then /health is the source of truth.
 
   # Redis Exporter (optional - requires redis_exporter container)
   # - job_name: 'redis'

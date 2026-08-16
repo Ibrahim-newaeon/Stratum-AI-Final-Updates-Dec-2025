@@ -1,6 +1,27 @@
 # =============================================================================
 # Stratum AI - Prometheus Alert Rules
 # =============================================================================
+# Every expression below is checked against the metric names the API actually
+# exposes. Verified by reading /metrics off the running production container
+# rather than by grepping for Gauge/Counter definitions — a metric can be
+# declared in app/core/metrics.py and still never be registered.
+#
+# Four rules were removed because the series they queried do not exist:
+#
+#   DatabaseConnectionPoolExhausted   db_pool_size, db_pool_available
+#   SlowDatabaseQueries               db_query_duration_seconds
+#   HighRateLimiting                  rate_limit_exceeded_total
+#   WorkerDown                        up{job="stratum-worker"}
+#
+# The first three never matched a series, so PromQL returned an empty vector
+# and the alert sat inactive forever — indistinguishable, on a dashboard, from
+# a system that is fine. (`db_pool_size` does exist in the codebase, but as a
+# pydantic config field, not a metric.) The fourth had the opposite failure:
+# it scraped an HTTP endpoint the celery worker never served, so it fired
+# permanently. Both shapes are worse than no rule at all.
+#
+# Restoring them means instrumenting the API first. Tracked as a follow-up;
+# do not re-add a rule here before confirming its series appears in /metrics.
 groups:
   - name: stratum-api
     interval: 30s
@@ -41,20 +62,12 @@ groups:
           summary: "Stratum API is down"
           description: "The Stratum API has been unreachable for more than 1 minute"
 
-      # Worker Down
-      - alert: WorkerDown
-        expr: up{job="stratum-worker"} == 0
-        for: 2m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Celery worker is down"
-          description: "The Celery worker has been unreachable for more than 2 minutes"
-
   - name: stratum-resources
     interval: 30s
     rules:
       # High Memory Usage
+      # The api container is capped at 3G in docker-compose.prod.yml; alert
+      # with headroom to act rather than at the point the OOM killer does.
       - alert: HighMemoryUsage
         expr: |
           process_resident_memory_bytes{job="stratum-api"}
@@ -76,32 +89,6 @@ groups:
         annotations:
           summary: "High CPU usage"
           description: "API CPU usage is {{ $value | humanizePercentage }}"
-
-  - name: stratum-database
-    interval: 30s
-    rules:
-      # Database Connection Pool Exhausted
-      - alert: DatabaseConnectionPoolExhausted
-        expr: |
-          db_pool_size{job="stratum-api"} - db_pool_available{job="stratum-api"}
-          >= db_pool_size{job="stratum-api"} * 0.9
-        for: 2m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Database connection pool nearly exhausted"
-          description: "{{ $value }} connections in use out of pool"
-
-      # Slow Database Queries
-      - alert: SlowDatabaseQueries
-        expr: |
-          histogram_quantile(0.95, sum(rate(db_query_duration_seconds_bucket[5m])) by (le)) > 1
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Slow database queries detected"
-          description: "95th percentile query time is {{ $value | humanizeDuration }}"
 
   - name: stratum-trust-layer
     interval: 30s
@@ -127,17 +114,3 @@ groups:
         annotations:
           summary: "Autopilot has been frozen"
           description: "Autopilot mode has been frozen for more than 30 minutes"
-
-  - name: stratum-rate-limiting
-    interval: 30s
-    rules:
-      # High Rate Limiting
-      - alert: HighRateLimiting
-        expr: |
-          sum(rate(rate_limit_exceeded_total[5m])) > 10
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "High rate limiting detected"
-          description: "{{ $value | humanize }} rate limit hits per second"

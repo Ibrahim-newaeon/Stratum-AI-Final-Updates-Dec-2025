@@ -3,6 +3,7 @@
 # Stratum AI - Hetzner deployment (Cloudflare edge)
 # =============================================================================
 # Commands: setup | deploy | update | status | logs | backup | restore | verify
+#           observability
 #
 # Run on the Hetzner host, from the repository root.
 #
@@ -10,6 +11,7 @@
 #   ./scripts/deploy-hetzner.sh deploy    # first bring-up
 #   ./scripts/deploy-hetzner.sh update    # pull + migrate + restart
 #   ./scripts/deploy-hetzner.sh verify    # post-cutover assertions
+#   ./scripts/deploy-hetzner.sh observability  # prometheus/alertmanager/grafana
 #
 # Modelled on scripts/deploy-beta.sh so the operational vocabulary is the same,
 # with two differences that matter: backups live off-host (Cloudflare R2), and
@@ -229,7 +231,10 @@ verify() {
     # The audit trail is the consumer that matters. A Cloudflare address here
     # means the real_ip block is not doing its job — see issue #652.
     local logged
-    logged="$(dc exec -T edge tail -n 1 /var/log/nginx/access.log 2>/dev/null | awk '{print $1}')"
+    # Read the container's stream, not the file. access.log is a symlink to
+    # /dev/stdout, so `tail` on it never returns — that hang is what stopped
+    # this check running at all the first time it was needed.
+    logged="$(dc logs --tail 40 edge 2>/dev/null | grep -E 'GET|POST' | tail -n 1 | awk '{print $1}')"
     case "$logged" in
         172.6[4-9].*|104.1[6-9].*|162.15[89].*|103.2*|141.101.*|108.162.*)
             log_error "    edge logged a Cloudflare address ($logged)"; fail=1 ;;
@@ -252,6 +257,70 @@ verify() {
 status() { require_env; dc ps; }
 logs()   { require_env; dc logs --tail "${2:-100}" -f "${1:-}"; }
 
+# -----------------------------------------------------------------------------
+# observability
+# -----------------------------------------------------------------------------
+# Brings up Prometheus, Alertmanager and Grafana on loopback only. Kept as a
+# separate command rather than folded into `deploy` so that a monitoring
+# problem can never take the API down with it.
+observability() {
+    require_env
+
+    local key_file="infrastructure/prometheus/metrics_api_key"
+
+    # /metrics is tenant-exempt and served on the same port as the public API.
+    # The edge denies it, but the scrape reaches api:8000 directly, so the key
+    # is what separates Prometheus from anything else on the compose network.
+    if ! grep -q '^METRICS_API_KEY=.\+' "$ENV_FILE"; then
+        log_error "METRICS_API_KEY is not set in $ENV_FILE"
+        log_error "Generate one with: openssl rand -hex 32"
+        exit 1
+    fi
+    for var in GRAFANA_ADMIN_USER GRAFANA_ADMIN_PASSWORD; do
+        grep -q "^${var}=.\+" "$ENV_FILE" || {
+            log_error "$var is not set in $ENV_FILE"; exit 1; }
+    done
+
+    # Prometheus reads the bearer token from a file, so mirror the variable out
+    # of .env. Written with a trailing-newline-free printf: Prometheus sends the
+    # file's bytes verbatim, and a stray \n produces a 403 that looks like a
+    # wrong key.
+    log_info "Writing scrape credentials to $key_file"
+    printf '%s' "$(grep -m1 '^METRICS_API_KEY=' "$ENV_FILE" | cut -d= -f2-)" > "$key_file"
+    chmod 600 "$key_file"
+
+    log_info "Starting observability stack (loopback only)"
+    docker compose $COMPOSE_FILES -f docker-compose.observability.yml \
+        up -d prometheus alertmanager grafana
+
+    log_info "Waiting for Prometheus to load its rules"
+    local ok=0
+    for _ in $(seq 1 30); do
+        if curl -sf http://127.0.0.1:9090/-/ready >/dev/null 2>&1; then ok=1; break; fi
+        sleep 2
+    done
+    [ "$ok" = 1 ] || { log_error "Prometheus did not become ready"; exit 1; }
+
+    # A target that is down and a rule that failed to load both report success
+    # at the container level, so assert on the API rather than on `docker ps`.
+    local up_count
+    up_count=$(curl -sf 'http://127.0.0.1:9090/api/v1/query?query=up{job="stratum-api"}' \
+        | grep -o '"value":\[[^]]*,"1"\]' | wc -l)
+    if [ "$up_count" -lt 1 ]; then
+        log_warn "Prometheus is running but the stratum-api target is not up yet"
+        log_warn "Check http://127.0.0.1:9090/targets — a 403 there means the key is wrong"
+    else
+        log_info "stratum-api target is up"
+    fi
+
+    echo
+    log_info "Nothing is published beyond loopback. Tunnel in from your workstation:"
+    echo "    ssh -L 9090:127.0.0.1:9090 -L 9093:127.0.0.1:9093 -L 3001:127.0.0.1:3001 root@<host>"
+    echo "    Grafana       http://localhost:3001"
+    echo "    Prometheus    http://localhost:9090"
+    echo "    Alertmanager  http://localhost:9093"
+}
+
 case "${1:-}" in
     setup)   setup ;;
     deploy)  deploy ;;
@@ -261,8 +330,9 @@ case "${1:-}" in
     backup)  backup ;;
     restore) shift; restore "$@" ;;
     verify)  verify ;;
+    observability) observability ;;
     *)
-        echo "Usage: $0 {setup|deploy|update|status|logs|backup|restore <key>|verify}"
+        echo "Usage: $0 {setup|deploy|update|status|logs|backup|restore <key>|verify|observability}"
         exit 1
         ;;
 esac

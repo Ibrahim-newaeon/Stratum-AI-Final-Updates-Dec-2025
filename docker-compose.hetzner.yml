@@ -48,7 +48,13 @@ services:
       # Origin cert, key, and the Cloudflare origin-pull CA. Provisioned by
       # scripts/deploy-hetzner.sh setup; never committed.
       - ./certs:/etc/nginx/certs:ro
-      - nginx_logs:/var/log/nginx
+      # No volume over /var/log/nginx. The image ships access.log and error.log
+      # as symlinks to /dev/stdout and /dev/stderr, which is how a container is
+      # supposed to log — Docker captures the streams and a log driver can ship
+      # them. Mounting a named volume there copied those symlinks into the
+      # volume on first use, so the "persisted logs" were two dangling links to
+      # the host's own stdout: nothing was stored, and `tail` on either one
+      # blocked forever. Use `docker compose logs edge`.
     # Services introduced outside docker-compose.yml must join stratum_network
     # explicitly, or compose puts them on the project default where the API's
     # DNS name does not resolve.
@@ -122,6 +128,3 @@ services:
         limits:
           memory: 256M
           cpus: '0.5'
-
-volumes:
-  nginx_logs:
