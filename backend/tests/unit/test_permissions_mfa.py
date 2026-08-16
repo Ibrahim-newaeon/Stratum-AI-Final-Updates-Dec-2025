@@ -632,13 +632,47 @@ class TestRequireRole:
         await checker(req)
 
 
+class _DbUser:
+    """Stand-in for the User row require_super_admin loads."""
+
+    def __init__(self, role: str, is_active: bool = True) -> None:
+        self.role = role
+        self.is_active = is_active
+
+
+class _FakeResult:
+    def __init__(self, user) -> None:
+        self._user = user
+
+    def scalar_one_or_none(self):
+        return self._user
+
+
+class _FakeDb:
+    """Minimal async session: one execute() returning one row (or None)."""
+
+    def __init__(self, user) -> None:
+        self._user = user
+
+    async def execute(self, *_args, **_kwargs):
+        return _FakeResult(self._user)
+
+
+def _db_user(role: str, is_active: bool = True) -> _DbUser:
+    return _DbUser(role, is_active)
+
+
+def _fake_db(user) -> _FakeDb:
+    return _FakeDb(user)
+
+
 @pytest.mark.unit
 class TestRequireSuperAdmin:
 
     @pytest.mark.asyncio
     async def test_superadmin_passes(self) -> None:
         req = _make_request(role="superadmin", user_id=1)
-        await require_super_admin(req)
+        await require_super_admin(req, _fake_db(_db_user("superadmin")))
 
     @pytest.mark.asyncio
     async def test_admin_raises_403(self) -> None:
@@ -646,7 +680,7 @@ class TestRequireSuperAdmin:
 
         req = _make_request(role="admin", user_id=1)
         with pytest.raises(HTTPException) as exc:
-            await require_super_admin(req)
+            await require_super_admin(req, _fake_db(_db_user("admin")))
         assert exc.value.status_code == 403
 
     @pytest.mark.asyncio
@@ -655,8 +689,45 @@ class TestRequireSuperAdmin:
 
         req = _make_request()
         with pytest.raises(HTTPException) as exc:
-            await require_super_admin(req)
+            await require_super_admin(req, _fake_db(None))
         assert exc.value.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_jwt_says_superadmin_but_db_says_demoted(self) -> None:
+        """The whole point: the token is not the source of truth.
+
+        The request carries role="superadmin" exactly as a still-valid token
+        issued before the demotion would. The row says otherwise, and the row
+        wins.
+        """
+        from fastapi import HTTPException
+
+        req = _make_request(role="superadmin", user_id=1)
+        with pytest.raises(HTTPException) as exc:
+            await require_super_admin(req, _fake_db(_db_user("admin")))
+        assert exc.value.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_deactivated_superadmin_rejected(self) -> None:
+        """Deactivation takes effect on the next request, not at token expiry."""
+        from fastapi import HTTPException
+
+        req = _make_request(role="superadmin", user_id=1)
+        with pytest.raises(HTTPException) as exc:
+            await require_super_admin(
+                req, _fake_db(_db_user("superadmin", is_active=False))
+            )
+        assert exc.value.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_deleted_superadmin_rejected(self) -> None:
+        """A soft-deleted user is excluded by the query, so no row comes back."""
+        from fastapi import HTTPException
+
+        req = _make_request(role="superadmin", user_id=1)
+        with pytest.raises(HTTPException) as exc:
+            await require_super_admin(req, _fake_db(None))
+        assert exc.value.status_code == 403
 
 
 # =============================================================================

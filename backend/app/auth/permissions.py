@@ -19,11 +19,7 @@ from typing import TYPE_CHECKING, Callable, List, Optional, Set
 
 from fastapi import Depends, HTTPException, Request, status
 
-# Module-level import is safe despite deps.py referencing this module: its
-# import of permissions is function-local (deps.get_accessible_client_ids), so
-# it resolves at call time and cannot form an import-time cycle.
-from app.auth.deps import CurrentUser as _CurrentUser
-from app.auth.deps import get_current_user as _current_user_dep
+from app.db.session import get_async_session as _get_session_dep
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -697,7 +693,8 @@ def require_role(roles: List[str]) -> Callable:
 
 
 async def require_super_admin(
-    current_user: _CurrentUser = Depends(_current_user_dep),
+    request: Request,
+    db: "AsyncSession" = Depends(_get_session_dep),
 ) -> None:
     """
     FastAPI dependency requiring super admin, verified against the DATABASE.
@@ -711,22 +708,48 @@ async def require_super_admin(
     surface — every tenant's data, billing, subscription actions, data
     seeding — half an hour of stale authority is the wrong trade.
 
-    ``get_current_user`` loads the row and rejects deleted and deactivated
-    users, so offboarding takes effect on the next request rather than the next
-    half hour. Explicit logout was already covered by the token blacklist; an
-    admin-UI demotion was not.
+    Equally deliberately NOT ``Depends(get_current_user)``, which is the
+    obvious way to reach the database. That dependency assigns
+    ``request.state.tenant_id = user.tenant_id`` as a side effect, and this
+    guard runs on routes where a superadmin legitimately acts on *another*
+    tenant (``?tenant_id=X``). Overwriting the tenant context with the
+    superadmin's own made ``_verify_tenant_access`` reject them with "Access
+    denied" — an authorization fix that broke authorization. This reads the
+    row and mutates nothing.
 
-    The cost is one primary-key lookup per request, which every endpoint taking
-    ``get_current_user`` already pays.
+    The cost is one primary-key lookup per request.
 
     Usage:
         @router.get("/system/health", dependencies=[Depends(require_super_admin)])
         async def system_health():
             ...
     """
-    role = getattr(current_user.role, "value", current_user.role)
+    user_id = getattr(request.state, "user_id", None)
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-    if not is_superadmin_role(role):
+    from sqlalchemy import select
+
+    from app.models import User
+
+    result = await db.execute(
+        select(User).where(User.id == user_id, User.is_deleted.is_(False))
+    )
+    user = result.scalar_one_or_none()
+
+    # Deleted or deactivated is not superadmin, whatever the token says — this
+    # is the half of the check a JWT claim can never make.
+    if user is None or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Super admin access required",
+        )
+
+    if not is_superadmin_role(getattr(user.role, "value", user.role)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Super admin access required",
