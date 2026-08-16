@@ -99,7 +99,19 @@ class ChurnRiskItem(BaseModel):
 # Dependencies
 # =============================================================================
 def require_superadmin(request: Request) -> int:
-    """Verify user has superadmin role."""
+    """Return the acting user's id. NOT the authorization check.
+
+    Authorization for this router is the DATABASE-backed
+    ``require_super_admin`` dependency applied at the mount in
+    ``app/api/v1/__init__.py``. This helper only reads ``request.state``, which
+    the middleware populates from the JWT — a snapshot from login — so on its
+    own it would keep admitting a superadmin who had since been demoted,
+    deactivated or deleted, for the remainder of their token's lifetime.
+
+    Kept because handlers use its return value as the acting user id, which is
+    fine: by the time it runs, the mount-level dependency has already verified
+    the role against the database.
+    """
     user_role = getattr(request.state, "role", None)
     user_id = getattr(request.state, "user_id", None)
 

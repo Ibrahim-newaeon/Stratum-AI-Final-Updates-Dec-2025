@@ -17,7 +17,12 @@ Permissions are granular and can be checked individually or in combination.
 from enum import Enum
 from typing import TYPE_CHECKING, Callable, List, Optional, Set
 
-from fastapi import HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request, status
+
+# Module-level import is safe despite deps.py referencing this module: its
+# import of permissions is function-local (deps.get_accessible_client_ids), so
+# it resolves at call time and cannot form an import-time cycle.
+from app.auth.deps import get_current_user as _current_user_dep
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -690,22 +695,33 @@ def require_role(roles: List[str]) -> Callable:
     return role_checker
 
 
-async def require_super_admin(request: Request) -> None:
+async def require_super_admin(current_user=Depends(_current_user_dep)) -> None:
     """
-    FastAPI dependency that requires super admin role.
+    FastAPI dependency requiring super admin, verified against the DATABASE.
 
-    This is a convenience dependency for routes that should only
-    be accessible to super admins (platform-level operations).
+    Deliberately not ``_authenticated_role(request)`` like the other
+    dependencies in this module. That reads ``request.state.role``, which the
+    middleware copies from the JWT — a snapshot taken at login. Demote a
+    superadmin, deactivate them, or soft-delete them, and their existing token
+    keeps asserting ``role: superadmin`` for the rest of its lifetime
+    (``access_token_expire_minutes``, 30 by default). On the platform-wide
+    surface — every tenant's data, billing, subscription actions, data
+    seeding — half an hour of stale authority is the wrong trade.
+
+    ``get_current_user`` loads the row and rejects deleted and deactivated
+    users, so offboarding takes effect on the next request rather than the next
+    half hour. Explicit logout was already covered by the token blacklist; an
+    admin-UI demotion was not.
+
+    The cost is one primary-key lookup per request, which every endpoint taking
+    ``get_current_user`` already pays.
 
     Usage:
-        @router.get("/system/health")
-        async def system_health(
-            request: Request,
-            _: None = Depends(require_super_admin)
-        ):
+        @router.get("/system/health", dependencies=[Depends(require_super_admin)])
+        async def system_health():
             ...
     """
-    role = _authenticated_role(request)
+    role = getattr(current_user.role, "value", current_user.role)
 
     if not is_superadmin_role(role):
         raise HTTPException(

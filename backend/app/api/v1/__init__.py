@@ -214,17 +214,24 @@ api_router.include_router(
 )
 
 # Super Admin Dashboard (Platform-level management)
+# Gated at the router so every route inherits the DATABASE-backed superadmin
+# check. The handlers each call a module-local require_superadmin(request) that
+# reads request.state.role — the JWT claim — so a demoted, deactivated or
+# deleted superadmin kept full platform access until their token expired.
 api_router.include_router(
     superadmin.router,
     prefix="/superadmin",
     tags=["Super Admin"],
+    dependencies=[Depends(require_super_admin)],
 )
 
 # Launch Readiness (Go-Live wizard)
+# Same reason — it carries its own copy of the claim-based helper.
 api_router.include_router(
     launch_readiness.router,
     prefix="/superadmin/launch-readiness",
     tags=["Launch Readiness"],
+    dependencies=[Depends(require_super_admin)],
 )
 
 # Dashboard (Overview metrics, signal health, campaigns, settings)
@@ -242,10 +249,13 @@ api_router.include_router(
 )
 
 # Superadmin Analytics (Platform-wide analytics)
+# Same again — these four routes inline `getattr(request.state,
+# "is_superadmin", False)`, which is the middleware's own copy of the JWT claim.
 api_router.include_router(
     superadmin_analytics.router,
     prefix="/superadmin/analytics",
     tags=["Superadmin Analytics"],
+    dependencies=[Depends(require_super_admin)],
 )
 
 # Autopilot (Automated campaign optimization)
