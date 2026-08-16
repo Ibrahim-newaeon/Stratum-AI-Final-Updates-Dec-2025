@@ -501,3 +501,152 @@ class TestRateLimitMiddleware:
         middleware._maybe_cleanup()
 
         assert "ip:idle-client" not in middleware._buckets
+
+
+# =============================================================================
+# RateLimitMiddleware — Redis path
+# =============================================================================
+
+
+class FakeRedis:
+    """Minimal Redis double honouring the TTL semantics this middleware relies on.
+
+    The suite above only ever exercised the in-memory fallback, so the Redis
+    counter — the one that actually runs in production — had no coverage at
+    all. This models just enough of INCR/EXPIRE to tell a re-armed TTL apart
+    from a one-shot one, driven by a manual clock so a multi-window test does
+    not have to sleep.
+    """
+
+    def __init__(self) -> None:
+        self.now = 0.0
+        self.values: dict[str, int] = {}
+        self.expires_at: dict[str, float] = {}
+
+    # -- clock ----------------------------------------------------------- #
+    def advance(self, seconds: float) -> None:
+        self.now += seconds
+        for key in [k for k, exp in self.expires_at.items() if exp <= self.now]:
+            del self.expires_at[key]
+            self.values.pop(key, None)
+
+    # -- commands --------------------------------------------------------- #
+    def _incr(self, key: str) -> int:
+        self.values[key] = self.values.get(key, 0) + 1
+        return self.values[key]
+
+    def _expire(self, key: str, seconds: int, nx: bool = False) -> bool:
+        if key not in self.values:
+            return False
+        if nx and key in self.expires_at:
+            return False
+        self.expires_at[key] = self.now + seconds
+        return True
+
+    # -- client surface --------------------------------------------------- #
+    async def ping(self) -> bool:
+        return True
+
+    def pipeline(self) -> "FakePipeline":
+        return FakePipeline(self)
+
+
+class FakePipeline:
+    """Records queued commands and applies them on execute()."""
+
+    def __init__(self, redis: FakeRedis) -> None:
+        self._redis = redis
+        self._queued: list = []
+
+    def incr(self, key: str) -> None:
+        self._queued.append(("incr", (key,), {}))
+
+    def expire(self, key: str, seconds: int, **kwargs) -> None:
+        self._queued.append(("expire", (key, seconds), kwargs))
+
+    async def execute(self) -> list:
+        results = []
+        for op, args, kwargs in self._queued:
+            if op == "incr":
+                results.append(self._redis._incr(*args))
+            else:
+                results.append(self._redis._expire(*args, **kwargs))
+        self._queued.clear()
+        return results
+
+
+class TestRateLimitRedisWindow:
+    """Regression tests for the Redis fixed-window counter."""
+
+    @staticmethod
+    def _middleware(rpm: int = 100) -> tuple[RateLimitMiddleware, FakeRedis]:
+        middleware = RateLimitMiddleware(MagicMock(), requests_per_minute=rpm)
+        fake = FakeRedis()
+        middleware._redis = fake
+        middleware._redis_available = True
+        return middleware, fake
+
+    @pytest.mark.asyncio
+    async def test_steady_low_rate_client_is_never_blocked(self):
+        """A client well under the limit must not accumulate across windows.
+
+        This is the production failure: the health check polled every 30s
+        against a 60s window, and because EXPIRE was re-armed on every request
+        the key never expired. The counter climbed past the limit and the
+        client stayed blocked forever.
+        """
+        middleware, fake = self._middleware(rpm=100)
+        request = _make_request("/api/v1/data", client_host="10.0.0.50")
+
+        # Two requests per window for an hour — 120 requests, limit is 100/min.
+        for _ in range(120):
+            response = await middleware.dispatch(request, _ok_call_next)
+            assert response.status_code == 200, "steady low-rate client got blocked"
+            fake.advance(30)
+
+    @pytest.mark.asyncio
+    async def test_burst_over_limit_is_blocked_then_recovers(self):
+        """Exceeding the limit blocks, and the block lifts when the window ends."""
+        middleware, fake = self._middleware(rpm=10)
+        request = _make_request("/api/v1/data", client_host="10.0.0.51")
+
+        for _ in range(10):
+            assert (
+                await middleware.dispatch(request, _ok_call_next)
+            ).status_code == 200
+
+        blocked = await middleware.dispatch(request, _ok_call_next)
+        assert blocked.status_code == 429
+
+        # Window elapses — the key expires and the client is served again.
+        fake.advance(61)
+        recovered = await middleware.dispatch(request, _ok_call_next)
+        assert recovered.status_code == 200, "client did not recover after the window"
+
+    @pytest.mark.asyncio
+    async def test_expire_is_set_once_per_window(self):
+        """The TTL is armed on the window's first request only."""
+        middleware, fake = self._middleware(rpm=100)
+        request = _make_request("/api/v1/data", client_host="10.0.0.52")
+
+        await middleware.dispatch(request, _ok_call_next)
+        first_deadline = fake.expires_at["rl:ip:10.0.0.52"]
+
+        fake.advance(30)
+        await middleware.dispatch(request, _ok_call_next)
+
+        assert (
+            fake.expires_at["rl:ip:10.0.0.52"] == first_deadline
+        ), "second request re-armed the TTL; the window can never close"
+
+    @pytest.mark.asyncio
+    async def test_health_endpoints_bypass_the_limiter(self):
+        """Liveness probes are exempt and consume no budget."""
+        middleware, fake = self._middleware(rpm=1)
+        health = _make_request("/health", client_host="127.0.0.1")
+
+        for _ in range(50):
+            response = await middleware.dispatch(health, _ok_call_next)
+            assert response.status_code == 200
+
+        assert fake.values == {}, "health probes consumed rate limit budget"

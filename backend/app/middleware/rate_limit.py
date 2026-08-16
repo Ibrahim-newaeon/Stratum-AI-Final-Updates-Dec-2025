@@ -2,7 +2,7 @@
 # Stratum AI - Rate Limiting Middleware
 # =============================================================================
 """
-Sliding-window rate limiting using Redis (distributed) with in-memory fallback.
+Fixed-window rate limiting using Redis (distributed) with in-memory fallback.
 
 Uses Redis INCR + EXPIRE for accurate, distributed counting across multiple
 API workers. Falls back to a local in-memory token bucket when Redis is
@@ -22,6 +22,19 @@ from app.core.config import settings
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
+
+# Liveness probes, not traffic. Every other middleware in this package already
+# exempts them (audit, csrf, request_logging, tenant); the rate limiter did
+# not, so the container healthcheck — which polls from inside the container and
+# therefore always presents the same client IP — spent its own budget and then
+# reported the API unhealthy.
+_EXEMPT_PATHS: frozenset[str] = frozenset(
+    {
+        "/health",
+        "/health/ready",
+        "/health/live",
+    }
+)
 
 
 # =============================================================================
@@ -63,7 +76,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     Distributed rate limiting middleware.
 
     Strategy:
-    - **Redis available** → sliding-window counter via INCR + EXPIRE.
+    - **Redis available** → fixed-window counter via INCR + EXPIRE.
       Shared across all workers / containers.
     - **Redis unavailable** → per-process token bucket (graceful degradation).
 
@@ -84,7 +97,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self.requests_per_minute = requests_per_minute
         self.burst_size = burst_size
         self.rate_per_second = requests_per_minute / 60.0
-        self.window_seconds = 60  # 1-minute sliding window
+        self.window_seconds = 60  # fixed 1-minute window
 
         # Stricter limits for authentication endpoints to prevent brute force
         self._auth_limits = {
@@ -137,7 +150,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self, client_id: str, auth_limit: dict | None = None
     ) -> tuple[bool, int]:
         """
-        Sliding-window counter in Redis.
+        Fixed-window counter in Redis.
 
         Returns (allowed: bool, remaining: int).
         """
@@ -149,7 +162,13 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         key = f"rl:{client_id}"
         pipe = redis_client.pipeline()
         pipe.incr(key)
-        pipe.expire(key, self.window_seconds)
+        # nx=True: set the TTL only when the key has none, i.e. on the request
+        # that opened this window. A bare EXPIRE re-arms the TTL on *every*
+        # request, so any client sending at least one request per window keeps
+        # pushing expiry out of reach — the counter then climbs without bound
+        # and, once past `rpm`, that client is blocked permanently rather than
+        # for a minute. Requires Redis >= 7.0 (compose pins redis:7-alpine).
+        pipe.expire(key, self.window_seconds, nx=True)
         results = await pipe.execute()
 
         current_count: int = results[0]
@@ -195,6 +214,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Apply rate limiting to the request."""
         path = request.url.path
+        if path in _EXEMPT_PATHS:
+            return await call_next(request)
+
         auth_limit = self._get_auth_limit(path)
         client_id = self._get_client_identifier(request)
 
