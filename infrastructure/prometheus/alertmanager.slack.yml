@@ -1,0 +1,72 @@
+# =============================================================================
+# Stratum AI - Alertmanager Configuration (Slack)
+# =============================================================================
+# TEMPLATE. Rendered by `deploy-hetzner.sh observability` with envsubst into
+# alertmanager.generated.yml, which is what the container mounts. envsubst is
+# given an explicit variable list so it replaces the webhook placeholder and
+# nothing else — the Go templating below ({{ .Status }} and friends) has to
+# reach Alertmanager intact.
+#
+# The placeholder is written only where it is needed, in the two api_url
+# fields. Naming it in prose here would substitute it into a comment as well,
+# putting the credential somewhere nobody would think to look for it.
+#
+# Used when SLACK_WEBHOOK_URL is set. When it is not, the deploy falls back to
+# alertmanager.yml, which routes alerts to the UI and notifies nobody.
+#
+# A webhook URL is a credential — anyone holding it can post to the channel.
+# It lives in .env (mode 600) and reaches the container only through the
+# rendered file, which is gitignored.
+# =============================================================================
+
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['alertname', 'severity']
+  group_wait: 30s
+  group_interval: 5m
+  # A firing alert repeats every 4h so a problem left alone keeps surfacing,
+  # rather than scrolling past once and being forgotten.
+  repeat_interval: 4h
+  receiver: 'default'
+
+  routes:
+    - match:
+        severity: critical
+      receiver: 'critical'
+      repeat_interval: 1h
+
+receivers:
+  - name: 'default'
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#stratum-alerts'
+        # Resolution notices matter as much as the alert: without them the
+        # channel fills with problems that were fixed hours ago.
+        send_resolved: true
+        title: '[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}'
+        text: >-
+          {{ range .Alerts }}{{ .Annotations.summary }}
+          {{ .Annotations.description }}
+          {{ end }}
+
+  - name: 'critical'
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#stratum-critical'
+        send_resolved: true
+        title: '[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}'
+        text: >-
+          {{ range .Alerts }}{{ .Annotations.summary }}
+          {{ .Annotations.description }}
+          {{ end }}
+
+inhibit_rules:
+  # A critical and a warning for the same alertname are one problem; only the
+  # critical is sent.
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname']

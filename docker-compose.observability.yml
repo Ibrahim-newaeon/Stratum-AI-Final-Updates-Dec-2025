@@ -73,7 +73,9 @@ services:
     container_name: stratum_alertmanager
     restart: unless-stopped
     volumes:
-      - ./infrastructure/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      # Rendered by `deploy-hetzner.sh observability`: the Slack webhook is a
+      # credential, so it comes from .env rather than a checked-in file.
+      - ./infrastructure/prometheus/alertmanager.generated.yml:/etc/alertmanager/alertmanager.yml:ro
       - alertmanager_data:/alertmanager
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
