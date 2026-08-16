@@ -16,11 +16,12 @@ Endpoints:
 - POST /payments/webhook - Stripe webhook handler
 """
 
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.permissions import Permission, require_permissions
@@ -48,7 +49,12 @@ class CreateCheckoutRequest(BaseModel):
     )
     success_url: str = Field(..., description="URL to redirect on successful payment")
     cancel_url: str = Field(..., description="URL to redirect on canceled payment")
-    trial_days: int = Field(default=14, ge=0, le=30, description="Trial period in days")
+
+    # trial_days was a request field — `Field(default=14, ge=0, le=30)`. The
+    # caller picked its own trial length, and nothing recorded that a tenant
+    # had already had one, so cancel/resubscribe granted another 30 days
+    # indefinitely. Length is now a server constant and eligibility is decided
+    # from the tenant row; see TRIAL_PERIOD_DAYS and _trial_days_for_tenant.
 
 
 class CreateCheckoutResponse(BaseModel):
@@ -155,6 +161,23 @@ async def get_tenant_from_request(request: Request, db: AsyncSession) -> Tenant:
         )
 
     return tenant
+
+
+# One trial per tenant, fixed length. Registration already grants exactly this
+# (auth.py sets trial_ends_at = now + 14 days on signup), so for any tenant that
+# arrived through signup the answer here is zero — checkout was handing out a
+# *second* trial on top of the one they already had.
+TRIAL_PERIOD_DAYS = 14
+
+
+def _trial_days_for_tenant(tenant: Tenant) -> int:
+    """Trial length to request from Stripe for this tenant.
+
+    trial_ends_at is the record of a trial having been granted; it is never
+    cleared, so it stays truthy after the trial ends. That is what makes
+    cancel-and-resubscribe stop working: the row still says a trial was used.
+    """
+    return 0 if tenant.trial_ends_at is not None else TRIAL_PERIOD_DAYS
 
 
 def validate_tier(tier_str: str) -> SubscriptionTier:
@@ -317,6 +340,28 @@ async def create_checkout(
             # Save customer ID to tenant
             await stripe_service.sync_tenant_stripe_customer(db, tenant.id, customer_id)
 
+    trial_days = _trial_days_for_tenant(tenant)
+
+    # Claim the trial before Stripe is asked for one, and in the same request
+    # that asks. Recording it afterwards — or on the webhook — would let two
+    # concurrent checkouts each see an unused trial and both be granted one.
+    if trial_days:
+        await db.execute(
+            update(Tenant)
+            .where(Tenant.id == tenant.id, Tenant.trial_ends_at.is_(None))
+            .values(
+                trial_ends_at=datetime.now(timezone.utc) + timedelta(days=trial_days)
+            )
+        )
+        await db.commit()
+
+    logger.info(
+        "checkout_session_requested",
+        tenant_id=tenant.id,
+        tier=tier.value,
+        trial_days=trial_days,
+    )
+
     # Create checkout session
     session = await stripe_service.create_checkout_session(
         customer_id=customer_id,
@@ -324,7 +369,7 @@ async def create_checkout(
         success_url=body.success_url,
         cancel_url=body.cancel_url,
         tenant_id=tenant.id,
-        trial_days=body.trial_days,
+        trial_days=trial_days,
     )
 
     return CreateCheckoutResponse(
