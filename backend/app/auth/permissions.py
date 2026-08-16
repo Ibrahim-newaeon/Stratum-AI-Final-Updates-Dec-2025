@@ -22,6 +22,7 @@ from fastapi import Depends, HTTPException, Request, status
 # Module-level import is safe despite deps.py referencing this module: its
 # import of permissions is function-local (deps.get_accessible_client_ids), so
 # it resolves at call time and cannot form an import-time cycle.
+from app.auth.deps import CurrentUser as _CurrentUser
 from app.auth.deps import get_current_user as _current_user_dep
 
 if TYPE_CHECKING:
@@ -695,7 +696,9 @@ def require_role(roles: List[str]) -> Callable:
     return role_checker
 
 
-async def require_super_admin(current_user=Depends(_current_user_dep)) -> None:
+async def require_super_admin(
+    current_user: _CurrentUser = Depends(_current_user_dep),
+) -> None:
     """
     FastAPI dependency requiring super admin, verified against the DATABASE.
 
