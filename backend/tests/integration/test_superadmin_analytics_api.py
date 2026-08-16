@@ -2,7 +2,7 @@
 # Stratum AI - Superadmin Analytics Endpoint Integration Tests
 # =============================================================================
 """Integration tests for the platform-wide superadmin analytics under
-``/api/v1/superadmin/analytics/superadmin/...``: platform overview, tenant
+``/api/v1/superadmin/...``: platform overview, tenant
 profitability, signal-health trends, and actions analytics. Every route is
 gated on ``request.state.is_superadmin``.
 """
@@ -12,7 +12,7 @@ from httpx import AsyncClient
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
-_BASE = "/api/v1/superadmin/analytics/superadmin"
+_BASE = "/api/v1/superadmin"
 
 _ENDPOINTS = [
     "/platform-overview",
