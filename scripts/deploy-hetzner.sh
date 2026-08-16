@@ -287,7 +287,13 @@ observability() {
     # wrong key.
     log_info "Writing scrape credentials to $key_file"
     printf '%s' "$(grep -m1 '^METRICS_API_KEY=' "$ENV_FILE" | cut -d= -f2-)" > "$key_file"
-    chmod 600 "$key_file"
+    # Owned by nobody(65534) — the uid prom/prometheus runs as. Left root-owned
+    # at 0600 the container cannot read it and the target fails with
+    # "unable to read authorization credentials: permission denied", which
+    # reads like a bad key rather than a bad mode. 0400 after the chown, so it
+    # stays unreadable to every other account on the host.
+    chown 65534:65534 "$key_file"
+    chmod 400 "$key_file"
 
     log_info "Starting observability stack (loopback only)"
     docker compose $COMPOSE_FILES -f docker-compose.observability.yml \
