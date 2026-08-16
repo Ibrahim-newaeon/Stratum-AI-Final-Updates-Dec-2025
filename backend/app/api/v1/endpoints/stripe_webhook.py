@@ -24,7 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.base_models import Tenant, User
 from app.core.config import settings
 from app.core.logging import get_logger
-from app.core.security import decrypt_pii
+from app.core.security import decrypt_pii, mask_email
 from app.db.session import async_session_maker
 from app.services import stripe_service
 from app.services.email_service import get_email_service
@@ -463,7 +463,7 @@ async def handle_customer_created(db: AsyncSession, customer: dict):
     logger.info(
         "stripe_customer_created",
         customer_id=customer_id,
-        email=email,
+        email=mask_email(email),
         tenant_id=tenant_id,
     )
 

@@ -21,6 +21,7 @@ from app.core.security import (
     get_password_hash,
     hash_pii_for_lookup,
     looks_like_pii_ciphertext,
+    mask_email,
 )
 from app.db.session import get_async_session
 from app.models import Tenant, User, UserRole
@@ -404,10 +405,12 @@ async def invite_user(
                 invite_token=invite_token,
                 role=invite_data.role,
             )
-            logger.info(f"Invite email sent to {invite_data.email}")
+            logger.info("invite_email_sent", email=mask_email(invite_data.email))
         except (ConnectionError, TimeoutError, OSError, ValueError) as e:
             logger.error(
-                "send_invite_email_failed", email=invite_data.email, error=str(e)
+                "send_invite_email_failed",
+                email=mask_email(invite_data.email),
+                error=str(e),
             )
 
     background_tasks.add_task(send_invite_email)

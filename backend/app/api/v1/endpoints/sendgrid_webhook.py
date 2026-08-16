@@ -28,6 +28,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.permissions import require_super_admin
 from app.core.config import settings
 from app.core.logging import get_logger
+from app.core.security import mask_email
 from app.db.session import async_session_maker
 from app.models.newsletter import (
     NewsletterCampaign,
@@ -211,7 +212,7 @@ async def _process_single_event(db: AsyncSession, event: SendGridEvent) -> None:
     if event.event in ("bounce", "dropped"):
         logger.warning(
             "Email bounce/drop detected",
-            email=event.email,
+            email=mask_email(event.email),
             reason=event.reason,
             response=event.response,
             status=event.status,
@@ -222,7 +223,7 @@ async def _process_single_event(db: AsyncSession, event: SendGridEvent) -> None:
     if event.event == "spam_report":
         logger.warning(
             "Spam report received",
-            email=event.email,
+            email=mask_email(event.email),
             sg_message_id=event.sg_message_id,
         )
 

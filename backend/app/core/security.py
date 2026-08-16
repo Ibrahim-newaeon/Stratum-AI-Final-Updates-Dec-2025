@@ -333,6 +333,40 @@ def anonymize_pii(value: str) -> str:
     return f"ANONYMIZED_{random_suffix}"
 
 
+def mask_email(email: Optional[str]) -> str:
+    """Mask an email address for logging.
+
+    ``anonymize_pii`` is not the tool for this — it returns a random
+    ``ANONYMIZED_<hex>`` placeholder, which is right for erasure and useless in
+    a log line someone is trying to read.
+
+    Application logs holding addresses are personal data, and they sit outside
+    the Fernet boundary and outside GDPR erasure: deleting a user does not
+    touch the log that recorded their invite. Keeping the domain preserves what
+    operators actually debug with — delivery, SPF/DKIM, provider outages —
+    while dropping the identifying local part.
+
+        alice@example.com  ->  a***@example.com
+    """
+    if not email or "@" not in email:
+        return "***"
+    local, _, domain = email.partition("@")
+    return f"{local[:1]}***@{domain}" if local else f"***@{domain}"
+
+
+def mask_phone(phone: Optional[str]) -> str:
+    """Mask a phone number for logging, keeping country and area code.
+
+    Matches the shape already used ad hoc in auth.py and the pacing alert
+    service, so existing log output stays comparable.
+
+        +14155551234  ->  +14155****
+    """
+    if not phone:
+        return "***"
+    return f"{phone[:6]}****" if len(phone) > 6 else "***"
+
+
 def generate_api_key() -> str:
     """Generate a secure API key."""
     return (
