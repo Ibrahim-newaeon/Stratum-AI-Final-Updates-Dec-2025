@@ -616,8 +616,22 @@ def create_application() -> FastAPI:
             "database": readiness["database"],
             "redis": readiness["redis"],
             "worker": worker_status,
+            # Mirrors EmailService._send_email's precedence: SendGrid first,
+            # SMTP as the fallback, nothing otherwise. Reporting on
+            # sendgrid_api_key alone called a fully working SMTP setup
+            # "not_configured" — the check knew about one of the two providers
+            # the service actually supports, so configuring Resend over SMTP
+            # looked like it had failed. Names the provider rather than saying
+            # "configured", because which one is sending matters when mail
+            # stops arriving.
             "email_provider": (
-                "configured" if settings.sendgrid_api_key else "not_configured"
+                "sendgrid"
+                if settings.sendgrid_api_key
+                else (
+                    "smtp"
+                    if settings.smtp_user and settings.smtp_password
+                    else "not_configured"
+                )
             ),
         }
 
