@@ -181,6 +181,17 @@ services:
       - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/1
       - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-}@redis:6379/2
     volumes: []
+    # beat persists its last-run times to a gdbm file, by default in the
+    # working directory. Dev gets away with that because docker-compose.yml
+    # bind-mounts ./backend over /app; here `volumes: []` drops that mount, so
+    # /app is the image layer — root-owned, while the container runs as
+    # uid 1000. beat crashed on startup with
+    #   _gdbm.error: [Errno 13] Permission denied: 'celerybeat-schedule'
+    # and, because restart: always, did so 3749 times without ever running a
+    # single periodic task. Point it somewhere the runtime user owns.
+    command: >
+      celery -A app.workers.celery_app beat --loglevel=info
+      --schedule=/home/appuser/celerybeat-schedule
     deploy:
       resources:
         limits:
@@ -189,10 +200,14 @@ services:
         reservations:
           memory: 128M
     healthcheck:
-      test: ["CMD", "python", "-c", "import os; exit(0 if os.path.exists('celerybeat-schedule') else 1)"]
+      # Glob, because the gdbm backend may append a suffix to the name it is
+      # given. start_period covers the gap before beat first writes the file —
+      # without it the container is marked unhealthy during normal startup.
+      test: ["CMD", "python", "-c", "import glob,sys; sys.exit(0 if glob.glob('/home/appuser/celerybeat-schedule*') else 1)"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 60s
 
   # ===========================================================================
   # React Frontend - Production (Nginx)
