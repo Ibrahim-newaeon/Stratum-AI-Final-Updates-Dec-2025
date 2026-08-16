@@ -21,7 +21,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.feature_gate import get_current_tier
+from app.core.feature_gate import get_tenant_tier
 from app.core.tiers import Feature, SubscriptionTier, get_tier_limit, has_feature
 from app.db.session import get_db
 from app.models import Campaign
@@ -110,7 +110,7 @@ async def create_widget(
     - Professional: Minimal "Powered by Stratum" branding
     - Enterprise: No branding (white-label)
     """
-    tier = get_current_tier()
+    tier = await get_tenant_tier(tenant_id)
 
     # Check feature access
     if not has_feature(tier, Feature.EMBED_WIDGETS_BASIC):
@@ -158,7 +158,7 @@ async def update_widget(
     service: EmbedWidgetService = Depends(get_widget_service),
 ):
     """Update an existing widget."""
-    tier = get_current_tier()
+    tier = await get_tenant_tier(tenant_id)
     widget = await service.update_widget(tenant_id, widget_id, data, tier)
     return widget
 
@@ -195,7 +195,7 @@ async def create_token(
     IMPORTANT: The token value is only returned once at creation.
     Store it securely - it cannot be retrieved again.
     """
-    tier = get_current_tier()
+    tier = await get_tenant_tier(tenant_id)
     token, plaintext_token, refresh_token = await service.create_token(
         tenant_id=tenant_id,
         widget_id=widget_id,
@@ -289,7 +289,7 @@ async def add_domain(
     Domains must be whitelisted before they can be used with tokens.
     Supports wildcards like *.example.com
     """
-    tier = get_current_tier()
+    tier = await get_tenant_tier(tenant_id)
     domain = await service.add_domain_to_whitelist(
         tenant_id=tenant_id,
         domain_pattern=data.domain_pattern,
@@ -382,11 +382,14 @@ async def get_embed_code(
 
 
 @router.get("/tier-info")
-async def get_embed_tier_info():
+async def get_embed_tier_info(tenant_id: int = Depends(get_tenant_id)):
     """
-    Get embed widget limits and features for current tier.
+    Get embed widget limits and features for the caller's tier.
+
+    Took no tenant context at all, so it described whatever tier the
+    deprecated settings fallback produced — the same answer for everyone.
     """
-    tier = get_current_tier()
+    tier = await get_tenant_tier(tenant_id)
 
     return {
         "tier": tier.value,
