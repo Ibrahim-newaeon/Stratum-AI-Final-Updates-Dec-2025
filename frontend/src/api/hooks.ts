@@ -346,7 +346,7 @@ export function useTenantRecommendations(tenantId: number, options?: { limit?: n
           expected_impact: number
         }>
         total: number
-      }>>(`/insights/recommendations${params}`)
+      }>>(`/insights/tenant/${tenantId}/recommendations${params}`)
       return response.data.data
     },
     staleTime: 60 * 1000,

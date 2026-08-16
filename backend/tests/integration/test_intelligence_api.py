@@ -2,7 +2,7 @@
 # Stratum AI - AI Intelligence Endpoint Integration Tests
 # =============================================================================
 """Integration tests for the AI-intelligence surface under
-``/api/v1/intelligence/analytics/insights/...``: natural-language query (NLQ),
+``/api/v1/analytics/insights/...``: natural-language query (NLQ),
 anomaly explanation, and campaign performance prediction.
 
 These use rule-based engines (no external LLM), so they run deterministically
@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
-_BASE = "/api/v1/intelligence/analytics/insights"
+_BASE = "/api/v1/analytics/insights"
 
 
 async def _seed_campaign_with_metrics(db: AsyncSession, tenant_id: int):
