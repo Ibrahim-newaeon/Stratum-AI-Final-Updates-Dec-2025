@@ -328,7 +328,13 @@ observability() {
         log_warn "Alertmanager UI over the tunnel, and will page nobody."
         cp "$am_src" "$am_out"
     fi
-    chmod 600 "$am_out"
+    # Same ownership dance as the scrape key above, and for the same reason:
+    # prom/alertmanager runs as nobody(65534), so a root-owned 0600 file is
+    # unreadable to it. Left that way, amtool reports
+    # "FAILED: open /am.yml: permission denied" — which reads like a broken
+    # config rather than a broken mode.
+    chown 65534:65534 "$am_out"
+    chmod 400 "$am_out"
 
     # Fail before starting rather than after: amtool reports the line, a
     # crash-looping container reports only that it restarted.
