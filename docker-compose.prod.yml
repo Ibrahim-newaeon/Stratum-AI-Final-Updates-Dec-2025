@@ -80,7 +80,15 @@ services:
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
       - PII_ENCRYPTION_KEY=${PII_ENCRYPTION_KEY:?PII_ENCRYPTION_KEY is required}
       - CORS_ORIGINS=${CORS_ORIGINS:-https://app.yourdomain.com}
-      - LOG_LEVEL=WARNING
+      # Interpolated, not hardcoded. dev and staging already use
+      # ${LOG_LEVEL:-INFO}; production pinned the literal WARNING, so raising
+      # verbosity during an incident meant editing compose and restarting the
+      # API — the one moment you want more detail, not a redeploy. INFO is the
+      # default here because WARNING discards 817 logger.info call sites,
+      # including campaign/asset/rule/webhook deletions, password resets, and
+      # the audience_sync_consent_suppressed diagnostic. Set LOG_LEVEL=WARNING
+      # in .env to restore the old behaviour.
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - LOG_FORMAT=json
       - SENTRY_DSN=${SENTRY_DSN:-}
     volumes:
@@ -135,7 +143,7 @@ services:
       - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/0
       - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/1
       - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-}@redis:6379/2
-      - LOG_LEVEL=WARNING
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - SENTRY_DSN=${SENTRY_DSN:-}
     volumes:
       # Writable: the app auto-trains missing models on startup and the
@@ -144,7 +152,9 @@ services:
       - ./ml_service/models:/app/ml_service/models
     depends_on:
       - pgbouncer
-    command: celery -A app.workers.celery_app worker --loglevel=warning --concurrency=2
+    # Celery keeps its own logger, so LOG_LEVEL above does not reach it. Track
+    # the same variable here or the worker stays quiet while the app is verbose.
+    command: celery -A app.workers.celery_app worker --loglevel=${LOG_LEVEL:-INFO} --concurrency=2
     deploy:
       resources:
         limits:
