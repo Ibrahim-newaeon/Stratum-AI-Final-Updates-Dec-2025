@@ -93,15 +93,16 @@ async def _seed_profile(
     db.add(profile)
     await db.flush()
     for identifier_type, raw in identifiers:
-        db.add(
-            CDPProfileIdentifier(
-                tenant_id=tenant_id,
-                profile_id=profile.id,
-                identifier_type=identifier_type,
-                identifier_value=raw,
-                identifier_hash=_sha(raw),
-            )
+        identifier = CDPProfileIdentifier(
+            tenant_id=tenant_id,
+            profile_id=profile.id,
+            identifier_type=identifier_type,
+            identifier_hash=_sha(raw),
         )
+        # identifier_value is encrypted under the row's tenant key, so it is set
+        # after tenant_id rather than passed to the constructor [CDP-04].
+        identifier.set_identifier_value(raw)
+        db.add(identifier)
     db.add(
         CDPSegmentMembership(
             tenant_id=tenant_id,

@@ -559,10 +559,12 @@ async def link_identifiers_to_profile(
                 tenant_id=tenant_id,
                 profile_id=profile.id,
                 identifier_type=ident.type,
-                identifier_value=ident.value,  # Store original (can be redacted later)
                 identifier_hash=ident_hash,
                 is_primary=(ident.type in ["email", "phone"]),
             )
+            # Set after tenant_id, never as a constructor kwarg: the value is
+            # encrypted under this row's tenant key [CDP-04].
+            new_ident.set_identifier_value(ident.value)
             db.add(new_ident)
 
     # Update profile lifecycle if we now have PII
