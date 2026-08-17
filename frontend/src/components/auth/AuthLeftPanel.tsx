@@ -42,7 +42,19 @@ export default function AuthLeftPanel({ className }: AuthLeftPanelProps) {
         </a>
       </div>
 
-      {/* Center: testimonial */}
+      {/* Center: what the product does.
+       *
+       * This used to be a testimonial from "Jane Doe, CMO, GrowthCo" beneath a
+       * "Trusted by 500+ growth teams" badge — placeholder copy that shipped to
+       * production on every auth screen. A fabricated endorsement is a
+       * regulated claim (FTC Rule on Consumer Reviews and Testimonials; UCPD
+       * Annex I), and it sat one column from "Access your trust-gated revenue
+       * operations": an unverifiable claim undercutting a product whose whole
+       * argument is not acting on unverifiable data.
+       *
+       * Replaced with what the system actually does. Put social proof back here
+       * when there is real, attributable proof to show.
+       */}
       <div className="relative z-10 max-w-md">
         <span
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11.5px] uppercase tracking-[0.06em] font-medium text-[#ECECEC] mb-6"
@@ -55,21 +67,15 @@ export default function AuthLeftPanel({ className }: AuthLeftPanelProps) {
             className="w-1.5 h-1.5 rounded-full bg-[#FF5A1F]"
             style={{ boxShadow: '0 0 8px #FF5A1F' }}
           />
-          Trusted by 500+ growth teams
+          Trust-gated automation
         </span>
-        <blockquote className="text-[28px] leading-tight tracking-tight text-white mt-6 mb-8">
-          &ldquo;Stratum doesn't just manage our ads. It partners with us to grow revenue — with
-          every decision auditable and reversible.&rdquo;
-        </blockquote>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#262626] flex items-center justify-center text-[#9A9A9A] text-sm font-medium">
-            JD
-          </div>
-          <div>
-            <p className="text-sm font-medium text-white">Jane Doe</p>
-            <p className="text-xs text-[#6B6B6B]">CMO, GrowthCo</p>
-          </div>
-        </div>
+        <p className="text-[28px] leading-tight tracking-tight text-white mt-6 mb-6">
+          Automation that declines to act on data it cannot trust.
+        </p>
+        <p className="text-sm leading-relaxed text-[#9A9A9A]">
+          Every automated decision is gated on signal health, recorded with the reason it
+          passed or was held, and reversible.
+        </p>
       </div>
 
       {/* Bottom: status marker */}
