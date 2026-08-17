@@ -211,6 +211,7 @@ class TestEnvironmentProperties:
             use_mock_ad_data="false",
             cors_origins="https://app.stratum.ai",
             frontend_url="https://app.stratum.ai",
+            metrics_api_key="ci-metrics-key",
         )
         assert s.is_production is True
         assert s.is_development is False
@@ -310,6 +311,7 @@ class TestProductionCORSSafety:
             use_mock_ad_data="false",
             cors_origins="https://app.stratum.ai",
             frontend_url="https://app.stratum.ai",
+            metrics_api_key="ci-metrics-key",
         )
         defaults.update(overrides)
         return _make_settings(**defaults)
@@ -338,3 +340,7 @@ class TestProductionCORSSafety:
     def test_staging_also_rejects_localhost(self) -> None:
         with pytest.raises(ValueError, match="CORS_ORIGINS contains insecure origin"):
             self._prod_settings(app_env="staging", cors_origins="http://localhost:3000")
+
+    def test_production_requires_metrics_api_key(self) -> None:
+        with pytest.raises(ValueError, match="METRICS_API_KEY must be explicitly set"):
+            self._prod_settings(metrics_api_key="")

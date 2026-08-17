@@ -51,12 +51,54 @@ from app.middleware.tenant import TenantMiddleware
 # request.url.path labels create unbounded series cardinality.
 
 
-def metrics_access_allowed(authorization_header: str, api_key: str) -> bool:
-    """Gate for /metrics: open when no key is configured, else require
-    a constant-time-compared "Bearer <key>" Authorization header."""
+def metrics_access_allowed(
+    authorization_header: str,
+    api_key: str,
+    *,
+    require_key: bool = False,
+) -> bool:
+    """Gate for /metrics.
+
+    When ``api_key`` is set, require a constant-time-compared
+    ``Authorization: Bearer <key>`` header. When ``api_key`` is empty:
+    allow (local/dev scrape) unless ``require_key`` is True, in which
+    case deny — production must never expose tenant-labeled series.
+    """
     if not api_key:
-        return True
+        return not require_key
     return secrets.compare_digest(authorization_header, f"Bearer {api_key}")
+
+
+def docs_access_allowed(provided_key: str, configured_key: str) -> bool:
+    """Gate for /docs, /redoc, /openapi.json in production.
+
+    Empty ``configured_key`` disables documentation (deny all). A
+    configured key must match ``provided_key`` in constant time.
+    """
+    if not configured_key:
+        return False
+    return secrets.compare_digest(provided_key, configured_key)
+
+
+WS_BEARER_PREFIX = "bearer."
+
+
+def extract_ws_access_token(
+    subprotocols: list[str] | tuple[str, ...] | None,
+) -> Optional[str]:
+    """Read the access token from WebSocket subprotocols, never the query string.
+
+    Clients offer a single subprotocol ``bearer.<jwt>``. Query-string tokens
+    leak via access logs, Referer headers, and browser history.
+    """
+    if not subprotocols:
+        return None
+    for proto in subprotocols:
+        if isinstance(proto, str) and proto.startswith(WS_BEARER_PREFIX):
+            token = proto[len(WS_BEARER_PREFIX) :]
+            if token:
+                return token
+    return None
 
 
 async def check_readiness() -> dict:
@@ -332,10 +374,14 @@ def create_application() -> FastAPI:
         # route/middleware closure that references HTTPException hits
         # "NameError: free variable not associated with a value" and 500s
         # (notably /health). Use the module-level imports instead.
-        DOCS_API_KEY = os.environ.get("DOCS_API_KEY", "")
+        DOCS_API_KEY = (settings.docs_api_key or "").strip()
 
         async def verify_docs_access(request: Request) -> None:
-            """Require DOCS_API_KEY query parameter for docs access in production."""
+            """Require DOCS_API_KEY for docs access in production.
+
+            Unset key disables documentation entirely (503). An incorrect
+            or missing ``api_key`` query parameter returns 403.
+            """
             # Allow internal health checks without key
             if request.url.path in (
                 "/health",
@@ -344,15 +390,18 @@ def create_application() -> FastAPI:
                 "/metrics",
             ):
                 return
-            # Skip if DOCS_API_KEY not configured (fallback to open)
-            if not DOCS_API_KEY:
-                return
             provided = request.query_params.get("api_key", "")
-            if not provided or not secrets.compare_digest(provided, DOCS_API_KEY):
+            if docs_access_allowed(provided, DOCS_API_KEY):
+                return
+            if not DOCS_API_KEY:
                 raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Documentation access requires a valid api_key query parameter",
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Documentation disabled in production",
                 )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Documentation access requires a valid api_key query parameter",
+            )
 
         # Mount docs behind the access gate
         from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
@@ -790,19 +839,20 @@ def create_application() -> FastAPI:
     # Always-on exposition of the full global registry (domain metrics +
     # HTTP collectors when ENABLE_METRICS=true — see instrumentation above).
     # The registry carries tenant_id-labeled series (EMQ, autopilot, trust
-    # gate), so exposition is gated: when METRICS_API_KEY is set, scrapers
-    # must send "Authorization: Bearer <key>" (see the commented authorization
-    # block in infrastructure/prometheus/prometheus.yml). Unset = open, for
-    # local/dev scraping only — production MUST set it because /metrics is
-    # tenant-exempt (middleware/tenant.py PUBLIC_ENDPOINTS) and served on the
-    # same port as the public API.
-    METRICS_API_KEY = os.environ.get("METRICS_API_KEY", "")
+    # gate), so exposition is gated. Production/staging refuse to start
+    # without METRICS_API_KEY (Settings.enforce_production_safety). Unset
+    # remains open only in development so local scrapes still work.
+    METRICS_API_KEY = (settings.metrics_api_key or "").strip()
 
     @app.get("/metrics", include_in_schema=False)
     async def metrics(request: Request):
         """Prometheus metrics endpoint."""
         auth_header = request.headers.get("authorization", "")
-        if not metrics_access_allowed(auth_header, METRICS_API_KEY):
+        if not metrics_access_allowed(
+            auth_header,
+            METRICS_API_KEY,
+            require_key=settings.app_env in ("production", "staging"),
+        ):
             return JSONResponse(
                 status_code=status.HTTP_403_FORBIDDEN,
                 content={"detail": "Metrics access requires a valid bearer token"},
@@ -878,14 +928,15 @@ def create_application() -> FastAPI:
     async def websocket_endpoint(
         websocket: WebSocket,
         tenant_id: Optional[int] = Query(default=None),
-        token: Optional[str] = Query(default=None),
     ):
         """
         WebSocket endpoint for real-time dashboard updates.
 
+        Auth: offer subprotocol ``bearer.<access_jwt>``. Query-string tokens
+        are rejected (they leak via logs, Referer, and browser history).
+
         Query params:
-        - tenant_id: Optional tenant ID for tenant-scoped messages
-        - token: Optional auth token for authenticated connections
+        - tenant_id: Superadmin-only target tenant (ignored for other roles)
 
         Message types:
         - emq_update: EMQ score changes
@@ -895,45 +946,46 @@ def create_application() -> FastAPI:
         - action_recommendation: New action recommendations
         - platform_status: Platform health updates
         """
-        # SECURITY: Require a valid token for WebSocket connections.
+        # SECURITY: Require a valid access token via Sec-WebSocket-Protocol.
         # Anonymous connections could receive tenant-scoped data without auth.
+        offered = list(websocket.scope.get("subprotocols") or [])
+        token = extract_ws_access_token(offered)
         user_id = None
-        if token:
-            try:
-                import jwt as pyjwt
-
-                payload = pyjwt.decode(
-                    token,
-                    settings.jwt_secret_key,
-                    algorithms=[settings.jwt_algorithm],
-                )
-                # Reject refresh/other token types used as a WS credential.
-                if payload.get("type") != "access":
-                    await websocket.close(code=4001, reason="Invalid token type")
-                    return
-                user_id = payload.get("sub")
-                # SECURITY (TEN-001): tenant comes from the VERIFIED token claim,
-                # never the client-supplied query param (see _resolve_ws_tenant).
-                tenant_id = _resolve_ws_tenant(payload, tenant_id)
-            except (
-                pyjwt.InvalidTokenError,
-                ValueError,
-                TypeError,
-                KeyError,
-            ) as _jwt_err:
-                # Invalid/expired token — reject the connection
-                await websocket.close(code=4001, reason="Invalid or expired token")
-                return
-        else:
-            # No token provided — reject unauthenticated connections
+        if not token:
             await websocket.close(code=4001, reason="Authentication required")
             return
+        try:
+            import jwt as pyjwt
 
-        # Connect the client
+            payload = pyjwt.decode(
+                token,
+                settings.jwt_secret_key,
+                algorithms=[settings.jwt_algorithm],
+            )
+            # Reject refresh/other token types used as a WS credential.
+            if payload.get("type") != "access":
+                await websocket.close(code=4001, reason="Invalid token type")
+                return
+            user_id = payload.get("sub")
+            # SECURITY (TEN-001): tenant comes from the VERIFIED token claim,
+            # never the client-supplied query param (see _resolve_ws_tenant).
+            tenant_id = _resolve_ws_tenant(payload, tenant_id)
+        except (
+            pyjwt.InvalidTokenError,
+            ValueError,
+            TypeError,
+            KeyError,
+        ):
+            await websocket.close(code=4001, reason="Invalid or expired token")
+            return
+
+        # Connect the client (echo the bearer subprotocol so the handshake
+        # completes — browsers require the server to pick one offered value).
         client_id = await ws_manager.connect(
             websocket=websocket,
             tenant_id=tenant_id,
             user_id=user_id,
+            subprotocol=f"{WS_BEARER_PREFIX}{token}",
         )
 
         logger.info(

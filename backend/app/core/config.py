@@ -421,6 +421,23 @@ class Settings(BaseSettings):
     rate_limit_burst: int = Field(default=20)
 
     # -------------------------------------------------------------------------
+    # Endpoint gates (docs / metrics)
+    # -------------------------------------------------------------------------
+    # /metrics is tenant-exempt and exports tenant_id-labeled series. Empty is
+    # allowed in development (open scrape); production/staging reject startup
+    # without a key so the route cannot ship unauthenticated.
+    metrics_api_key: Optional[str] = Field(
+        default=None,
+        description="Bearer key required to scrape /metrics",
+    )
+    # Empty in production disables /docs, /redoc, and /openapi.json (503).
+    # Set a key to expose them behind ?api_key=.
+    docs_api_key: Optional[str] = Field(
+        default=None,
+        description="Query-param key for /docs in production; empty disables docs",
+    )
+
+    # -------------------------------------------------------------------------
     # Feature Flags
     # -------------------------------------------------------------------------
     # Competitor Intelligence and Automation Rules are shelved off for launch:
@@ -562,6 +579,11 @@ class Settings(BaseSettings):
             if self.use_mock_ad_data is True:
                 raise ValueError(
                     f"use_mock_ad_data must be False in {self.app_env} — production must use real API data"
+                )
+            if not (self.metrics_api_key or "").strip():
+                raise ValueError(
+                    f"METRICS_API_KEY must be explicitly set in {self.app_env} — "
+                    "/metrics is tenant-exempt and carries tenant_id-labeled series"
                 )
 
             # CORS: reject localhost, 127.0.0.1, and wildcard origins

@@ -189,13 +189,14 @@ class WebSocketManager:
         websocket: WebSocket,
         tenant_id: Optional[int] = None,
         user_id: Optional[int] = None,
+        subprotocol: Optional[str] = None,
     ) -> str:
         """
         Register a new WebSocket connection.
 
         Returns the client ID for future reference.
         """
-        await websocket.accept()
+        await websocket.accept(subprotocol=subprotocol)
 
         client_id = self._generate_client_id()
         client = ConnectedClient(

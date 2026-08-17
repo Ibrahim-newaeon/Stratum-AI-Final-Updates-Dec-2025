@@ -34,6 +34,7 @@ class MockWebSocket {
   static CONNECTING = 0;
 
   url: string;
+  protocols: string | string[] | undefined;
   readyState: number = MockWebSocket.CONNECTING;
   onopen: WSHandler = null;
   onclose: WSHandler = null;
@@ -42,8 +43,9 @@ class MockWebSocket {
   send = vi.fn();
   close = vi.fn();
 
-  constructor(url: string) {
+  constructor(url: string, protocols?: string | string[]) {
     this.url = url;
+    this.protocols = protocols;
     MockWebSocket.instances.push(this);
   }
 
@@ -76,6 +78,10 @@ class MockWebSocket {
 Object.defineProperty(MockWebSocket, 'OPEN', { value: 1, writable: false });
 Object.defineProperty(MockWebSocket, 'CLOSED', { value: 3, writable: false });
 Object.defineProperty(MockWebSocket, 'CONNECTING', { value: 0, writable: false });
+
+vi.mock('../api/client', () => ({
+  getAccessToken: () => 'test-access-token',
+}));
 
 vi.stubGlobal('WebSocket', MockWebSocket);
 
@@ -111,6 +117,7 @@ describe('useWebSocket', () => {
 
       expect(MockWebSocket.instances).toHaveLength(1);
       expect(MockWebSocket.instances[0].url).toBe('ws://test');
+      expect(MockWebSocket.instances[0].protocols).toEqual(['bearer.test-access-token']);
     });
 
     it('should not auto-connect when autoConnect is false', () => {

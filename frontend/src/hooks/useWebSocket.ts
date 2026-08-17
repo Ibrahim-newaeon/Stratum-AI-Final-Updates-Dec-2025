@@ -7,6 +7,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { getAccessToken } from '../api/client'
 
 type ConnectionState = 'connecting' | 'connected' | 'disconnected' | 'error'
 
@@ -60,7 +61,14 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     setConnectionState('connecting')
 
     try {
-      const ws = new WebSocket(url)
+      const token = getAccessToken()
+      if (!token) {
+        setConnectionState('error')
+        return
+      }
+      // Token goes in Sec-WebSocket-Protocol, never the URL — query-string
+      // JWTs leak via access logs, Referer, and browser history.
+      const ws = new WebSocket(url, [`bearer.${token}`])
       wsRef.current = ws
 
       ws.onopen = () => {
