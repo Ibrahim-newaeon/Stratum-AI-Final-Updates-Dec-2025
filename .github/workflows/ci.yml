@@ -15,8 +15,10 @@ concurrency:
 
 env:
   PYTHON_VERSION: "3.12"
-  # Node 24 is the only version the whole toolchain currently agrees on, and it
-  # is deliberately NOT the Dockerfile's 26. Both bounds were measured:
+  # Node 24 is the toolchain floor that jsdom 29/30 and vitest agree on.
+  # frontend/Dockerfile uses the same major (node:24-alpine). Do not raise
+  # this to 26 without re-checking the storage regression below. Both bounds
+  # were measured:
   #
   #   Node 20 (the previous value) is too old. jsdom 30 (#686) raised its floor
   #   to ^22.22.2 || ^24.15.0 || >=26.0.0 and pulls undici 8. npm installs it
@@ -35,10 +37,6 @@ env:
   # jsdom bump does not have to land as a flag day with this change. Verified
   # locally on 24.18.0 with jsdom 30 installed: 70 files, 1036 tests, all pass.
   #
-  # The gap against frontend/Dockerfile's node:26-alpine is real but does not
-  # reach production: jsdom and vitest are devDependencies that never ship, and
-  # the image only runs `vite build`. Close it by moving the Dockerfile to 24,
-  # or CI to 26 once the storage regression above is resolved — not silently.
   NODE_VERSION: "24"
 
 jobs:
@@ -729,7 +727,7 @@ jobs:
   gate:
     name: Release Gate
     runs-on: ubuntu-latest
-    needs: [backend-quality, backend-tests, backend-security, frontend, security, secrets, deploy-config]
+    needs: [backend-quality, backend-tests, backend-security, frontend, e2e, security, secrets, deploy-config]
     if: always()
 
     steps:
@@ -739,6 +737,7 @@ jobs:
           echo "Backend Tests: ${{ needs.backend-tests.result }}"
           echo "Backend Security: ${{ needs.backend-security.result }}"
           echo "Frontend: ${{ needs.frontend.result }}"
+          echo "E2E: ${{ needs.e2e.result }}"
           echo "Security: ${{ needs.security.result }}"
           echo "Secrets: ${{ needs.secrets.result }}"
           echo "Deploy Config: ${{ needs.deploy-config.result }}"
@@ -746,6 +745,7 @@ jobs:
              [[ "${{ needs.backend-tests.result }}" != "success" ]] || \
              [[ "${{ needs.backend-security.result }}" != "success" ]] || \
              [[ "${{ needs.frontend.result }}" != "success" ]] || \
+             [[ "${{ needs.e2e.result }}" != "success" ]] || \
              [[ "${{ needs.security.result }}" != "success" ]] || \
              [[ "${{ needs.secrets.result }}" != "success" ]] || \
              [[ "${{ needs.deploy-config.result }}" != "success" ]]; then
