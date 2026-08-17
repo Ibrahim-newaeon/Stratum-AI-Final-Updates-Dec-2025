@@ -60,6 +60,9 @@ const VerifyEmail = lazyWithRetry(() => import('./views/VerifyEmail'));
 const Onboarding = lazyWithRetry(() => import('./views/Onboarding'));
 const Overview = lazyWithRetry(() => import('./views/dashboard/Overview'));
 const Plans = lazyWithRetry(() => import('./views/dashboard/Plans'));
+// Trust Engine: /dashboard/trust rendered TenantAdminOverview, a generic tenant
+// admin page, because no Trust Engine screen existed. It does now.
+const TrustEngine = lazyWithRetry(() => import('./views/TrustEngine'));
 const CustomDashboard = lazyWithRetry(() => import('./views/CustomDashboard'));
 const Campaigns = lazyWithRetry(() => import('./views/Campaigns'));
 const CampaignDetail = lazyWithRetry(() => import('./views/CampaignDetail'));
@@ -174,7 +177,10 @@ const TenantInsights = lazyWithRetry(() => import('./views/tenant/Insights'));
 const TenantAuditLog = lazyWithRetry(() => import('./views/tenant/AuditLog'));
 
 // Role-based tenant views
-const TenantAdminOverview = lazyWithRetry(() => import('./views/tenant/Overview'));
+// TenantAdminOverview (views/tenant/Overview.tsx) lost its last caller when
+// /dashboard/trust started rendering the real Trust Engine — it had been
+// standing in for a screen that did not exist. Left on disk rather than deleted
+// here, to keep this change to one thing; it is a removal candidate.
 const MediaBuyerConsole = lazyWithRetry(() => import('./views/tenant/Console'));
 const SignalHub = lazyWithRetry(() => import('./views/tenant/SignalHub'));
 
@@ -1434,7 +1440,7 @@ function App() {
                           path="trust"
                           element={
                             <LazyRoute>
-                              <TenantAdminOverview />
+                              <TrustEngine />
                             </LazyRoute>
                           }
                         />
@@ -1593,7 +1599,7 @@ function App() {
                           path="trust"
                           element={
                             <LazyRoute>
-                              <TenantAdminOverview />
+                              <TrustEngine />
                             </LazyRoute>
                           }
                         />
