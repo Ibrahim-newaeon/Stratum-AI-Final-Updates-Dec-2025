@@ -38,11 +38,12 @@ omit =
     app/services/crm/zoho_writeback.py
     app/workers/crm_sync_tasks.py
     # Dead code (2026-07-02 audit, re-verified 2026-07-05): app/stratum/
-    # workers has zero importers; app/monitoring is imported only by the
-    # memory_debug endpoint, which is never registered in the API router.
+    # workers has zero importers. app/monitoring has no importer inside the
+    # app either, now that the memory_debug endpoint that never registered
+    # has been deleted (2026-08-17); its remaining consumer is the standalone
+    # backend/run_memory_audit.py script, which the test suite never runs.
     app/stratum/workers/*
     app/monitoring/*
-    app/api/v1/endpoints/memory_debug.py
     # NOTE: delivery_logger.py was previously omitted as "zero importers", but
     # capi_service.py now wires it (imports + get_delivery_logger()/log_delivery
     # in _log_deliveries), so it is measured again [CAPI-04]. Its DB paths are
@@ -202,8 +203,8 @@ omit =
 # omit code that is either explicitly cut from launch (Salesforce/Pipedrive/
 # Zoho CRM families + their sole unregistered entry point crm_sync_tasks;
 # see backend/docs/06-deploy/launch-scope-decisions.md) or verified dead
-# (stratum/workers: zero importers; monitoring/* + memory_debug endpoint:
-# never registered in the router). ~3,900 stmts / ~3,570 missed leave the
+# (stratum/workers: zero importers; monitoring/*: no in-app importer since
+# the memory_debug endpoint was deleted). ~3,900 stmts / ~3,570 missed leave the
 # denominator, so measured coverage reflects only reachable code. CI
 # combined measured 54.21% before; CI measured 57.55% after (the naive
 # statement arithmetic suggested ~61.5%, but branch-coverage weighting
