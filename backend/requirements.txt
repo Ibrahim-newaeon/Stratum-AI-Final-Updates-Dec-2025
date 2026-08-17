@@ -90,7 +90,7 @@ ruff==0.16.3
 # Ad Platform SDKs
 stripe>=15.3.0
 requests>=2.34.2
-facebook-business>=25.0.2
+facebook-business>=26.0.0
 google-ads>=31.3.0
 
 # Analytics & ML (scipy needed by ml/ab_testing.py)
