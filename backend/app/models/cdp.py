@@ -257,8 +257,66 @@ class CDPProfileIdentifier(Base):
 
     # Identifier details
     identifier_type = Column(String(50), nullable=False)
-    identifier_value = Column(String(512), nullable=True)  # Original (can be redacted)
     identifier_hash = Column(String(64), nullable=False)  # SHA256 hash
+
+    # The raw identifier — an email address or phone number — encrypted at rest
+    # under this row's tenant key [CDP-04]. The old comment here read "Original
+    # (can be redacted)", and redaction never arrived.
+    #
+    # Mapped under a private name so the public `identifier_value` can be a
+    # property that decrypts; the DB column keeps its original name, so this is
+    # a widening only (migration 064), not a rename.
+    #
+    # NOT app.db.types.EncryptedString: a TypeDecorator is handed the bare value
+    # and never the row, so it cannot reach tenant_id and would put every
+    # tenant's identifiers under one global-derived key. This follows
+    # AudienceSyncCredential's explicit accessor pattern instead (AUTH-05).
+    #
+    # Width holds the ciphertext, not the input: IdentifierInput.value permits
+    # 512 chars and encrypt_pii is ~2.2x, so 512 would reject the longest
+    # legitimate identifier on insert.
+    _identifier_value_encrypted = Column(
+        "identifier_value", String(2048), nullable=True
+    )
+
+    def set_identifier_value(self, value: Optional[str]) -> None:
+        """Encrypt and store the raw identifier under this row's tenant key.
+
+        Deliberately a method rather than a settable property, so that
+        `CDPProfileIdentifier(identifier_value=...)` raises instead of
+        succeeding. SQLAlchemy's constructor applies kwargs in whatever order it
+        receives them, so a settable property could encrypt before `tenant_id`
+        was assigned — falling back to the global key while looking entirely
+        successful. Callers set the tenant first, then call this.
+        """
+        if value is None:
+            self._identifier_value_encrypted = None
+            return
+
+        from app.core.security import encrypt_pii
+
+        self._identifier_value_encrypted = encrypt_pii(value, self.tenant_id)
+
+    @property
+    def identifier_value(self) -> Optional[str]:
+        """The decrypted raw identifier.
+
+        `decrypt_pii` dual-reads (tenant DEK, tenant-salted, true-global), so
+        values written before the tenant was threaded through still decrypt.
+        Rows predating encryption entirely are plaintext and fail to decrypt;
+        those are returned as-is so existing profiles keep rendering, matching
+        how EncryptedString treats its own legacy rows.
+        """
+        stored = self._identifier_value_encrypted
+        if stored is None:
+            return None
+
+        from app.core.security import decrypt_pii
+
+        try:
+            return decrypt_pii(stored, self.tenant_id)
+        except ValueError:
+            return stored
 
     # Metadata
     is_primary = Column(Boolean, nullable=False, default=False)

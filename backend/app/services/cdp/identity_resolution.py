@@ -128,10 +128,12 @@ class IdentityResolutionService:
                 tenant_id=self.tenant_id,
                 profile_id=profile.id,
                 identifier_type=identifier.get("type"),
-                identifier_value=identifier.get("value"),
                 identifier_hash=identifier.get("hash"),
                 is_primary=False,
             )
+            # Set after tenant_id, never as a constructor kwarg: the value is
+            # encrypted under this row's tenant key [CDP-04].
+            profile_identifier.set_identifier_value(identifier.get("value"))
             self.db.add(profile_identifier)
 
         await self.db.flush()
