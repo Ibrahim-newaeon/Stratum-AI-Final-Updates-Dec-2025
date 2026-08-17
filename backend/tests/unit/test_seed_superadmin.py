@@ -190,3 +190,34 @@ async def test_create_superadmin_raises_catchable_error_on_bad_config(clean_env)
 
     with pytest.raises(seed_superadmin.SuperadminConfigError):
         await seed_superadmin.create_superadmin()
+
+
+@pytest.mark.unit
+async def test_create_superadmin_uses_pgbouncer_safe_connect_args(clean_env):
+    """The seeder's own engine must carry the pooler-safe connect args.
+
+    Production routes asyncpg through a transaction-pooling pgbouncer. Without
+    these, asyncpg's sequential prepared-statement names collide across server
+    connections and the seed fails with DuplicatePreparedStatementError — which
+    the lifespan swallows, so the account silently never gets created.
+    """
+    from app.db.session import ASYNCPG_CONNECT_ARGS
+
+    clean_env.setenv("SUPERADMIN_EMAIL", "admin@example.com")
+    clean_env.setenv("SUPERADMIN_PASSWORD", VALID_PASSWORD)
+
+    captured: dict = {}
+
+    class _StopBeforeConnecting(Exception):
+        pass
+
+    def capture_engine_kwargs(*args, **kwargs):
+        captured.update(kwargs)
+        raise _StopBeforeConnecting
+
+    clean_env.setattr(seed_superadmin, "create_async_engine", capture_engine_kwargs)
+
+    with pytest.raises(_StopBeforeConnecting):
+        await seed_superadmin.create_superadmin()
+
+    assert captured.get("connect_args") is ASYNCPG_CONNECT_ARGS

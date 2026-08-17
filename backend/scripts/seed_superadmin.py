@@ -31,6 +31,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.core.config import settings
 from app.core.security import encrypt_pii, get_password_hash, hash_pii_for_lookup
+from app.db.session import ASYNCPG_CONNECT_ARGS
 
 # Minimum length enforced on SUPERADMIN_PASSWORD.
 MIN_PASSWORD_LENGTH = 16
@@ -111,10 +112,19 @@ async def create_superadmin() -> None:
 
     force_reset = force_reset_requested()
 
-    # Create async engine
+    # ASYNCPG_CONNECT_ARGS is not optional here. Production routes asyncpg
+    # through a transaction-pooling pgbouncer, where asyncpg's sequential
+    # prepared-statement names (__asyncpg_stmt_8__, ...) collide across server
+    # connections. Without these args this seeder failed on most boots with
+    # DuplicatePreparedStatementError, then cascaded into
+    # InFailedSQLTransactionError — caught by the lifespan and logged as
+    # superadmin_seed_failed, so the API came up fine and the account was
+    # simply never created. Imported rather than duplicated so the two engine
+    # configurations cannot drift.
     engine = create_async_engine(
         settings.database_url.replace("postgresql://", "postgresql+asyncpg://"),
         echo=False,
+        connect_args=ASYNCPG_CONNECT_ARGS,
     )
 
     try:
