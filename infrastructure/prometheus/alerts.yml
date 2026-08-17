@@ -6,22 +6,28 @@
 # rather than by grepping for Gauge/Counter definitions — a metric can be
 # declared in app/core/metrics.py and still never be registered.
 #
-# Four rules were removed because the series they queried do not exist:
+# Four rules were removed in #661 because the series they queried do not exist:
 #
 #   DatabaseConnectionPoolExhausted   db_pool_size, db_pool_available
 #   SlowDatabaseQueries               db_query_duration_seconds
 #   HighRateLimiting                  rate_limit_exceeded_total
-#   WorkerDown                        up{job="stratum-worker"}
+#   WorkerDown                        up{job="stratum-worker"}   <- RESTORED
 #
 # The first three never matched a series, so PromQL returned an empty vector
 # and the alert sat inactive forever — indistinguishable, on a dashboard, from
 # a system that is fine. (`db_pool_size` does exist in the codebase, but as a
-# pydantic config field, not a metric.) The fourth had the opposite failure:
-# it scraped an HTTP endpoint the celery worker never served, so it fired
-# permanently. Both shapes are worse than no rule at all.
+# pydantic config field, not a metric.) The fourth had a subtler version of the
+# same failure: nothing scrapes the celery worker, so `up{job="stratum-worker"}`
+# never existed either and the rule evaluated to no data, not to a firing alert.
 #
-# Restoring them means instrumenting the API first. Tracked as a follow-up;
-# do not re-add a rule here before confirming its series appears in /metrics.
+# WorkerDown is back, rewritten against `stratum_celery_worker_up` — a gauge the
+# API now refreshes from the worker's Redis heartbeat on every scrape. The other
+# three still need their metrics instrumented first.
+#
+# The rule for re-adding anything here is unchanged: confirm the series appears
+# in a real /metrics response, and prefer an expression that also fires when the
+# series goes missing (see WorkerDown's `or absent(...)`) so a metric that stops
+# being exported reads as a problem instead of as silence.
 groups:
   - name: stratum-api
     interval: 30s
@@ -61,6 +67,32 @@ groups:
         annotations:
           summary: "Stratum API is down"
           description: "The Stratum API has been unreachable for more than 1 minute"
+
+      # Worker Down
+      #
+      # Restored from #661, which deleted it because the old expression
+      # `up{job="stratum-worker"} == 0` could never fire: the worker serves no
+      # HTTP and nothing scrapes it, so that series never existed. Prometheus
+      # evaluates a rule over a missing series as "no data", not as a failure,
+      # which is why it looked healthy for as long as it was deployed.
+      #
+      # This reads the gauge the API exports instead. The worker writes an epoch
+      # to `stratum:worker:heartbeat` (TTL 300) once a minute and the API
+      # publishes that reading on every scrape. `absent()` covers the other
+      # half: if the API stops exporting the series at all, the alert fires
+      # rather than going quiet — the exact way the previous rule failed.
+      - alert: WorkerDown
+        expr: |
+          stratum_celery_worker_up == 0
+          or absent(stratum_celery_worker_up)
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Celery worker is down"
+          description: >-
+            No fresh Celery worker heartbeat for more than 5 minutes.
+            Periodic tasks, including the audit-log drain, are not running.
 
   - name: stratum-resources
     interval: 30s

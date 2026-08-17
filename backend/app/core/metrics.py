@@ -22,6 +22,10 @@ from prometheus_client import Counter, Gauge, Histogram
 from prometheus_fastapi_instrumentator import Instrumentator, metrics
 from prometheus_fastapi_instrumentator.metrics import Info as MetricInfo
 
+from app.core.logging import get_logger
+
+logger = get_logger(__name__)
+
 # =============================================================================
 # Custom Business Metrics
 # =============================================================================
@@ -194,6 +198,25 @@ celery_tasks_total = Counter(
     name="stratum_celery_tasks_total",
     documentation="Total Celery tasks by name and status",
     labelnames=["task_name", "status"],
+)
+
+# Worker liveness, exported by the API because nothing scrapes the worker.
+#
+# #661 deleted a WorkerDown rule reading `up{job="stratum-worker"} == 0`. The
+# worker serves no HTTP and has no /metrics, so that series never existed and
+# the rule could not fire either way. The heartbeat exists for this reason: the
+# worker writes an epoch to `stratum:worker:heartbeat` (TTL 300) every minute
+# and the API reads it. /health already surfaced that as `worker:
+# alive|down|unknown`; this exports the same reading so an alert can use it.
+#
+# No labels: there is one worker fleet, and a label would make `== 0` a
+# per-series test that a vanished label silently stops evaluating.
+celery_worker_up = Gauge(
+    name="stratum_celery_worker_up",
+    documentation=(
+        "1 when a Celery worker heartbeat is fresh, 0 when it is stale, "
+        "missing, or unreadable"
+    ),
 )
 
 
@@ -591,3 +614,43 @@ def set_confidence_band_metric(tenant_id: int, band: str) -> None:
     """
     band_value = CONFIDENCE_BAND_VALUES.get(band.lower(), 1)
     emq_confidence_band.labels(tenant_id=str(tenant_id)).set(band_value)
+
+
+def set_worker_up_metric(alive: bool) -> None:
+    """
+    Set the Celery worker liveness gauge.
+
+    Args:
+        alive: True when a worker heartbeat is fresh
+    """
+    celery_worker_up.set(1 if alive else 0)
+
+
+def refresh_worker_up_metric() -> None:
+    """
+    Read the worker heartbeat and publish it to the gauge.
+
+    Called by the ``/metrics`` handler on every scrape. A gauge that is declared
+    but never refreshed reads 0 forever, which is indistinguishable from a
+    permanently dead worker — so the refresh, not the declaration, is what makes
+    the alert meaningful.
+
+    The import is deliberately lazy: ``app.workers.tasks.monitoring`` pulls in
+    the Celery app, and importing that from ``app.core.metrics`` would make a
+    core module depend on the worker stack at import time.
+
+    An unreadable heartbeat publishes **0, not a stale 1**. Leaving the previous
+    1 in place would hide a genuinely dead worker, which is the failure this
+    metric exists to catch; a spurious 0 costs a page that the alert's ``for:``
+    window largely absorbs. This mirrors the failure set ``/health`` reports as
+    ``unknown`` — a gauge has no third state, so it fails toward being noticed.
+    """
+    try:
+        from app.workers.tasks.monitoring import worker_is_alive
+
+        alive = worker_is_alive()
+    except (ImportError, RuntimeError, OSError) as exc:
+        logger.warning("worker_liveness_unreadable", error=str(exc))
+        alive = False
+
+    set_worker_up_metric(bool(alive))
