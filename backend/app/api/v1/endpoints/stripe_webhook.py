@@ -64,15 +64,15 @@ async def _claim_event(event_id: str) -> Optional[bool]:
         )
         return bool(won)
     except (ConnectionError, TimeoutError, OSError) as exc:
-        # Deliberately fail open. The handlers re-fetch state from Stripe and
-        # are idempotent, so a duplicate is close to harmless; refusing the
-        # event instead would leave subscription state stale for as long as
-        # Redis is down, which is the worse failure.
+        # Fail closed. Processing without a duplicate guard can double-apply
+        # subscription state (and emails) across uvicorn workers. Stripe
+        # retries 503s, so a Redis outage delays billing rather than
+        # corrupting it.
         logger.error(
             "stripe_webhook_idempotency_unavailable",
             event_id=event_id,
             error=str(exc),
-            detail="processing without a duplicate guard",
+            detail="refusing event until Redis is reachable",
         )
         return None
 
@@ -178,6 +178,11 @@ async def stripe_webhook(request: Request):
     # Claim before processing, not after. Claiming afterwards leaves a window
     # in which two workers handling the same retry both run the handlers.
     claimed = await _claim_event(event.id)
+    if claimed is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Idempotency store unavailable",
+        )
     if claimed is False:
         logger.info("stripe_webhook_duplicate_skipped", event_id=event.id)
         return {"status": "already_processed", "event_type": event_type}
