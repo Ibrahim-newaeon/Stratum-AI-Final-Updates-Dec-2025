@@ -510,7 +510,10 @@ async def upgrade_subscription(
     )
 
     # Sync to tenant record
+    # sync_tenant_subscription only issues the UPDATE; the caller commits.
+    # There is no webhook wrapper on this path to do it.
     await stripe_service.sync_tenant_subscription(db, tenant.id, updated_sub)
+    await db.commit()
 
     return SubscriptionResponse(
         has_subscription=True,
@@ -572,7 +575,10 @@ async def cancel_subscription(
     )
 
     # Sync to tenant record
+    # sync_tenant_subscription only issues the UPDATE; the caller commits.
+    # There is no webhook wrapper on this path to do it.
     await stripe_service.sync_tenant_subscription(db, tenant.id, canceled_sub)
+    await db.commit()
 
     return SubscriptionResponse(
         has_subscription=True,
@@ -634,7 +640,10 @@ async def reactivate_subscription(
     reactivated_sub = await stripe_service.reactivate_subscription(sub_to_reactivate.id)
 
     # Sync to tenant record
+    # sync_tenant_subscription only issues the UPDATE; the caller commits.
+    # There is no webhook wrapper on this path to do it.
     await stripe_service.sync_tenant_subscription(db, tenant.id, reactivated_sub)
+    await db.commit()
 
     return SubscriptionResponse(
         has_subscription=True,

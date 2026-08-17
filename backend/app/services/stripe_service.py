@@ -816,6 +816,19 @@ async def sync_tenant_subscription(
     Updates the tenant's plan and plan_expires_at based on Stripe subscription.
     Only the states in ENTITLING_STATES grant the paid plan; every other state
     downgrades to free.
+
+    **The caller owns the transaction.** This issues the UPDATE and does not
+    commit. It used to, which made the Stripe webhook's rollback a no-op for
+    the plan: `stripe_webhook.stripe_webhook` wraps every handler in
+    commit-on-success / rollback-on-failure, so an inner commit persisted the
+    plan change before the wrapper had decided the event succeeded. A failure
+    after that point discarded the rest of the handler's work, asked Stripe to
+    retry, and left the plan already applied. `handle_checkout_completed` is
+    the clearest case — it writes `stripe_customer_id` first, and the inner
+    commit swept that uncommitted write in too.
+
+    Callers therefore commit: the webhook wrapper for webhook paths, and each
+    payments.py endpoint for the request paths.
     """
     from app.base_models import Tenant
 
@@ -862,7 +875,6 @@ async def sync_tenant_subscription(
             plan_expires_at=plan_expires_at,
         )
     )
-    await db.commit()
 
     logger.info(
         "tenant_subscription_synced",
