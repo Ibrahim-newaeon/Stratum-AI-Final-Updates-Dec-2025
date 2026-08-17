@@ -38,16 +38,27 @@ describe('AuthLeftPanel', () => {
     expect(wordmark.closest('a')).toHaveAttribute('href', '/landing.html');
   });
 
-  it('renders the testimonial', () => {
+  it('states what the product does', () => {
     render(<AuthLeftPanel />);
-    expect(screen.getByText(/partners with us to grow revenue/)).toBeInTheDocument();
-    expect(screen.getByText('Jane Doe')).toBeInTheDocument();
-    expect(screen.getByText('CMO, GrowthCo')).toBeInTheDocument();
+    expect(screen.getByText(/declines to act on data it cannot trust/i)).toBeInTheDocument();
+    expect(screen.getByText(/gated on signal health/i)).toBeInTheDocument();
   });
 
   it('renders the trust badge', () => {
     render(<AuthLeftPanel />);
-    expect(screen.getByText(/Trusted by 500\+ growth teams/i)).toBeInTheDocument();
+    expect(screen.getByText(/Trust-gated automation/i)).toBeInTheDocument();
+  });
+
+  it('makes no claim about customers, ratings, or endorsements', () => {
+    // These tests previously asserted the presence of a fabricated testimonial
+    // ("Jane Doe, CMO, GrowthCo") and an unverifiable "500+ growth teams"
+    // badge — encoding the fabrication as a requirement. This asserts the
+    // opposite, so the placeholder copy cannot quietly return.
+    render(<AuthLeftPanel />);
+    expect(screen.queryByText(/Jane Doe/i)).toBeNull();
+    expect(screen.queryByText(/GrowthCo/i)).toBeNull();
+    expect(screen.queryByText(/\d+\+?\s*(growth teams|teams|companies|customers)/i)).toBeNull();
+    expect(screen.queryByText(/\d(\.\d)?\s*\/\s*5/)).toBeNull();
   });
 
   it('renders the trust engine status marker', () => {
