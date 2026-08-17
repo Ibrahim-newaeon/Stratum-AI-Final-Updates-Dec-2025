@@ -15,7 +15,31 @@ concurrency:
 
 env:
   PYTHON_VERSION: "3.12"
-  NODE_VERSION: "20"
+  # Node 24 is the only version the whole toolchain currently agrees on, and it
+  # is deliberately NOT the Dockerfile's 26. Both bounds were measured:
+  #
+  #   Node 20 (the previous value) is too old. jsdom 30 (#686) raised its floor
+  #   to ^22.22.2 || ^24.15.0 || >=26.0.0 and pulls undici 8. npm installs it
+  #   regardless — engines are advisory without engine-strict — and every
+  #   vitest worker then died on `webidl.util.markAsUncloneable is not a
+  #   function`. That run reported 65 unhandled errors and "Test Files: no
+  #   tests": a suite that executed nothing, which is worse than a red one.
+  #
+  #   Node 26 is too new. Measured on this workflow: the suite starts, then
+  #   every storage-backed test fails with "Cannot read properties of undefined
+  #   (reading 'setItem')" — localStorage/sessionStorage are undefined. Node's
+  #   own experimental Web Storage globals appear to shadow the ones jsdom
+  #   installs. Do not raise this to 26 without re-checking that.
+  #
+  # 24 satisfies jsdom 29 (>=24.0.0) and jsdom 30 (^24.15.0) at once, so the
+  # jsdom bump does not have to land as a flag day with this change. Verified
+  # locally on 24.18.0 with jsdom 30 installed: 70 files, 1036 tests, all pass.
+  #
+  # The gap against frontend/Dockerfile's node:26-alpine is real but does not
+  # reach production: jsdom and vitest are devDependencies that never ship, and
+  # the image only runs `vite build`. Close it by moving the Dockerfile to 24,
+  # or CI to 26 once the storage regression above is resolved — not silently.
+  NODE_VERSION: "24"
 
 jobs:
   # ===========================================================================
