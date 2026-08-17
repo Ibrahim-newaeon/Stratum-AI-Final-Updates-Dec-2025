@@ -177,10 +177,11 @@ const TenantInsights = lazyWithRetry(() => import('./views/tenant/Insights'));
 const TenantAuditLog = lazyWithRetry(() => import('./views/tenant/AuditLog'));
 
 // Role-based tenant views
-// TenantAdminOverview (views/tenant/Overview.tsx) lost its last caller when
-// /dashboard/trust started rendering the real Trust Engine — it had been
-// standing in for a screen that did not exist. Left on disk rather than deleted
-// here, to keep this change to one thing; it is a removal candidate.
+// TenantAdminOverview still serves /app/:tenantId/trust — the tenant-admin
+// trust surface, which is NOT the same screen as /dashboard/trust. Only the
+// dashboard route moved to the new Trust Engine; replacing both broke the
+// tenant page and the guided tour that targets its data-tour hooks.
+const TenantAdminOverview = lazyWithRetry(() => import('./views/tenant/Overview'));
 const MediaBuyerConsole = lazyWithRetry(() => import('./views/tenant/Console'));
 const SignalHub = lazyWithRetry(() => import('./views/tenant/SignalHub'));
 
@@ -1599,7 +1600,7 @@ function App() {
                           path="trust"
                           element={
                             <LazyRoute>
-                              <TrustEngine />
+                              <TenantAdminOverview />
                             </LazyRoute>
                           }
                         />
