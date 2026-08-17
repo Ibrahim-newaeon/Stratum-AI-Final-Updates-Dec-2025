@@ -1,27 +1,28 @@
-import { useState, useMemo, useCallback, memo } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
-  Search,
-  Filter,
-  Plus,
-  ChevronDown,
-  ChevronUp,
-  TrendingUp,
-  TrendingDown,
-  Pause,
-  Play,
-  Edit,
-  Trash2,
-  ExternalLink,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
   Loader2,
+  Pause,
+  Pencil,
+  Play,
+  Plus,
   RefreshCw,
-  Target,
+  Search,
+  Trash2,
 } from 'lucide-react'
-import { cn, formatCurrency, formatPercent, formatCompactNumber, getPlatformColor } from '@/lib/utils'
+import { cn, formatCurrency, formatCompactNumber } from '@/lib/utils'
 import CampaignCreateModal from '@/components/campaigns/CampaignCreateModal'
 import { useCampaigns, usePauseCampaign, useActivateCampaign, useDeleteCampaign } from '@/api/hooks'
 import { usePriceMetrics } from '@/hooks/usePriceMetrics'
+import { PageHeader } from '@/components/primitives/PageHeader'
+import { StatRow, type StatRowItem } from '@/components/primitives/StatRow'
+import { StatusPill } from '@/components/primitives/StatusPill'
+import { DataTable, type DataTableColumn } from '@/components/primitives/DataTable'
+import { statusVariant, statusLabel } from '@/lib/statusVariant'
 
 interface Campaign {
   id: number
@@ -36,181 +37,9 @@ interface Campaign {
   clicks: number
   conversions: number
   ctr: number
-  trend: 'up' | 'down' | 'stable'
 }
 
-type SortField = 'name' | 'spend' | 'revenue' | 'roas' | 'conversions'
-type SortDirection = 'asc' | 'desc'
-
-const SortIcon = memo(function SortIcon({
-  field,
-  sortField,
-  sortDirection,
-}: {
-  field: SortField
-  sortField: SortField | null
-  sortDirection: SortDirection
-}) {
-  if (sortField !== field) return null
-  return sortDirection === 'asc' ? (
-    <ChevronUp className="w-4 h-4" />
-  ) : (
-    <ChevronDown className="w-4 h-4" />
-  )
-})
-
-const StatusBadge = memo(function StatusBadge({ status }: { status: Campaign['status'] }) {
-  const styles = {
-    active: 'bg-green-500/10 text-green-500',
-    paused: 'bg-amber-500/10 text-amber-500',
-    completed: 'bg-blue-500/10 text-blue-500',
-    draft: 'bg-gray-500/10 text-gray-500',
-  }
-  return (
-    <span className={cn('px-2 py-1 rounded-full text-xs font-medium', styles[status])}>
-      {status.charAt(0).toUpperCase() + status.slice(1)}
-    </span>
-  )
-})
-
-interface CampaignRowProps {
-  campaign: Campaign
-  isSelected: boolean
-  showPriceMetrics: boolean
-  onToggleSelect: (id: number) => void
-  onView: (id: number) => void
-  onEdit: (id: number) => void
-  onToggleStatus: (id: number, status: Campaign['status']) => void
-}
-
-const CampaignRow = memo(function CampaignRow({
-  campaign,
-  isSelected,
-  showPriceMetrics,
-  onToggleSelect,
-  onView,
-  onEdit,
-  onToggleStatus,
-}: CampaignRowProps) {
-  const getPlatformBadge = (platform: string) => {
-    const logoMap: Record<string, string> = {
-      meta: '/icons/meta.svg',
-      google: '/icons/google.svg',
-      tiktok: '/icons/tiktok.svg',
-      snapchat: '/icons/snapchat.svg',
-    }
-    const logo = logoMap[platform.toLowerCase()]
-    if (logo) {
-      return (
-        <img
-          src={logo}
-          alt={platform}
-          className="w-6 h-6 rounded-full"
-          title={platform.charAt(0).toUpperCase() + platform.slice(1)}
-        />
-      )
-    }
-    return (
-      <div
-        className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
-        style={{ backgroundColor: getPlatformColor(platform) }}
-        title={platform.charAt(0).toUpperCase() + platform.slice(1)}
-      >
-        {platform.charAt(0).toUpperCase()}
-      </div>
-    )
-  }
-
-  return (
-    <tr className="hover:bg-muted/30 transition-colors">
-      <td className="p-4">
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={() => onToggleSelect(campaign.id)}
-          className="rounded border-muted-foreground/50"
-        />
-      </td>
-      <td className="p-4">
-        <div className="flex items-center gap-3">
-          {getPlatformBadge(campaign.platform)}
-          <div>
-            <p className="font-medium">{campaign.name}</p>
-            {showPriceMetrics && (
-              <p className="text-xs text-muted-foreground">
-                {formatCurrency(campaign.spend)} / {formatCurrency(campaign.budget)}
-              </p>
-            )}
-          </div>
-        </div>
-      </td>
-      <td className="p-4"><StatusBadge status={campaign.status} /></td>
-      {showPriceMetrics && (
-        <td className="p-4 text-right font-medium">{formatCurrency(campaign.spend)}</td>
-      )}
-      {showPriceMetrics && (
-        <td className="p-4 text-right font-medium text-green-500">
-          {formatCurrency(campaign.revenue)}
-        </td>
-      )}
-      {showPriceMetrics && (
-        <td className="p-4 text-right">
-          <span
-            className={cn(
-              'font-semibold',
-              campaign.roas >= 4 && 'text-green-500',
-              campaign.roas >= 3 && campaign.roas < 4 && 'text-primary',
-              campaign.roas < 3 && 'text-amber-500'
-            )}
-          >
-            {campaign.roas.toFixed(2)}x
-          </span>
-        </td>
-      )}
-      <td className="p-4 text-right">{formatCompactNumber(campaign.conversions)}</td>
-      <td className="p-4 text-right">{formatPercent(campaign.ctr)}</td>
-      <td className="p-4 text-center">
-        {campaign.trend === 'up' && (
-          <TrendingUp className="w-5 h-5 text-green-500 mx-auto" />
-        )}
-        {campaign.trend === 'down' && (
-          <TrendingDown className="w-5 h-5 text-red-500 mx-auto" />
-        )}
-        {campaign.trend === 'stable' && (
-          <div className="w-5 h-0.5 bg-muted-foreground mx-auto" />
-        )}
-      </td>
-      <td className="p-4 text-right">
-        <div className="flex items-center justify-end gap-1">
-          <button
-            onClick={() => onView(campaign.id)}
-            className="p-2 rounded-lg hover:bg-muted transition-colors"
-            title="View campaign details"
-            aria-label="View campaign details"
-          >
-            <ExternalLink className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => onEdit(campaign.id)}
-            className="p-2 rounded-lg hover:bg-muted transition-colors"
-            title="Edit campaign"
-            aria-label="Edit campaign"
-          >
-            <Edit className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => onToggleStatus(campaign.id, campaign.status)}
-            className="p-2 rounded-lg hover:bg-muted transition-colors"
-            title={campaign.status === 'active' ? 'Pause campaign' : 'Activate campaign'}
-            aria-label={campaign.status === 'active' ? 'Pause campaign' : 'Activate campaign'}
-          >
-            {campaign.status === 'active' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-          </button>
-        </div>
-      </td>
-    </tr>
-  )
-})
+const PAGE_SIZE = 20
 
 export function Campaigns() {
   const { t } = useTranslation()
@@ -219,159 +48,273 @@ export function Campaigns() {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [platformFilter, setPlatformFilter] = useState<string>('all')
-  const [sortField, setSortField] = useState<SortField>('spend')
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [selectedCampaigns, setSelectedCampaigns] = useState<number[]>([])
   const [createModalOpen, setCreateModalOpen] = useState(false)
-  const [, setEditModalCampaignId] = useState<number | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
-  const pageSize = 20
 
-  // Fetch campaigns from API
-  const { data: campaignsData, isLoading, refetch: refetchCampaigns } = useCampaigns()
+  const { data: campaignsData, isLoading, error, refetch: refetchCampaigns } = useCampaigns()
   const pauseCampaign = usePauseCampaign()
   const activateCampaign = useActivateCampaign()
   const deleteCampaign = useDeleteCampaign()
 
-  // Transform API data or fall back to mock
+  // Normalise the API rows. Campaign ids are integers in the database, so
+  // Number() is safe here; the looser `string` in the API type is historical.
   const campaigns = useMemo((): Campaign[] => {
-    if (campaignsData?.items && campaignsData.items.length > 0) {
-      return (campaignsData.items as unknown as Array<Record<string, unknown>>).map((c) => ({
-        id: Number(c.id) || Number(c.campaign_id) || 0,
-        name: String(c.name || c.campaign_name || ''),
-        platform: String(c.platform || 'google').toLowerCase(),
-        status: String(c.status || 'active').toLowerCase() as Campaign['status'],
-        spend: Number(c.spend) || 0,
-        budget: Number(c.budget || c.daily_budget) || 10000,
-        revenue: Number(c.revenue) || 0,
-        roas: Number(c.roas) || (Number(c.spend) > 0 ? Number(c.revenue) / Number(c.spend) : 0),
-        impressions: Number(c.impressions) || 0,
-        clicks: Number(c.clicks) || 0,
-        conversions: Number(c.conversions) || 0,
-        ctr: Number(c.ctr) || (Number(c.impressions) > 0 ? (Number(c.clicks) / Number(c.impressions)) * 100 : 0),
-        trend: String(c.trend || (Number(c.roas) >= 3.5 ? 'up' : Number(c.roas) < 2.5 ? 'down' : 'stable')) as Campaign['trend'],
-      }))
-    }
-    return []
+    const items = campaignsData?.items
+    if (!items || items.length === 0) return []
+    return (items as unknown as Array<Record<string, unknown>>).map((c) => ({
+      id: Number(c.id) || Number(c.campaign_id) || 0,
+      name: String(c.name || c.campaign_name || ''),
+      platform: String(c.platform || 'google').toLowerCase(),
+      status: String(c.status || 'active').toLowerCase() as Campaign['status'],
+      spend: Number(c.spend) || 0,
+      budget: Number(c.budget || c.daily_budget) || 0,
+      revenue: Number(c.revenue) || 0,
+      roas: Number(c.roas) || (Number(c.spend) > 0 ? Number(c.revenue) / Number(c.spend) : 0),
+      impressions: Number(c.impressions) || 0,
+      clicks: Number(c.clicks) || 0,
+      conversions: Number(c.conversions) || 0,
+      ctr:
+        Number(c.ctr) ||
+        (Number(c.impressions) > 0 ? (Number(c.clicks) / Number(c.impressions)) * 100 : 0),
+    }))
   }, [campaignsData])
 
-  const filteredCampaigns = campaigns
-    .filter((campaign) => {
-      if (searchQuery && !campaign.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-        return false
-      }
-      if (statusFilter !== 'all' && campaign.status !== statusFilter) {
-        return false
-      }
-      if (platformFilter !== 'all' && campaign.platform !== platformFilter) {
-        return false
-      }
-      return true
-    })
-    .sort((a, b) => {
-      const aValue = a[sortField]
-      const bValue = b[sortField]
-      const direction = sortDirection === 'asc' ? 1 : -1
-      if (typeof aValue === 'string') {
-        return aValue.localeCompare(bValue as string) * direction
-      }
-      return ((aValue as number) - (bValue as number)) * direction
-    })
+  const filteredCampaigns = useMemo(
+    () =>
+      campaigns.filter((campaign) => {
+        if (searchQuery && !campaign.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+          return false
+        }
+        if (statusFilter !== 'all' && campaign.status !== statusFilter) return false
+        if (platformFilter !== 'all' && campaign.platform !== platformFilter) return false
+        return true
+      }),
+    [campaigns, searchQuery, statusFilter, platformFilter],
+  )
 
-  // Handle bulk pause
-  const handleBulkPause = async () => {
-    for (const id of selectedCampaigns) {
-      await pauseCampaign.mutateAsync(id.toString())
-    }
-    setSelectedCampaigns([])
-  }
+  const totalPages = Math.max(1, Math.ceil(filteredCampaigns.length / PAGE_SIZE))
+  const page = Math.min(currentPage, totalPages)
+  const pageRows = filteredCampaigns.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
-  // Handle bulk activate
-  const handleBulkActivate = async () => {
-    for (const id of selectedCampaigns) {
-      await activateCampaign.mutateAsync(id.toString())
-    }
-    setSelectedCampaigns([])
-  }
+  // The context line states the decision this screen supports, not what it is.
+  const activeCount = campaigns.filter((c) => c.status === 'active').length
+  const pausedCount = campaigns.filter((c) => c.status === 'paused').length
+  const contextLine = campaigns.length
+    ? `${activeCount} active · ${pausedCount} paused`
+    : t('campaigns.subtitle')
 
-  // Handle bulk delete
-  const handleBulkDelete = async () => {
-    for (const id of selectedCampaigns) {
-      await deleteCampaign.mutateAsync(id.toString())
+  const stats = useMemo((): StatRowItem[] => {
+    const totalSpend = campaigns.reduce((sum, c) => sum + c.spend, 0)
+    const totalRevenue = campaigns.reduce((sum, c) => sum + c.revenue, 0)
+    const totalBudget = campaigns.reduce((sum, c) => sum + c.budget, 0)
+    const blendedRoas = totalSpend > 0 ? totalRevenue / totalSpend : 0
+    const items: StatRowItem[] = [{ label: 'Active', value: String(activeCount) }]
+    if (showPriceMetrics) {
+      items.unshift({ label: 'Spend', value: formatCurrency(totalSpend) })
+      items.push({ label: 'ROAS', value: `${blendedRoas.toFixed(2)}×` })
+      items.push({ label: 'Budget', value: formatCurrency(totalBudget) })
     }
-    setSelectedCampaigns([])
-  }
+    return items
+  }, [campaigns, activeCount, showPriceMetrics])
 
   const toggleSelectAll = () => {
-    if (selectedCampaigns.length === filteredCampaigns.length) {
-      setSelectedCampaigns([])
-    } else {
-      setSelectedCampaigns(filteredCampaigns.map((c) => c.id))
-    }
+    setSelectedCampaigns((prev) =>
+      prev.length === pageRows.length ? [] : pageRows.map((c) => c.id),
+    )
   }
 
   const toggleSelectCampaign = (id: number) => {
     setSelectedCampaigns((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     )
   }
 
-  const handleSort = useCallback((field: SortField) => {
-    if (sortField === field) {
-      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
-    } else {
-      setSortField(field)
-      setSortDirection('desc')
+  const runBulk = async (fn: { mutateAsync: (id: string) => Promise<unknown> }) => {
+    for (const id of selectedCampaigns) {
+      await fn.mutateAsync(String(id))
     }
-  }, [sortField])
+    setSelectedCampaigns([])
+  }
+
+  const toggleStatus = (campaign: Campaign) => {
+    const action = campaign.status === 'active' ? pauseCampaign : activateCampaign
+    action.mutateAsync(String(campaign.id))
+  }
+
+  const numeric = 'text-right font-mono tabular-nums'
+
+  const columns: DataTableColumn<Campaign>[] = [
+    {
+      id: 'select',
+      className: 'w-10',
+      header: (
+        <input
+          type="checkbox"
+          aria-label="Select all campaigns"
+          checked={pageRows.length > 0 && selectedCampaigns.length === pageRows.length}
+          onChange={toggleSelectAll}
+          className="rounded border-muted-foreground/50"
+        />
+      ),
+      cell: (c) => (
+        <input
+          type="checkbox"
+          aria-label={`Select ${c.name}`}
+          checked={selectedCampaigns.includes(c.id)}
+          onChange={() => toggleSelectCampaign(c.id)}
+          className="rounded border-muted-foreground/50"
+        />
+      ),
+    },
+    {
+      id: 'name',
+      header: 'Campaign',
+      sortable: true,
+      sortAccessor: (c) => c.name,
+      cell: (c) => (
+        <div className="min-w-0">
+          <div className="truncate font-medium text-foreground">{c.name}</div>
+          <div className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+            {c.platform}
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      cell: (c) => (
+        <StatusPill size="sm" variant={statusVariant(c.status)}>
+          {statusLabel(c.status)}
+        </StatusPill>
+      ),
+    },
+    ...(showPriceMetrics
+      ? [
+          {
+            id: 'spend',
+            header: 'Spend',
+            sortable: true,
+            sortAccessor: (c: Campaign) => c.spend,
+            headerClassName: 'text-right',
+            cellClassName: numeric,
+            cell: (c: Campaign) => formatCurrency(c.spend),
+          },
+          {
+            id: 'budget',
+            header: 'Budget',
+            sortable: true,
+            sortAccessor: (c: Campaign) => c.budget,
+            headerClassName: 'text-right',
+            cellClassName: numeric,
+            cell: (c: Campaign) => formatCurrency(c.budget),
+          },
+          {
+            id: 'roas',
+            header: 'ROAS',
+            sortable: true,
+            sortAccessor: (c: Campaign) => c.roas,
+            headerClassName: 'text-right',
+            cellClassName: numeric,
+            cell: (c: Campaign) => `${c.roas.toFixed(2)}×`,
+          },
+        ]
+      : []),
+    {
+      id: 'conversions',
+      header: 'Conv.',
+      sortable: true,
+      sortAccessor: (c) => c.conversions,
+      headerClassName: 'text-right',
+      cellClassName: numeric,
+      cell: (c) => formatCompactNumber(c.conversions),
+    },
+    {
+      id: 'actions',
+      header: '',
+      className: 'w-32',
+      cellClassName: 'text-right',
+      // Hidden until hover, but always reachable by keyboard via focus-within.
+      cell: (c) => (
+        <div className="flex justify-end gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover/row:opacity-100">
+          <button
+            type="button"
+            onClick={() => navigate(`/dashboard/campaigns/${c.id}`)}
+            aria-label={`View ${c.name}`}
+            className="rounded-full p-2 hover:bg-muted"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate(`/dashboard/campaigns/${c.id}/edit`)}
+            aria-label={`Edit ${c.name}`}
+            className="rounded-full p-2 hover:bg-muted"
+          >
+            <Pencil className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => toggleStatus(c)}
+            aria-label={c.status === 'active' ? `Pause ${c.name}` : `Activate ${c.name}`}
+            className="rounded-full p-2 hover:bg-muted"
+          >
+            {c.status === 'active' ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          </button>
+        </div>
+      ),
+    },
+  ]
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">{t('campaigns.title')}</h1>
-          <p className="text-muted-foreground">{t('campaigns.subtitle')}</p>
-        </div>
+    <div className="px-8 py-6">
+      <PageHeader
+        title={t('campaigns.title')}
+        context={contextLine}
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() => refetchCampaigns()}
+              disabled={isLoading}
+              aria-label="Refresh campaigns"
+              className="rounded-full border border-border p-2 hover:bg-muted"
+            >
+              <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setCreateModalOpen(true)}
+              className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              <Plus className="h-4 w-4" />
+              <span>{t('campaigns.createNew')}</span>
+            </button>
+          </>
+        }
+      />
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => refetchCampaigns()}
-            disabled={isLoading}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-background hover:bg-accent transition-colors"
-            title="Refresh campaigns"
-            aria-label="Refresh campaigns"
-          >
-            <RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin')} />
-          </button>
-          <button
-            onClick={() => setCreateModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{t('campaigns.createNew')}</span>
-          </button>
-        </div>
-      </div>
+      <StatRow items={stats} />
 
-      {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col gap-3 border-b border-border py-4 md:flex-row md:items-center">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
+            aria-label={t('campaigns.searchPlaceholder')}
             placeholder={t('campaigns.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full rounded-full border border-border bg-background py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
-
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <select
+            aria-label={t('campaigns.allStatuses')}
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="rounded-full border border-border bg-background px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
           >
             <option value="all">{t('campaigns.allStatuses')}</option>
             <option value="active">{t('campaigns.active')}</option>
@@ -379,239 +322,115 @@ export function Campaigns() {
             <option value="completed">{t('campaigns.completed')}</option>
             <option value="draft">{t('campaigns.draft')}</option>
           </select>
-
           <select
+            aria-label={t('campaigns.allPlatforms')}
             value={platformFilter}
             onChange={(e) => setPlatformFilter(e.target.value)}
-            className="px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="rounded-full border border-border bg-background px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
           >
             <option value="all">{t('campaigns.allPlatforms')}</option>
             <option value="google">Google Ads</option>
             <option value="meta">Meta Ads</option>
             <option value="tiktok">TikTok Ads</option>
           </select>
-
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-muted transition-colors">
-            <Filter className="w-4 h-4" />
-            <span>{t('common.moreFilters')}</span>
-          </button>
         </div>
       </div>
 
-      {/* Bulk Actions */}
       {selectedCampaigns.length > 0 && (
-        <div className="flex items-center gap-4 p-3 rounded-lg bg-primary/10 border border-primary/20">
-          <span className="text-sm font-medium">
-            {selectedCampaigns.length} {t('campaigns.selected')}
+        <div className="mt-4 flex items-center gap-4 rounded-2xl border border-border bg-card px-4 py-3">
+          <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+            {selectedCampaigns.length} selected
           </span>
           <div className="flex gap-2">
             <button
-              onClick={handleBulkPause}
+              type="button"
+              onClick={() => runBulk(pauseCampaign)}
               disabled={pauseCampaign.isPending}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-background border hover:bg-muted transition-colors text-sm disabled:opacity-50"
+              className="flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-sm hover:bg-muted disabled:opacity-50"
             >
-              {pauseCampaign.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Pause className="w-4 h-4" />}
-              {t('campaigns.pauseSelected')}
-            </button>
-            <button
-              onClick={handleBulkActivate}
-              disabled={activateCampaign.isPending}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-background border hover:bg-muted transition-colors text-sm disabled:opacity-50"
-            >
-              {activateCampaign.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-              {t('campaigns.activateSelected')}
-            </button>
-            <button
-              onClick={handleBulkDelete}
-              disabled={deleteCampaign.isPending}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors text-sm disabled:opacity-50"
-            >
-              {deleteCampaign.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-              {t('campaigns.deleteSelected')}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!isLoading && campaigns.length === 0 && (
-        <div className="flex flex-col items-center justify-center p-12 rounded-xl border bg-card">
-          <Target className="w-12 h-12 text-muted-foreground mb-4" />
-          <h2 className="text-lg font-semibold mb-2">No campaigns yet</h2>
-          <p className="text-muted-foreground text-center max-w-md">
-            Create your first campaign to start tracking performance across platforms.
-          </p>
-        </div>
-      )}
-
-      {/* Table */}
-      <div className="rounded-xl border bg-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-muted/50 border-b">
-              <tr>
-                <th scope="col" className="p-4 text-left">
-                  <input
-                    type="checkbox"
-                    checked={selectedCampaigns.length === filteredCampaigns.length && filteredCampaigns.length > 0}
-                    onChange={toggleSelectAll}
-                    className="rounded border-muted-foreground/50"
-                  />
-                </th>
-                <th scope="col" className="p-4 text-left">
-                  <button
-                    onClick={() => handleSort('name')}
-                    className="flex items-center gap-1 text-sm font-medium hover:text-primary"
-                  >
-                    {t('campaigns.name')}
-                    <SortIcon field="name" sortField={sortField} sortDirection={sortDirection} />
-                  </button>
-                </th>
-                <th scope="col" className="p-4 text-left text-sm font-medium">{t('campaigns.status')}</th>
-                {showPriceMetrics && (
-                  <th scope="col" className="p-4 text-right">
-                    <button
-                      onClick={() => handleSort('spend')}
-                      className="flex items-center gap-1 text-sm font-medium hover:text-primary ml-auto"
-                    >
-                      {t('campaigns.spend')}
-                      <SortIcon field="spend" sortField={sortField} sortDirection={sortDirection} />
-                    </button>
-                  </th>
-                )}
-                {showPriceMetrics && (
-                  <th scope="col" className="p-4 text-right">
-                    <button
-                      onClick={() => handleSort('revenue')}
-                      className="flex items-center gap-1 text-sm font-medium hover:text-primary ml-auto"
-                    >
-                      {t('campaigns.revenue')}
-                      <SortIcon field="revenue" sortField={sortField} sortDirection={sortDirection} />
-                    </button>
-                  </th>
-                )}
-                {showPriceMetrics && (
-                  <th scope="col" className="p-4 text-right">
-                    <button
-                      onClick={() => handleSort('roas')}
-                      className="flex items-center gap-1 text-sm font-medium hover:text-primary ml-auto"
-                    >
-                      ROAS
-                      <SortIcon field="roas" sortField={sortField} sortDirection={sortDirection} />
-                    </button>
-                  </th>
-                )}
-                <th scope="col" className="p-4 text-right">
-                  <button
-                    onClick={() => handleSort('conversions')}
-                    className="flex items-center gap-1 text-sm font-medium hover:text-primary ml-auto"
-                  >
-                    {t('campaigns.conversions')}
-                    <SortIcon field="conversions" sortField={sortField} sortDirection={sortDirection} />
-                  </button>
-                </th>
-                <th scope="col" className="p-4 text-right text-sm font-medium">CTR</th>
-                <th scope="col" className="p-4 text-center text-sm font-medium">{t('campaigns.trend')}</th>
-                <th scope="col" className="p-4 text-right text-sm font-medium">{t('campaigns.actions')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {filteredCampaigns.map((campaign) => (
-                <CampaignRow
-                  key={campaign.id}
-                  campaign={campaign}
-                  isSelected={selectedCampaigns.includes(campaign.id)}
-                  showPriceMetrics={showPriceMetrics}
-                  onToggleSelect={toggleSelectCampaign}
-                  onView={(id) => navigate(`/dashboard/campaigns/${id}`)}
-                  onEdit={(id) => {
-                    setEditModalCampaignId(id)
-                    setCreateModalOpen(true)
-                  }}
-                  onToggleStatus={async (id, status) => {
-                    if (status === 'active') {
-                      await pauseCampaign.mutateAsync(id.toString())
-                    } else if (status === 'paused') {
-                      await activateCampaign.mutateAsync(id.toString())
-                    }
-                  }}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {filteredCampaigns.length === 0 && (
-          <div className="p-12 text-center">
-            <p className="text-muted-foreground">{t('campaigns.noResults')}</p>
-          </div>
-        )}
-      </div>
-
-      {/* Pagination */}
-      {(() => {
-        const totalPages = Math.max(1, Math.ceil(filteredCampaigns.length / pageSize))
-        const paginatedCampaigns = filteredCampaigns.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-        const startItem = filteredCampaigns.length > 0 ? (currentPage - 1) * pageSize + 1 : 0
-        const endItem = Math.min(currentPage * pageSize, filteredCampaigns.length)
-        // Note: paginatedCampaigns is available but table above already shows filteredCampaigns
-        void paginatedCampaigns
-        return (
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Loading campaigns...
-                </span>
+              {pauseCampaign.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                `Showing ${startItem}-${endItem} of ${filteredCampaigns.length} campaigns`
+                <Pause className="h-4 w-4" />
               )}
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1.5 rounded-lg border hover:bg-muted transition-colors text-sm disabled:opacity-50"
-              >
-                {t('common.previous')}
-              </button>
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={cn(
-                    'px-3 py-1.5 rounded-lg text-sm',
-                    currentPage === page
-                      ? 'bg-primary text-primary-foreground'
-                      : 'border hover:bg-muted transition-colors'
-                  )}
-                >
-                  {page}
-                </button>
-              ))}
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1.5 rounded-lg border hover:bg-muted transition-colors text-sm disabled:opacity-50"
-              >
-                {t('common.next')}
-              </button>
-            </div>
+              Pause
+            </button>
+            <button
+              type="button"
+              onClick={() => runBulk(activateCampaign)}
+              disabled={activateCampaign.isPending}
+              className="flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-sm hover:bg-muted disabled:opacity-50"
+            >
+              {activateCampaign.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Play className="h-4 w-4" />
+              )}
+              Activate
+            </button>
+            <button
+              type="button"
+              onClick={() => runBulk(deleteCampaign)}
+              disabled={deleteCampaign.isPending}
+              className="flex items-center gap-1 rounded-full border border-danger/30 px-3 py-1.5 text-sm text-danger hover:bg-danger/10 disabled:opacity-50"
+            >
+              {deleteCampaign.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              Delete
+            </button>
           </div>
-        )
-      })()}
+        </div>
+      )}
 
-      {/* Campaign Create Modal */}
+      <DataTable
+        data={pageRows}
+        columns={columns}
+        rowKey={(c) => c.id}
+        loading={isLoading}
+        ariaLabel="Campaigns"
+        className="mt-4"
+        emptyMessage="No campaigns yet. Connect a platform to import them."
+        // An empty table and a failed fetch must never look identical.
+        error={error ? 'Could not load campaigns. Retry, or check the integration.' : undefined}
+      />
+
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between">
+          <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+            Page {page} of {totalPages}
+          </span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              aria-label="Previous page"
+              className="rounded-full border border-border p-2 disabled:opacity-40"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              aria-label="Next page"
+              className="rounded-full border border-border p-2 disabled:opacity-40"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       <CampaignCreateModal
         open={createModalOpen}
-        onClose={() => {
-          setCreateModalOpen(false)
-          setEditModalCampaignId(null)
-        }}
+        onClose={() => setCreateModalOpen(false)}
         onSuccess={() => {
           setCreateModalOpen(false)
-          setEditModalCampaignId(null)
+          refetchCampaigns()
         }}
       />
     </div>

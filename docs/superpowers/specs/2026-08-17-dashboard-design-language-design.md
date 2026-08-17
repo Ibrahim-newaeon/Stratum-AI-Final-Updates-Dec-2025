@@ -62,11 +62,47 @@ layout problems and all three sit in the core journey.
 | --- | --- | --- | --- |
 | Campaigns | `/dashboard/campaigns` | `views/Campaigns.tsx`, 621 lines, no primitives. Local `StatusBadge`; hand-rolled `<table>`/`<td>`. | Rewrite |
 | Rules | `/dashboard/rules` | `views/Rules.tsx`, 555 lines, no primitives. Local `getStatusBadge`; create/edit in a modal. | Rewrite |
-| Trust Engine | `/dashboard/trust` | **No screen exists.** `/dashboard/trust-engine` redirects to `/dashboard/trust`, which renders `TenantAdminOverview` (`views/tenant/Overview.tsx`, 469 lines, no primitives) — a generic tenant admin page. | **Net-new design** |
+| ~~Trust Engine~~ | `/dashboard/trust` | **RETRACTED — see below.** | **No work needed** |
 
-The Trust Engine finding is the significant one: the sidebar's flagship
-destination, for the feature the product is named around, currently points at a
-generic overview. There is nothing to migrate. It has to be designed.
+> ## RETRACTION (2026-08-17, same day)
+>
+> **This spec originally claimed no Trust Engine screen existed. That was false,
+> and the claim drove a whole section plus a redundant implementation.**
+>
+> `/dashboard/trust` renders `views/tenant/Overview.tsx` — whose own docstring
+> reads *"Tenant Overview (Head of Marketing View) … Primary goal: Trust,
+> control, decisions, reporting"*. It composes `TrustStatusHeader`,
+> `EmqScoreCard`, `EmqFixPlaybookPanel`, `EmqTimeline`, `KpiStrip` and
+> `ActionsPanel`, and renders `components/trust/TrustGatePanel` (294 lines, with
+> its own test), which already surfaced the score, the tenant-configured
+> thresholds, `mode_reason`, the calculator's issue strings, and the
+> allowed/restricted action chips.
+>
+> That file even carries a comment explaining that `/dashboard/trust` mounts it
+> without a `:tenantId` segment — so the reuse was deliberate and documented,
+> not a stand-in.
+>
+> A `views/TrustEngine.tsx` was built against the false premise and has been
+> deleted. It reimplemented a tested component while dropping the EMQ score
+> card, fix playbook, incident timeline, autopilot state and action approval —
+> a net regression. It also repointed `/app/:tenantId/trust`, breaking three E2E
+> tests and the guided tour that targets `data-tour="fix-playbook"`.
+>
+> The one genuine gap — `signal_health.components` returned by the API and
+> rendered nowhere — was added to the existing `TrustGatePanel` as a worst-first
+> contributing-signals list, banded against the tenant's configured thresholds.
+> Roughly 40 lines, not a new page.
+>
+> **Root cause, recorded because it recurred three times in this spec:** I
+> concluded "X does not exist" from not finding X where I expected it, instead
+> of searching for X. The same error produced the five-weighted-components claim
+> and the per-campaign trust column. `grep -r "TrustGate" src/` would have ended
+> this one immediately. Before designing anything, search the codebase for the
+> *concept by name*, not just the location it is assumed to live in.
+>
+> **The diagnostic archetype therefore has no exemplar in this spec.**
+> `TenantOverview` + `TrustGatePanel` already are it, and the ~6 views listed
+> under that archetype should follow those, not anything designed here.
 
 ### Archetypes established
 
@@ -176,9 +212,14 @@ establishes the drawer pattern, so this is reuse.
 - Existing hooks retained: `useRules`, `useToggleRule`, `useDuplicateRule`,
   `useUpdateRule`.
 
-## Archetype 3 — diagnostic (Trust Engine)
+## Archetype 3 — diagnostic (Trust Engine) — RETRACTED
 
-Net-new. This screen carries the "not easy to build" weight.
+**Everything in this section is superseded by the retraction above. It is kept
+only so the reasoning error stays legible; do not build from it.**
+
+The screen it describes already exists as `views/tenant/Overview.tsx` +
+`components/trust/TrustGatePanel.tsx`. The only part worth keeping — showing
+`signal_health.components` — was added to that panel instead.
 
 ### Designed against the data that exists, not the data that is documented
 

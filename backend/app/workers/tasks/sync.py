@@ -25,13 +25,45 @@ logger = get_task_logger(__name__)
 
 
 def _run_async(coro, timeout_seconds: int = 300):
-    """Run an async coroutine from a synchronous Celery task with a timeout."""
+    """Run an async coroutine from a synchronous Celery task with a timeout.
+
+    ``asyncio.run`` creates a fresh event loop and closes it on the way out,
+    but the async engine's pool is module-level and outlives it. Both ends of
+    that mismatch have to be handled or the worker leaks Postgres sessions:
+
+    - Entering, connections pooled under the *previous* task's now-closed loop
+      must be discarded, or this task fails with "got Future attached to a
+      different loop".
+    - Leaving, connections opened under *this* loop must be closed while the
+      loop is still alive. Otherwise ``asyncio.run`` tears the loop down under
+      live asyncpg sockets, which never send a termination: pgbouncer logs
+      ``client unexpected eof`` and Postgres keeps the session forever as
+      ``idle in transaction``. That is only visible when a transaction happens
+      to be open at teardown — the timeout path below, since
+      ``sync_platform`` holds its transaction across external ad-platform
+      calls — so it leaks a couple of pool slots an hour rather than all at
+      once, and takes the product down about a day after a deploy.
+
+    The disposal therefore runs in a ``finally``: a task that times out or
+    raises is exactly the one holding an open transaction.
+    """
+    from app.db import session as db_session
+
+    async def _runner():
+        await db_session.dispose_stale_async_pool()
+        try:
+            return await asyncio.wait_for(coro, timeout=timeout_seconds)
+        finally:
+            await db_session.async_engine.dispose()
+
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:
-        # No event loop running in this thread — use asyncio.run for clean lifecycle
-        return asyncio.run(asyncio.wait_for(coro, timeout=timeout_seconds))
-    # Reuse existing loop (e.g., nested async calls)
+        # No event loop running in this thread — asyncio.run owns the loop
+        # lifecycle, so this is where the pool hygiene above belongs.
+        return asyncio.run(_runner())
+    # Reuse existing loop (e.g., nested async calls). The caller owns the loop
+    # and its pooled connections, so do NOT dispose the shared engine here.
     return loop.run_until_complete(asyncio.wait_for(coro, timeout=timeout_seconds))
 
 
