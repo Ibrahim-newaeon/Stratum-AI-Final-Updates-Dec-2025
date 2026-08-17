@@ -62,6 +62,32 @@ groups:
           summary: "Stratum API is down"
           description: "The Stratum API has been unreachable for more than 1 minute"
 
+      # Worker Down
+      #
+      # Restored from #661, which deleted it because the old expression
+      # `up{job="stratum-worker"} == 0` could never fire: the worker serves no
+      # HTTP and nothing scrapes it, so that series never existed. Prometheus
+      # evaluates a rule over a missing series as "no data", not as a failure,
+      # which is why it looked healthy for as long as it was deployed.
+      #
+      # This reads the gauge the API exports instead. The worker writes an epoch
+      # to `stratum:worker:heartbeat` (TTL 300) once a minute and the API
+      # publishes that reading on every scrape. `absent()` covers the other
+      # half: if the API stops exporting the series at all, the alert fires
+      # rather than going quiet — the exact way the previous rule failed.
+      - alert: WorkerDown
+        expr: |
+          stratum_celery_worker_up == 0
+          or absent(stratum_celery_worker_up)
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Celery worker is down"
+          description: >-
+            No fresh Celery worker heartbeat for more than 5 minutes.
+            Periodic tasks, including the audit-log drain, are not running.
+
   - name: stratum-resources
     interval: 30s
     rules:

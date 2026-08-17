@@ -310,6 +310,7 @@ def create_application() -> FastAPI:
     # the unconditional one below.
     from app.core.metrics import (
         create_instrumentator,
+        refresh_worker_up_metric,
         request_by_tenant_instrumentation,
     )
 
@@ -802,6 +803,11 @@ def create_application() -> FastAPI:
                 status_code=status.HTTP_403_FORBIDDEN,
                 content={"detail": "Metrics access requires a valid bearer token"},
             )
+        # Worker liveness is pull-based: nothing scrapes the worker, so the API
+        # reads its Redis heartbeat and publishes the result at scrape time.
+        # Refreshing here rather than on a timer means the exported value is
+        # never staler than the scrape itself.
+        refresh_worker_up_metric()
         return Response(
             content=generate_latest(),
             media_type=CONTENT_TYPE_LATEST,
