@@ -22,10 +22,19 @@ before launch or explicitly cut to the post-launch backlog.
 Do not present these three in the product UI as available integrations
 until wired.
 
-The cut modules (and verified-dead code: `stratum/workers/`,
-`monitoring/`, the unregistered `memory_debug` endpoint) are omitted from
-the coverage denominator in `backend/.coveragerc` so the CI gate measures
-only reachable code — **un-omit each family when wiring it post-launch**.
+The cut modules (and verified-dead code: `stratum/workers/`, `monitoring/`)
+are omitted from the coverage denominator in `backend/.coveragerc` so the CI
+gate measures only reachable code — **un-omit each family when wiring it
+post-launch**.
+
+The `memory_debug` endpoint that used to be listed here was deleted on
+2026-08-17. Its router was never included in the API router *and*
+`init_debug_endpoints()` was never called, so all 14 endpoints were
+unreachable and would have returned 503 even if mounted. `monitoring/`
+survives because the standalone `backend/run_memory_audit.py` still uses
+`memory_audit.py` and `visualizations.py`; `monitoring/middleware.py` and
+`monitoring/celery_hooks.py` lost their last consumer with that deletion and
+are candidates for removal.
 
 ## Production deploy prerequisites (from PR #517)
 
