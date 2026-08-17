@@ -209,7 +209,12 @@ async def create_superadmin() -> None:
                         "now": now,
                     },
                 )
-                tenant_id = result.fetchone()[0]
+                tenant_row = result.fetchone()
+                if tenant_row is None:
+                    raise RuntimeError(
+                        "Tenant INSERT ... RETURNING id produced no row."
+                    )
+                tenant_id = tenant_row[0]
                 print(f"  Tenant ID: {tenant_id}")
             else:
                 tenant_id = tenant[0]
@@ -244,7 +249,10 @@ async def create_superadmin() -> None:
                     "now": now,
                 },
             )
-            user_id = result.fetchone()[0]
+            user_row = result.fetchone()
+            if user_row is None:
+                raise RuntimeError("User INSERT ... RETURNING id produced no row.")
+            user_id = user_row[0]
 
             print("\n" + "=" * 50)
             print("SUPER ADMIN CREATED SUCCESSFULLY")
