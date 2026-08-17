@@ -15,7 +15,17 @@ concurrency:
 
 env:
   PYTHON_VERSION: "3.12"
-  NODE_VERSION: "20"
+  # MUST track frontend/Dockerfile's `FROM node:<v>-alpine`. This was "20"
+  # while the Dockerfile built and shipped on 26 — six majors between what CI
+  # validated and what production ran, with no .nvmrc or package.json engines
+  # field to catch the drift. It surfaced when jsdom 30 (PR #686) raised its
+  # floor to ^22.22.2 || ^24.15.0 || >=26.0.0: npm installed it anyway, because
+  # engines are advisory without engine-strict, and every vitest worker then
+  # died on `webidl.util.markAsUncloneable is not a function` from the undici 8
+  # that jsdom 30 pulls in. The run reported 65 unhandled errors and
+  # "Test Files: no tests" — a suite that executed nothing, not a suite that
+  # passed.
+  NODE_VERSION: "26"
 
 jobs:
   # ===========================================================================
