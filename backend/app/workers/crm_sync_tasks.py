@@ -44,11 +44,26 @@ def async_task(func):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
+        from app.db import session as db_session
+
         coro = asyncio.wait_for(func(*args, **kwargs), timeout=300)
+
+        async def _runner():
+            # Drop connections pooled under the previous task's closed loop,
+            # and close this loop's own before asyncio.run tears it down —
+            # see app.workers.tasks.sync._run_async for why an abandoned
+            # socket leaves Postgres idle in transaction forever.
+            await db_session.dispose_stale_async_pool()
+            try:
+                return await coro
+            finally:
+                await db_session.async_engine.dispose()
+
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
-            return asyncio.run(coro)
+            return asyncio.run(_runner())
+        # Caller owns this loop and its pooled connections — don't dispose.
         return loop.run_until_complete(coro)
 
     return wrapper
