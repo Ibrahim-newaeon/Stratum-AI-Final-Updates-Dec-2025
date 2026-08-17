@@ -98,7 +98,9 @@ def test_load_config_rejects_partial_config(clean_env, email, password):
 @pytest.mark.unit
 def test_load_config_rejects_short_password(clean_env):
     clean_env.setenv("SUPERADMIN_EMAIL", "admin@example.com")
-    clean_env.setenv("SUPERADMIN_PASSWORD", "x" * (seed_superadmin.MIN_PASSWORD_LENGTH - 1))
+    clean_env.setenv(
+        "SUPERADMIN_PASSWORD", "x" * (seed_superadmin.MIN_PASSWORD_LENGTH - 1)
+    )
     with pytest.raises(seed_superadmin.SuperadminConfigError):
         seed_superadmin.load_config()
 
