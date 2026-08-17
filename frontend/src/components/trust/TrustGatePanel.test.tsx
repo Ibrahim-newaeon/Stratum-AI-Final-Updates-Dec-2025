@@ -156,4 +156,53 @@ describe('TrustGatePanel', () => {
 
     expect(screen.getByRole('button', { name: /evaluating/i })).toBeDisabled();
   });
+
+  describe('signal health decomposition', () => {
+    // A score alone is a claim; the score beside the inputs that produced it is
+    // a method. The API has returned signal_health.components all along — emq,
+    // freshness, variance, anomaly (and cdp when present) — and nothing
+    // rendered them. These are the real component names, not the five weighted
+    // ones CLAUDE.md documents but no code computes.
+    it('lists each component with its score', () => {
+      mockUseTrustGateStatus.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: healthyGate,
+      });
+      mockUseEvaluateTrustGate.mockReturnValue(idleMutation);
+      render(<TrustGatePanel tenantId={2} />);
+
+      for (const name of ['emq', 'freshness', 'variance', 'anomaly']) {
+        expect(screen.getAllByText(new RegExp(name, 'i')).length).toBeGreaterThan(0);
+      }
+      expect(screen.getByText('80')).toBeInTheDocument(); // variance, the worst
+    });
+
+    it('orders components worst-first, because that is what needs attention', () => {
+      mockUseTrustGateStatus.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: healthyGate,
+      });
+      mockUseEvaluateTrustGate.mockReturnValue(idleMutation);
+      const { container } = render(<TrustGatePanel tenantId={2} />);
+
+      const names = Array.from(
+        container.querySelectorAll('[data-slot="component-name"]'),
+      ).map((el) => el.textContent);
+      expect(names).toEqual(['variance', 'anomaly', 'emq', 'freshness']);
+    });
+
+    it('renders nothing extra when the gate reports no components', () => {
+      mockUseTrustGateStatus.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { ...healthyGate, signal_health: { ...healthyGate.signal_health, components: {} } },
+      });
+      mockUseEvaluateTrustGate.mockReturnValue(idleMutation);
+      const { container } = render(<TrustGatePanel tenantId={2} />);
+
+      expect(container.querySelectorAll('[data-slot="component-name"]')).toHaveLength(0);
+    });
+  });
 });

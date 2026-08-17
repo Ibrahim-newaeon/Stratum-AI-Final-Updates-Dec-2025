@@ -60,9 +60,6 @@ const VerifyEmail = lazyWithRetry(() => import('./views/VerifyEmail'));
 const Onboarding = lazyWithRetry(() => import('./views/Onboarding'));
 const Overview = lazyWithRetry(() => import('./views/dashboard/Overview'));
 const Plans = lazyWithRetry(() => import('./views/dashboard/Plans'));
-// Trust Engine: /dashboard/trust rendered TenantAdminOverview, a generic tenant
-// admin page, because no Trust Engine screen existed. It does now.
-const TrustEngine = lazyWithRetry(() => import('./views/TrustEngine'));
 const CustomDashboard = lazyWithRetry(() => import('./views/CustomDashboard'));
 const Campaigns = lazyWithRetry(() => import('./views/Campaigns'));
 const CampaignDetail = lazyWithRetry(() => import('./views/CampaignDetail'));
@@ -177,10 +174,6 @@ const TenantInsights = lazyWithRetry(() => import('./views/tenant/Insights'));
 const TenantAuditLog = lazyWithRetry(() => import('./views/tenant/AuditLog'));
 
 // Role-based tenant views
-// TenantAdminOverview still serves /app/:tenantId/trust — the tenant-admin
-// trust surface, which is NOT the same screen as /dashboard/trust. Only the
-// dashboard route moved to the new Trust Engine; replacing both broke the
-// tenant page and the guided tour that targets its data-tour hooks.
 const TenantAdminOverview = lazyWithRetry(() => import('./views/tenant/Overview'));
 const MediaBuyerConsole = lazyWithRetry(() => import('./views/tenant/Console'));
 const SignalHub = lazyWithRetry(() => import('./views/tenant/SignalHub'));
@@ -1441,7 +1434,7 @@ function App() {
                           path="trust"
                           element={
                             <LazyRoute>
-                              <TrustEngine />
+                              <TenantAdminOverview />
                             </LazyRoute>
                           }
                         />

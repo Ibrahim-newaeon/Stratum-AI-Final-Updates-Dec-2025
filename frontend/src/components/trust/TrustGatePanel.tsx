@@ -95,6 +95,17 @@ export function TrustGatePanel({ tenantId, className }: TrustGatePanelProps) {
 
   const selectedAction = actionType || actionOptions[0] || ''
 
+  // Signal-health components, worst-first. Numeric values only: the map is
+  // typed Record<string, number> but comes straight off the wire, so a
+  // non-numeric entry should be skipped rather than rendered as NaN.
+  const componentRows = useMemo(() => {
+    const raw = data?.signal_health?.components ?? {}
+    return Object.entries(raw)
+      .filter(([, value]) => typeof value === 'number' && Number.isFinite(value))
+      .map(([name, score]) => ({ name, score: score as number }))
+      .sort((a, b) => a.score - b.score)
+  }, [data])
+
   const handleEvaluate = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!selectedAction || !entityId.trim()) return
@@ -181,6 +192,55 @@ export function TrustGatePanel({ tenantId, className }: TrustGatePanelProps) {
               </li>
             ))}
           </ul>
+        )}
+
+        {/* The score decomposed into the inputs that produced it.
+         *
+         * signal_health.components has been in the API response all along and
+         * nothing rendered it, so the composite read as a number with no
+         * derivation. These are the real component names — emq, freshness,
+         * variance, anomaly, and cdp when present — NOT the five weighted
+         * components CLAUDE.md documents, which no code computes and which
+         * carry no published weights.
+         *
+         * Sorted worst-first: the failing input is the one that needs
+         * attention and should not have to be hunted for. */}
+        {componentRows.length > 0 && (
+          <div>
+            <h4 className="mb-2 font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground">
+              Contributing signals
+            </h4>
+            <ul className="space-y-1">
+              {componentRows.map(({ name, score }) => (
+                <li key={name} className="flex items-baseline justify-between gap-3 text-sm">
+                  <span data-slot="component-name" className="capitalize text-foreground">
+                    {name}
+                  </span>
+                  <span className="flex items-baseline gap-2">
+                    <span className="font-mono tabular-nums text-foreground">
+                      {Math.round(score)}
+                    </span>
+                    <StatusPill
+                      size="sm"
+                      variant={
+                        score >= data.thresholds.pass_threshold
+                          ? 'healthy'
+                          : score >= data.thresholds.hold_threshold
+                            ? 'degraded'
+                            : 'unhealthy'
+                      }
+                    >
+                      {score >= data.thresholds.pass_threshold
+                        ? 'Pass'
+                        : score >= data.thresholds.hold_threshold
+                          ? 'Hold'
+                          : 'Block'}
+                    </StatusPill>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
