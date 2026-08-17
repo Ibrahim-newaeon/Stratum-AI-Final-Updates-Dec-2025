@@ -22,7 +22,7 @@ import { PageHeader } from '@/components/primitives/PageHeader'
 import { StatRow, type StatRowItem } from '@/components/primitives/StatRow'
 import { StatusPill } from '@/components/primitives/StatusPill'
 import { DataTable, type DataTableColumn } from '@/components/primitives/DataTable'
-import { campaignStatusVariant, campaignStatusLabel } from '@/lib/statusVariant'
+import { statusVariant, statusLabel } from '@/lib/statusVariant'
 
 interface Campaign {
   id: number
@@ -185,8 +185,8 @@ export function Campaigns() {
       id: 'status',
       header: 'Status',
       cell: (c) => (
-        <StatusPill size="sm" variant={campaignStatusVariant(c.status)}>
-          {campaignStatusLabel(c.status)}
+        <StatusPill size="sm" variant={statusVariant(c.status)}>
+          {statusLabel(c.status)}
         </StatusPill>
       ),
     },

@@ -3,14 +3,10 @@ import { useTranslation } from 'react-i18next'
 import {
   Search,
   Plus,
-  MoreHorizontal,
   Play,
   Pause,
   Edit,
   Copy,
-  Zap,
-  Clock,
-  CheckCircle2,
   ChevronRight,
   Bell,
   Tag,
@@ -23,6 +19,11 @@ import {
 import { cn } from '@/lib/utils'
 import { usePriceMetrics } from '@/hooks/usePriceMetrics'
 import { useRules, useToggleRule, useDuplicateRule, useUpdateRule } from '@/api/hooks'
+import { PageHeader } from '@/components/primitives/PageHeader'
+import { StatRow, type StatRowItem } from '@/components/primitives/StatRow'
+import { StatusPill } from '@/components/primitives/StatusPill'
+import { DataTable, type DataTableColumn } from '@/components/primitives/DataTable'
+import { statusVariant, statusLabel } from '@/lib/statusVariant'
 
 type RuleStatus = 'active' | 'paused' | 'draft'
 type RuleAction = 'apply_label' | 'send_alert' | 'pause_campaign' | 'adjust_budget' | 'notify_slack' | 'notify_whatsapp'
@@ -71,7 +72,7 @@ export function Rules() {
   const [editingRule, setEditingRule] = useState<Rule | null>(null)
 
   // Fetch rules from API
-  const { data: rulesData, isLoading, refetch } = useRules()
+  const { data: rulesData, isLoading, error, refetch } = useRules()
   const toggleRule = useToggleRule()
   const duplicateRule = useDuplicateRule()
   const updateRule = useUpdateRule()
@@ -126,20 +127,25 @@ export function Rules() {
     return true
   })
 
-  const getStatusBadge = (status: RuleStatus) => {
-    const config = {
-      active: { color: 'bg-green-500/10 text-green-500', icon: CheckCircle2, label: 'Active' },
-      paused: { color: 'bg-amber-500/10 text-amber-500', icon: Pause, label: 'Paused' },
-      draft: { color: 'bg-gray-500/10 text-gray-500', icon: Edit, label: 'Draft' },
-    }
-    const { color, icon: Icon, label } = config[status]
-    return (
-      <span className={cn('px-2 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1', color)}>
-        <Icon className="w-3 h-3" />
-        {label}
-      </span>
-    )
-  }
+  // "Triggers today" was the literal 23, rendered as a live metric whatever the
+  // data said. Derived from last_triggered now: a number that can be wrong is
+  // better than one that is decorative.
+  const stats = useMemo((): StatRowItem[] => {
+    const today = new Date().toDateString()
+    const triggeredToday = rules.filter(
+      (r) => r.lastTriggered && new Date(r.lastTriggered).toDateString() === today,
+    ).length
+    return [
+      { label: 'Rules', value: String(rules.length) },
+      { label: 'Active', value: String(rules.filter((r) => r.status === 'active').length) },
+      { label: 'Triggered today', value: String(triggeredToday) },
+      { label: 'Total triggers', value: String(rules.reduce((acc, r) => acc + r.triggerCount, 0)) },
+    ]
+  }, [rules])
+
+  // getStatusBadge lived here — the third independent status badge in this
+  // codebase, with its own greens and ambers. Replaced by StatusPill via the
+  // shared statusVariant/statusLabel mapping.
 
   const getActionIcon = (action: RuleAction) => {
     switch (action) {
@@ -186,60 +192,143 @@ export function Rules() {
     return d.toLocaleDateString()
   }
 
+  const columns: DataTableColumn<Rule>[] = [
+    {
+      id: 'name',
+      header: 'Rule',
+      sortable: true,
+      sortAccessor: (r) => r.name,
+      cell: (r) => (
+        <div className="min-w-0">
+          <div className="truncate font-medium text-foreground">{r.name}</div>
+          {r.description ? (
+            <div className="truncate text-xs text-muted-foreground">{r.description}</div>
+          ) : null}
+        </div>
+      ),
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      cell: (r) => (
+        <StatusPill size="sm" variant={statusVariant(r.status)}>
+          {statusLabel(r.status)}
+        </StatusPill>
+      ),
+    },
+    {
+      id: 'logic',
+      header: 'Logic',
+      hideOnMobile: true,
+      // The rule reads as a sentence in mono: IF <field> <op> <value> THEN <action>.
+      cell: (r) => (
+        <span className="flex flex-wrap items-center gap-1.5 font-mono text-xs text-muted-foreground">
+          <span className="text-primary">IF</span>
+          <span className="text-foreground">{r.condition.field}</span>
+          <span>{getOperatorLabel(r.condition.operator)}</span>
+          <span className="text-foreground">
+            {!showPriceMetrics && COST_RELATED_FIELDS.includes(r.condition.field)
+              ? '***'
+              : r.condition.value}
+          </span>
+          <ChevronRight className="h-3 w-3" />
+          <span className="text-primary">THEN</span>
+          <span className="inline-flex items-center gap-1 text-foreground">
+            {getActionIcon(r.action.type)}
+            {getActionLabel(r.action.type)}
+          </span>
+        </span>
+      ),
+    },
+    {
+      id: 'triggers',
+      header: 'Triggers',
+      sortable: true,
+      sortAccessor: (r) => r.triggerCount,
+      headerClassName: 'text-right',
+      cellClassName: 'text-right font-mono tabular-nums',
+      cell: (r) => String(r.triggerCount),
+    },
+    {
+      id: 'last',
+      header: 'Last fired',
+      hideOnMobile: true,
+      headerClassName: 'text-right',
+      cellClassName: 'text-right font-mono text-xs',
+      cell: (r) => formatLastTriggered(r.lastTriggered),
+    },
+    {
+      id: 'actions',
+      header: '',
+      className: 'w-32',
+      cellClassName: 'text-right',
+      // Hidden until hover, always reachable by keyboard via focus-within.
+      cell: (r) => (
+        <div className="flex justify-end gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover/row:opacity-100">
+          <button
+            type="button"
+            onClick={() => handleToggleRule(r.id, r.status)}
+            disabled={toggleRule.isPending}
+            aria-label={r.status === 'active' ? `Pause ${r.name}` : `Activate ${r.name}`}
+            className="rounded-full p-2 hover:bg-muted disabled:opacity-50"
+          >
+            {r.status === 'active' ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleEditRule(r)}
+            aria-label={`Edit ${r.name}`}
+            className="rounded-full p-2 hover:bg-muted"
+          >
+            <Edit className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleDuplicateRule(r.id)}
+            disabled={duplicateRule.isPending}
+            aria-label={`Duplicate ${r.name}`}
+            className="rounded-full p-2 hover:bg-muted disabled:opacity-50"
+          >
+            <Copy className="h-4 w-4" />
+          </button>
+        </div>
+      ),
+    },
+  ]
+
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Zap className="w-7 h-7 text-primary" />
-            {t('rules.title')}
-          </h1>
-          <p className="text-muted-foreground">{t('rules.subtitle')}</p>
-        </div>
+    <div className="px-8 py-6">
+      <PageHeader
+        title={t('rules.title')}
+        context={
+          rules.length
+            ? `${rules.filter((r) => r.status === 'active').length} active · ${rules.filter((r) => r.status === 'paused').length} paused`
+            : t('rules.subtitle')
+        }
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              disabled={isLoading}
+              aria-label="Refresh rules"
+              className="rounded-full border border-border p-2 hover:bg-muted"
+            >
+              <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              <Plus className="h-4 w-4" />
+              <span>{t('rules.createRule')}</span>
+            </button>
+          </>
+        }
+      />
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-background hover:bg-accent transition-colors"
-            title="Refresh rules"
-          >
-            <RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin')} />
-          </button>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{t('rules.createRule')}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl border bg-card">
-          <p className="text-sm text-muted-foreground mb-1">{t('rules.totalRules')}</p>
-          <p className="text-2xl font-bold">{isLoading ? '...' : rules.length}</p>
-        </div>
-        <div className="p-4 rounded-xl border bg-card">
-          <p className="text-sm text-muted-foreground mb-1">{t('rules.activeRules')}</p>
-          <p className="text-2xl font-bold text-green-500">
-            {isLoading ? '...' : rules.filter((r) => r.status === 'active').length}
-          </p>
-        </div>
-        <div className="p-4 rounded-xl border bg-card">
-          <p className="text-sm text-muted-foreground mb-1">{t('rules.triggersToday')}</p>
-          <p className="text-2xl font-bold text-primary">23</p>
-        </div>
-        <div className="p-4 rounded-xl border bg-card">
-          <p className="text-sm text-muted-foreground mb-1">{t('rules.actionsExecuted')}</p>
-          <p className="text-2xl font-bold">
-            {isLoading ? '...' : rules.reduce((acc, r) => acc + r.triggerCount, 0)}
-          </p>
-        </div>
-      </div>
+      <StatRow items={stats} />
 
       {/* Filters */}
       <div className="flex flex-col md:flex-row gap-4">
@@ -266,129 +355,17 @@ export function Rules() {
         </select>
       </div>
 
-      {/* Rules List */}
-      <div className="space-y-4">
-        {filteredRules.map((rule) => (
-          <div
-            key={rule.id}
-            className="rounded-xl border bg-card p-5 hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-start gap-4">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Zap className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold">{rule.name}</h3>
-                    {getStatusBadge(rule.status)}
-                  </div>
-                  <p className="text-sm text-muted-foreground">{rule.description}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {rule.status === 'active' ? (
-                  <button
-                    onClick={() => handleToggleRule(rule.id, rule.status)}
-                    disabled={toggleRule.isPending}
-                    className="p-2 rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
-                    title="Pause"
-                  >
-                    {toggleRule.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Pause className="w-4 h-4" />}
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleToggleRule(rule.id, rule.status)}
-                    disabled={toggleRule.isPending}
-                    className="p-2 rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
-                    title="Activate"
-                  >
-                    {toggleRule.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                  </button>
-                )}
-                <button
-                  onClick={() => handleEditRule(rule)}
-                  className="p-2 rounded-lg hover:bg-muted transition-colors"
-                  title="Edit"
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDuplicateRule(rule.id)}
-                  disabled={duplicateRule.isPending}
-                  className="p-2 rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
-                  title="Duplicate"
-                >
-                  {duplicateRule.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Copy className="w-4 h-4" />}
-                </button>
-                <button aria-label="More options" className="p-2 rounded-lg hover:bg-muted transition-colors">
-                  <MoreHorizontal className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Rule Logic Display */}
-            <div className="flex flex-wrap items-center gap-2 mb-4 p-3 rounded-lg bg-muted/50">
-              <span className="text-sm font-medium text-primary">IF</span>
-              <span className="px-2 py-1 rounded bg-background text-sm font-mono">
-                {rule.condition.field}
-              </span>
-              <span className="text-sm font-bold">
-                {getOperatorLabel(rule.condition.operator)}
-              </span>
-              <span className="px-2 py-1 rounded bg-background text-sm font-mono">
-                {!showPriceMetrics && COST_RELATED_FIELDS.includes(rule.condition.field)
-                  ? '***'
-                  : rule.condition.value}
-              </span>
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-primary">THEN</span>
-              <div className="flex items-center gap-1 px-2 py-1 rounded bg-background">
-                {getActionIcon(rule.action.type)}
-                <span className="text-sm">{getActionLabel(rule.action.type)}</span>
-              </div>
-            </div>
-
-            {/* Rule Metadata */}
-            <div className="flex flex-wrap items-center gap-6 text-sm">
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">{t('rules.appliesTo')}:</span>
-                <span className="font-medium">
-                  {rule.appliesTo.length > 0 ? rule.appliesTo.join(', ') : 'Not configured'}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-muted-foreground" />
-                <span className="text-muted-foreground">{t('rules.cooldown')}:</span>
-                <span className="font-medium">{rule.cooldownHours}h</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-muted-foreground" />
-                <span className="text-muted-foreground">{t('rules.triggered')}:</span>
-                <span className="font-medium">{rule.triggerCount} times</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">{t('rules.lastTriggered')}:</span>
-                <span className="font-medium">{formatLastTriggered(rule.lastTriggered)}</span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {filteredRules.length === 0 && (
-        <div className="text-center py-12">
-          <Zap className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">{t('rules.noRules')}</p>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="mt-4 text-primary hover:underline"
-          >
-            {t('rules.createFirst')}
-          </button>
-        </div>
-      )}
+      <DataTable
+        data={filteredRules}
+        columns={columns}
+        rowKey={(r) => r.id}
+        loading={isLoading}
+        ariaLabel="Automation rules"
+        className="mt-4"
+        emptyMessage="No automation rules yet. Create one to act on signal changes."
+        // An empty list and a failed fetch must never look identical.
+        error={error ? "Could not load rules. Retry, or check the connection." : undefined}
+      />
 
       {/* Create / Edit Rule Modal */}
       {showCreateModal && (
