@@ -5,7 +5,7 @@
 
 # FastAPI Framework
 fastapi==0.141.1
-uvicorn[standard]==0.52.1
+uvicorn[standard]==0.52.3
 python-multipart==0.0.32
 starlette==1.6.0
 
@@ -19,7 +19,7 @@ sendgrid==6.12.5
 sse-starlette==3.4.8
 
 # Database
-sqlalchemy[asyncio]==2.0.51
+sqlalchemy[asyncio]==2.0.52
 asyncpg==0.31.0
 psycopg2-binary==2.9.12
 alembic==1.19.1
@@ -52,7 +52,7 @@ numpy>=2.4.6,<3.0
 joblib==1.5.3
 
 # Google Cloud (for Vertex AI)
-google-cloud-aiplatform==1.163.0
+google-cloud-aiplatform==1.164.0
 google-auth==2.56.3
 
 # Web Scraping (Module D)
@@ -61,20 +61,20 @@ lxml==6.1.1
 
 # Validation & Serialization
 pydantic==2.13.4
-orjson==3.11.9
+orjson==3.12.0
 email-validator==2.3.0
 
 # Logging & Monitoring
 structlog==26.1.0
 python-json-logger==4.1.0
-sentry-sdk[fastapi]==2.67.1
+sentry-sdk[fastapi]==2.68.0
 prometheus-client==0.26.0
 
 # Ad Platform SDKs
 stripe>=15.3.0
 requests>=2.34.2
 facebook-business>=25.0.2
-google-ads>=31.0.0
+google-ads>=31.3.0
 
 # Analytics & ML (scipy needed by ml/ab_testing.py)
 scipy>=1.18.0
@@ -85,7 +85,7 @@ prometheus-fastapi-instrumentator>=8.0.2
 psutil>=7.2.2
 
 # PDF & Reporting
-weasyprint>=68.1
+weasyprint>=69.0
 PyYAML>=6.0.3
 
 # AWS (S3 for CMS assets & report delivery)

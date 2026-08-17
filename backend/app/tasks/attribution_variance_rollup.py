@@ -147,6 +147,11 @@ def attribution_variance_rollup(
     import asyncio
 
     async def run_rollup():
+        from app.db.session import dispose_stale_async_pool
+
+        # Celery tasks run asyncio.run() per invocation; drop pool
+        # connections bound to a previous task's event loop first.
+        await dispose_stale_async_pool()
         async with async_session_factory() as db:
             try:
                 rollup_date = (
