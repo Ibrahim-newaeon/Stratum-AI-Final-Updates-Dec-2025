@@ -36,6 +36,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base, TimestampMixin
+from app.db.types import EncryptedString, EncryptedText
 
 # =============================================================================
 # Enums
@@ -563,19 +564,39 @@ class CMSContactSubmission(Base, TimestampMixin):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
 
+    # Everything the visitor typed is encrypted at rest, plus the IP we derive
+    # from the request. This table has no tenant_id — submissions belong to
+    # Stratum, not to a tenant — so there is no per-tenant key to derive and the
+    # global-key column types are the only option; see app/db/types.py.
+    #
+    # Column widths are sized to the CIPHERTEXT, not to the ContactSubmit schema
+    # limit. Measured against this codebase's encrypt_pii rather than assumed:
+    # 255 chars -> 560, 50 -> 220, 45 -> 188. That is ~2.2x, not the ~1.4x a
+    # bare Fernet token would cost, so a column sized to the input limit turns
+    # the longest legitimate submission into a failed insert. Migration 063
+    # widened these; test_cms_contact_pii_at_rest asserts each column still
+    # fits its own worst case, so this cannot silently regress.
+    #
+    # No query filters or sorts on any of these (admin_list_contacts filters on
+    # is_read / is_spam and orders by created_at), so encryption costs no
+    # lookups.
+
     # Contact details
-    name = Column(String(255), nullable=False)
-    email = Column(String(255), nullable=False)
-    company = Column(String(255), nullable=True)
-    phone = Column(String(50), nullable=True)
+    name = Column(EncryptedString(1024), nullable=False)
+    email = Column(EncryptedString(1024), nullable=False)
+    company = Column(EncryptedString(1024), nullable=True)
+    phone = Column(EncryptedString(512), nullable=True)
 
     # Message
-    subject = Column(String(255), nullable=True)
-    message = Column(Text, nullable=False)
+    subject = Column(EncryptedString(1024), nullable=True)
+    message = Column(EncryptedText, nullable=False)
 
     # Context
+    # source_page and user_agent stay readable: neither is a personal
+    # identifier, and both are useful for triage precisely because you can read
+    # them straight out of the table.
     source_page = Column(String(255), nullable=True)  # Which page the form was on
-    ip_address = Column(String(45), nullable=True)
+    ip_address = Column(EncryptedString(512), nullable=True)
     user_agent = Column(String(512), nullable=True)
 
     # Processing

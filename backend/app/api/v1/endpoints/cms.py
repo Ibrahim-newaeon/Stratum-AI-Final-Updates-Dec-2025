@@ -28,6 +28,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.base_models import User
+from app.core.client_ip import get_client_ip
 from app.core.logging import get_logger
 from app.core.security import mask_email
 from app.db.session import get_async_session
@@ -487,8 +488,14 @@ async def submit_contact_form(
     """
     Submit contact form (public endpoint).
     """
-    # Get IP and user agent from request
-    ip_address = request.client.host if request.client else None
+    # Get IP and user agent from request.
+    #
+    # request.client.host was the *proxy* here: production runs behind
+    # Cloudflare and the nginx edge container, so every submission recorded the
+    # same internal address. get_client_ip only trusts forwarding headers when
+    # the direct peer is our own infrastructure, so a caller cannot choose the
+    # IP that gets stored.
+    ip_address = get_client_ip(request)
     user_agent = request.headers.get("user-agent", "")[:512]
 
     submission = CMSContactSubmission(

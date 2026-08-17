@@ -4,42 +4,53 @@
 """
 Reusable column types.
 
-`EncryptedString` transparently encrypts a text column at rest with Fernet,
-using the same `encrypt_pii`/`decrypt_pii` helpers the app uses for PII.
+`EncryptedString` and `EncryptedText` transparently encrypt a column at rest
+with Fernet, using the same `encrypt_pii`/`decrypt_pii` helpers the app uses for
+PII. They differ only in the underlying SQL type: `VARCHAR(n)` versus `TEXT`.
 """
 
 from typing import Optional
 
-from sqlalchemy import String
+from sqlalchemy import String, Text
 from sqlalchemy.types import TypeDecorator
 
 from app.core.security import decrypt_pii, encrypt_pii
 
 
-class EncryptedString(TypeDecorator):
-    """
-    A ``String`` column transparently encrypted at rest with Fernet.
-
-    Encrypts on write, decrypts on read. Rows written before encryption was
-    introduced are returned as-is (they fail to decrypt) and get re-encrypted
-    on their next write — so **no data migration is required** and the
-    underlying column stays ``VARCHAR``.
+class _EncryptedMixin:
+    """Shared Fernet bind/result handling for the encrypted column types.
 
     **Uses the global key, not a per-tenant one, and cannot do otherwise.**
     A ``TypeDecorator`` is handed the bare value, never the row, so there is no
-    way to reach ``tenant_id`` from here. Everything else that stores a secret
-    now passes the owning tenant to ``encrypt_pii`` (AUTH-05); this type is the
-    one place that structurally can't.
+    way to reach ``tenant_id`` from here.
 
-    Only ``SlackIntegration.webhook_url`` uses it today, so the exposure is one
-    low-sensitivity column. Do **not** reach for this type for access tokens,
-    refresh tokens, or user PII — those have tenant-aware call sites and should
-    use them. Making this tenant-aware means moving to explicit
-    ``set_x``/``get_x`` accessors on the model (as ``AudienceSyncCredential``
-    does) rather than a column type.
+    Prefer a tenant-aware call site (``encrypt_pii(value, tenant_id)``, as
+    ``AudienceSyncCredential`` does with explicit ``set_x``/``get_x`` accessors)
+    whenever the row *has* a tenant. Reach for these types only when it
+    structurally does not. Do not use them for access or refresh tokens: those
+    all hang off tenant-scoped rows and have tenant-aware call sites already.
+
+    Current uses, both deliberate:
+
+    - ``SlackIntegration.webhook_url`` — one low-sensitivity column.
+    - ``CMSContactSubmission`` PII (2026-08-17) — the public marketing contact
+      form. That table has no ``tenant_id`` at all: submissions belong to
+      Stratum, not to a tenant, so there is no key to derive per-tenant and the
+      global key is the only option available.
+
+    Rows written before encryption was introduced are returned as-is (they fail
+    to decrypt) and get re-encrypted on their next write, so adding the type to
+    an existing column needs no data migration. Note the limit of that: a row
+    whose encrypted columns are never rewritten stays plaintext forever. It is
+    only a clean migration path for columns that get updated, or for a table
+    that is empty when the type is introduced.
+
+    Widening the column IS required, though. Measure rather than estimate: a
+    bare Fernet token is ~1.4x the plaintext, but ``encrypt_pii`` here produces
+    about **2.2x** (255 chars -> 560, 50 -> 220, 45 -> 188). A ``VARCHAR`` sized
+    to the input limit will reject the longest legitimate value on insert.
     """
 
-    impl = String
     cache_ok = True
 
     def process_bind_param(self, value: Optional[str], dialect) -> Optional[str]:
@@ -56,3 +67,22 @@ class EncryptedString(TypeDecorator):
             # Legacy row stored as plaintext before encryption was added.
             # Return it as-is; it becomes ciphertext on the next write.
             return value
+
+
+class EncryptedString(_EncryptedMixin, TypeDecorator):
+    """A ``VARCHAR`` column transparently encrypted at rest with Fernet.
+
+    See ``_EncryptedMixin`` for the key-scoping caveat and sizing rule.
+    """
+
+    impl = String
+
+
+class EncryptedText(_EncryptedMixin, TypeDecorator):
+    """A ``TEXT`` column transparently encrypted at rest with Fernet.
+
+    Use this for unbounded free text (a message body) so the column keeps its
+    ``TEXT`` type instead of becoming a ``VARCHAR`` wide enough to guess at.
+    """
+
+    impl = Text
