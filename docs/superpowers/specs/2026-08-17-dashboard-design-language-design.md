@@ -136,19 +136,29 @@ and cut — one correct row height beats a control the user has to reason about.
 Built on `DataTable`.
 
 Columns: **Campaign** (name, platform as a mono sub-label) · **Status**
-(`StatusPill`) · **Spend** · **ROAS** · **Pacing** · **Trust** · row actions.
+(`StatusPill`) · **Spend** · **Budget** · **ROAS** · **Conversions** · row
+actions.
 
 - Numeric columns right-aligned, Geist Mono, `tabular-nums`.
 - Row actions (view / edit / pause-activate) are revealed on row hover and
   focus, and are always reachable by keyboard. This is how a row stays
   uncluttered without losing accessibility.
-- The **Trust** column shows the gate state for that campaign. It is the
-  product's differentiator expressed as a table column, and it is the reason
-  this is not a generic campaigns list.
 - Filter bar: search, status segmented control, platform dropdown. One row,
   hairline beneath.
 - Existing data hooks are retained: `useCampaigns`, `usePauseCampaign`,
   `useActivateCampaign`, `useDeleteCampaign`, `usePriceMetrics`.
+
+**A per-campaign Trust column was designed and cut.** It would have been the
+product's differentiator expressed as a table column — no competitor's campaign
+list says whether automation is allowed to touch a given row. But
+`CampaignWithMetrics` (`frontend/src/api/campaigns.ts:49`) carries no trust or
+pacing field, and both signals are tenant-level rather than per-campaign.
+Shipping the column would have meant fabricating its values.
+
+Adding it is backend work: per-campaign gate state on the campaigns list
+response. Worth doing — it is the single highest-value addition to this screen —
+but it needs its own spec, and the exemplar ships against real fields until then.
+The column order above leaves room to insert it without redesigning the row.
 
 ## Archetype 2 — authoring (Rules)
 
