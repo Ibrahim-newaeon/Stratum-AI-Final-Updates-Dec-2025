@@ -229,7 +229,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     except (ImportError, RuntimeError, ValueError) as e:
         logger.warning("platform_adapter_registration_failed", error=str(e))
 
-    # Auto-seed superadmin if not exists or update password
+    # Bootstrap the superadmin account when it does not exist yet. This is
+    # create-only: an existing account keeps its password and active/verified
+    # flags, so a password changed through the UI survives a restart. Use
+    # SUPERADMIN_FORCE_RESET=true for the credential-recovery path. A missing
+    # or invalid SUPERADMIN_* config is non-fatal here and only skips the seed.
     try:
         from scripts.seed_superadmin import create_superadmin
 

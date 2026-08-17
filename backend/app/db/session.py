@@ -39,7 +39,11 @@ logger = get_logger(__name__)
 # Applied unconditionally rather than only when the URL mentions pgbouncer: the
 # cost is a longer identifier, and keying behaviour off a hostname would break
 # silently the first time the pooler is renamed or moved.
-_asyncpg_connect_args: dict[str, Any] = {
+#
+# Public because every async engine in the codebase needs it, not just this one.
+# Any module calling create_async_engine() directly must pass these connect_args
+# or it will fail behind the pooler — see scripts/seed_superadmin.py.
+ASYNCPG_CONNECT_ARGS: dict[str, Any] = {
     "statement_cache_size": 0,
     "prepared_statement_name_func": lambda: f"__asyncpg_{uuid4()}__",
 }
@@ -52,7 +56,7 @@ async_engine = create_async_engine(
     pool_timeout=settings.db_pool_timeout,
     pool_pre_ping=True,
     echo=settings.debug and settings.is_development,
-    connect_args=_asyncpg_connect_args,
+    connect_args=ASYNCPG_CONNECT_ARGS,
 )
 
 AsyncSessionLocal = async_sessionmaker(
