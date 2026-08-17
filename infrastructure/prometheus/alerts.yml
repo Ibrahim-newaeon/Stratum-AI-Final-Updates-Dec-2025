@@ -6,22 +6,28 @@
 # rather than by grepping for Gauge/Counter definitions — a metric can be
 # declared in app/core/metrics.py and still never be registered.
 #
-# Four rules were removed because the series they queried do not exist:
+# Four rules were removed in #661 because the series they queried do not exist:
 #
 #   DatabaseConnectionPoolExhausted   db_pool_size, db_pool_available
 #   SlowDatabaseQueries               db_query_duration_seconds
 #   HighRateLimiting                  rate_limit_exceeded_total
-#   WorkerDown                        up{job="stratum-worker"}
+#   WorkerDown                        up{job="stratum-worker"}   <- RESTORED
 #
 # The first three never matched a series, so PromQL returned an empty vector
 # and the alert sat inactive forever — indistinguishable, on a dashboard, from
 # a system that is fine. (`db_pool_size` does exist in the codebase, but as a
-# pydantic config field, not a metric.) The fourth had the opposite failure:
-# it scraped an HTTP endpoint the celery worker never served, so it fired
-# permanently. Both shapes are worse than no rule at all.
+# pydantic config field, not a metric.) The fourth had a subtler version of the
+# same failure: nothing scrapes the celery worker, so `up{job="stratum-worker"}`
+# never existed either and the rule evaluated to no data, not to a firing alert.
 #
-# Restoring them means instrumenting the API first. Tracked as a follow-up;
-# do not re-add a rule here before confirming its series appears in /metrics.
+# WorkerDown is back, rewritten against `stratum_celery_worker_up` — a gauge the
+# API now refreshes from the worker's Redis heartbeat on every scrape. The other
+# three still need their metrics instrumented first.
+#
+# The rule for re-adding anything here is unchanged: confirm the series appears
+# in a real /metrics response, and prefer an expression that also fires when the
+# series goes missing (see WorkerDown's `or absent(...)`) so a metric that stops
+# being exported reads as a problem instead of as silence.
 groups:
   - name: stratum-api
     interval: 30s
