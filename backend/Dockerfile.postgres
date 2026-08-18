@@ -1,0 +1,46 @@
+# =============================================================================
+# Stratum AI - PostgreSQL 16 with pgvector AND Apache AGE
+# =============================================================================
+# Two extensions, one server, and no published image carries both:
+#   * pgvector — migration 049 (`CREATE EXTENSION vector`, copilot_doc_chunks
+#     uses a vector(1536) column). The stock AGE image lacks it.
+#   * Apache AGE — the knowledge graph issues real Cypher through
+#     `cypher('stratum_knowledge_graph', ...)` in
+#     app/services/knowledge_graph/service.py. The stock pgvector image lacks it.
+#
+# Built in two stages so the shipped server does not carry a compiler toolchain:
+# the builder compiles AGE, the runtime copies out the two artifacts Postgres
+# actually loads (the shared library and the extension control/SQL files).
+# =============================================================================
+
+FROM pgvector/pgvector:pg16 AS age-builder
+
+# PG16/v1.6.0-rc0 is the newest tag Apache AGE publishes for PostgreSQL 16.
+# AGE tags every release "-rc0"; it is their naming convention, not a
+# pre-release marker. Pinned rather than tracking a branch so an upstream push
+# cannot change what this image contains.
+ARG AGE_REF=PG16/v1.6.0-rc0
+
+# ca-certificates is not optional here: the postgres base image ships without a
+# CA bundle, so `git clone` over HTTPS fails verification ("CAfile: none")
+# before it reaches the network at all.
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        postgresql-server-dev-16 \
+        ca-certificates \
+        git \
+        flex \
+        bison; \
+    git clone --depth 1 --branch "${AGE_REF}" https://github.com/apache/age.git /tmp/age; \
+    make -C /tmp/age install; \
+    rm -rf /var/lib/apt/lists/*
+
+FROM pgvector/pgvector:pg16
+
+# Only the built artifacts cross the stage boundary — no apt state, no
+# toolchain. age.so is what LOAD 'age' opens; the extension directory is what
+# CREATE EXTENSION age reads.
+COPY --from=age-builder /usr/lib/postgresql/16/lib/age.so /usr/lib/postgresql/16/lib/age.so
+COPY --from=age-builder /usr/share/postgresql/16/extension/age* /usr/share/postgresql/16/extension/

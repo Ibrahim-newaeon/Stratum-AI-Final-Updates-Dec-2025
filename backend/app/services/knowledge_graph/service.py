@@ -12,7 +12,7 @@ import logging
 from typing import Any, Optional
 from uuid import UUID
 
-from sqlalchemy import text
+from sqlalchemy import Result, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import (
@@ -58,6 +58,35 @@ class KnowledgeGraphService:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    async def _execute_graph(self, query: str) -> Result:
+        """Run one AGE statement with the session prepared for Cypher.
+
+        Two things must already be true of the session before a
+        ``cypher(...)`` statement will even parse:
+
+        * AGE's library must be loaded. It installs the parse hooks the Cypher
+          syntax depends on, and Postgres' own on-demand loading is too late —
+          that happens at first function call, after the statement has been
+          parsed.
+        * ``ag_catalog`` must be on the search_path. Both ``cypher`` and the
+          ``agtype`` return type live there, and nothing else in the
+          application puts it on the path.
+
+        Deliberately scoped to this service rather than to the engine. A
+        connect-level listener would push every pooled connection through
+        ``LOAD``, so a database without AGE would fail the entire application
+        instead of the knowledge-graph routes that actually depend on it.
+
+        ``search_path`` is set LOCAL so it expires with the transaction rather
+        than following the connection back into the pool. ``LOAD`` has no LOCAL
+        form, but a loaded library on a pooled connection is inert.
+        """
+        await self.session.execute(text("LOAD 'age'"))
+        await self.session.execute(
+            text('SET LOCAL search_path = ag_catalog, "$user", public')
+        )
+        return await self.session.execute(text(query))
+
     # =========================================================================
     # NODE OPERATIONS
     # =========================================================================
@@ -79,7 +108,7 @@ class KnowledgeGraphService:
             alias="n", node_label=NodeLabel(label), properties=properties
         )
 
-        result = await self.session.execute(text(query))
+        result = await self._execute_graph(query)
         row = result.fetchone()
 
         if row:
@@ -112,7 +141,7 @@ class KnowledgeGraphService:
             set_properties=set_props,
         )
 
-        result = await self.session.execute(text(query))
+        result = await self._execute_graph(query)
         row = result.fetchone()
 
         if row:
@@ -141,7 +170,7 @@ class KnowledgeGraphService:
             .build()
         )
 
-        result = await self.session.execute(text(query))
+        result = await self._execute_graph(query)
         row = result.fetchone()
 
         if row:
@@ -173,7 +202,7 @@ class KnowledgeGraphService:
             $$) AS (result agtype);
         """
 
-        result = await self.session.execute(text(query))
+        result = await self._execute_graph(query)
         row = result.fetchone()
 
         if row:
@@ -221,7 +250,7 @@ class KnowledgeGraphService:
             edge_properties=edge.to_cypher_properties(),
         )
 
-        result = await self.session.execute(text(query))
+        result = await self._execute_graph(query)
         row = result.fetchone()
 
         if row:
@@ -260,7 +289,7 @@ class KnowledgeGraphService:
             $$) AS (result agtype);
         """
 
-        result = await self.session.execute(text(query))
+        result = await self._execute_graph(query)
         edges = []
         for row in result:
             edges.append(self._parse_agtype(row[0]))
@@ -284,7 +313,7 @@ class KnowledgeGraphService:
             List of channel revenue data
         """
         query, _params = RevenueAnalyticsQueries.revenue_by_channel(tenant_id, days)
-        result = await self.session.execute(text(query))
+        result = await self._execute_graph(query)
 
         return [self._parse_agtype(row[0]) for row in result]
 
@@ -305,7 +334,7 @@ class KnowledgeGraphService:
         query, _params = RevenueAnalyticsQueries.revenue_by_campaign(
             tenant_id, platform, days
         )
-        result = await self.session.execute(text(query))
+        result = await self._execute_graph(query)
 
         return [self._parse_agtype(row[0]) for row in result]
 
@@ -325,7 +354,7 @@ class KnowledgeGraphService:
         query, _params = RevenueAnalyticsQueries.customer_journey(
             tenant_id, profile_external_id
         )
-        result = await self.session.execute(text(query))
+        result = await self._execute_graph(query)
         row = result.fetchone()
 
         if row:
@@ -348,7 +377,7 @@ class KnowledgeGraphService:
         query, _params = RevenueAnalyticsQueries.segment_revenue_performance(
             tenant_id, days
         )
-        result = await self.session.execute(text(query))
+        result = await self._execute_graph(query)
 
         return [self._parse_agtype(row[0]) for row in result]
 
@@ -365,7 +394,7 @@ class KnowledgeGraphService:
             List of RFM segment data
         """
         query, _params = RevenueAnalyticsQueries.rfm_segment_trends(tenant_id)
-        result = await self.session.execute(text(query))
+        result = await self._execute_graph(query)
 
         return [self._parse_agtype(row[0]) for row in result]
 
@@ -387,7 +416,7 @@ class KnowledgeGraphService:
             List of blocked automation data with reasons
         """
         query, _params = RevenueAnalyticsQueries.blocked_automations(tenant_id, days)
-        result = await self.session.execute(text(query))
+        result = await self._execute_graph(query)
 
         return [self._parse_agtype(row[0]) for row in result]
 
@@ -405,7 +434,7 @@ class KnowledgeGraphService:
             Signal health vs revenue correlation data
         """
         query, _params = RevenueAnalyticsQueries.signal_health_impact(tenant_id, days)
-        result = await self.session.execute(text(query))
+        result = await self._execute_graph(query)
 
         return [self._parse_agtype(row[0]) for row in result]
 
@@ -442,7 +471,7 @@ class KnowledgeGraphService:
             $$) AS (result agtype);
         """
 
-        result = await self.session.execute(text(query))
+        result = await self._execute_graph(query)
         row = result.fetchone()
 
         if row:
@@ -470,7 +499,7 @@ class KnowledgeGraphService:
         query, _params = RevenueAnalyticsQueries.multi_touch_attribution_paths(
             tenant_id, min_touchpoints, limit
         )
-        result = await self.session.execute(text(query))
+        result = await self._execute_graph(query)
 
         return [self._parse_agtype(row[0]) for row in result]
 
@@ -503,7 +532,7 @@ class KnowledgeGraphService:
             $$) AS (result agtype);
         """
 
-        result = await self.session.execute(text(query))
+        result = await self._execute_graph(query)
         return [self._parse_agtype(row[0]) for row in result]
 
     # =========================================================================
@@ -530,7 +559,7 @@ class KnowledgeGraphService:
                     {cypher}
                 $$) AS (result agtype);
             """
-            result = await self.session.execute(text(query))
+            result = await self._execute_graph(query)
             row = result.fetchone()
             if row:
                 data = self._parse_agtype(row[0])
@@ -548,7 +577,7 @@ class KnowledgeGraphService:
                     {cypher}
                 $$) AS (result agtype);
             """
-            result = await self.session.execute(text(query))
+            result = await self._execute_graph(query)
             row = result.fetchone()
             if row:
                 data = self._parse_agtype(row[0])
@@ -598,7 +627,7 @@ class KnowledgeGraphService:
             $$) AS (result agtype);
         """
 
-        result = await self.session.execute(text(query))
+        result = await self._execute_graph(query)
         return [self._parse_agtype(row[0]) for row in result]
 
     async def health_check(self) -> bool:
@@ -614,7 +643,7 @@ class KnowledgeGraphService:
                     RETURN 1 AS health
                 $$) AS (result agtype);
             """
-            result = await self.session.execute(text(query))
+            result = await self._execute_graph(query)
             row = result.fetchone()
             return row is not None
         except (ConnectionError, TimeoutError, OSError) as e:

@@ -30,10 +30,14 @@ nothing except make the indexer require an OpenAI key.
 make migrate
 ```
 
-Adds the `vector` extension and the `copilot_doc_chunks` table. If
-your Postgres image doesn't include pgvector (vanilla `postgres:16`
-does _not_), pull `pgvector/pgvector:pg16` first. The migration is
-no-op on re-run.
+Adds the `vector` extension and the `copilot_doc_chunks` table. The
+migration is no-op on re-run.
+
+The compose `db` service builds `backend/Dockerfile.postgres`, which
+carries both pgvector and Apache AGE, so `docker compose up -d db`
+already gives you an image with the extension. Only if you point at
+some other Postgres does it need pgvector of its own — vanilla
+`postgres:16` does _not_ have it.
 
 ## Step 2 — Get an OpenAI API key
 

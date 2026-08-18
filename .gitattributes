@@ -1,3 +1,5 @@
 # Force LF line endings for shell scripts (required for Linux containers)
 *.sh text eol=lf
-Dockerfile text eol=lf
+# Dockerfile* so variants are covered too (Dockerfile.postgres): a CRLF
+# checkout breaks the backslash line continuations inside RUN.
+Dockerfile* text eol=lf
