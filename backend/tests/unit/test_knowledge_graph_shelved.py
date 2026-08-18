@@ -4,10 +4,13 @@
 """
 Tests for gating the Knowledge Graph behind a feature flag (P1-6).
 
-The KG depends on the Apache AGE Postgres extension. AGE is now provisioned
-(backend/Dockerfile.postgres) and the graph created (migration 065), so the
-flag ships on and survives as an operator kill switch. The router-level gate
-must still return 503 when it is turned off.
+AGE is now provisioned (backend/Dockerfile.postgres) and the graph created
+(migration 065), so the extension is no longer what holds this back — the
+routes would resolve rather than 500.
+
+The flag stays off for a second reason: nothing writes to the graph. Enabling
+it would turn a 503 into a confidently empty answer, which is the worse of the
+two. The router-level gate must keep returning 503 while that is true.
 """
 
 import pytest
@@ -30,7 +33,8 @@ async def test_enabled_passes(monkeypatch):
     assert await require_knowledge_graph_enabled() is None
 
 
-def test_flag_defaults_on():
-    # AGE is provisioned by the custom database image and the graph by
-    # migration 065, so the shipped default is on.
-    assert settings.feature_knowledge_graph is True
+def test_flag_defaults_off():
+    # Not because AGE is missing any more. Off because nothing populates the
+    # graph, so the routes would answer "no problems found" when the truth is
+    # "no data has ever been loaded". See app/core/config.py for the note.
+    assert settings.feature_knowledge_graph is False

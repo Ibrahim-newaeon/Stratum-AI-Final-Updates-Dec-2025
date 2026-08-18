@@ -224,7 +224,36 @@ def test_compose_db_service_builds_that_image():
 # =============================================================================
 # Flag
 # =============================================================================
-def test_knowledge_graph_flag_defaults_on():
-    """AGE is provisioned by the image and the graph by migration 065, so the
-    feature ships. The flag stays as an operator kill switch."""
-    assert settings.feature_knowledge_graph is True
+def test_knowledge_graph_flag_stays_off():
+    """Provisioned, but still gated -- and not for the original reason.
+
+    AGE is installed and the graph exists, so the routes would resolve rather
+    than 500. What is missing is a writer: enabling this now would answer
+    "no problems found" when the truth is "no data has ever been loaded",
+    and a confident wrong answer is worse than an honest 503.
+    """
+    assert settings.feature_knowledge_graph is False
+
+
+def test_nothing_populates_the_graph_yet():
+    """The reason the flag is off, pinned as an executable fact.
+
+    KnowledgeGraphSyncService has seven populate methods and a full_sync
+    orchestrator, and nothing instantiates it -- no Celery task, no beat entry,
+    and every KG route is a GET.
+
+    When this test fails, a writer has appeared, and that is the moment to flip
+    feature_knowledge_graph to True. It is a reminder, not a prohibition.
+    """
+    workers = BACKEND_DIR / "app" / "workers"
+    referencing = [
+        path.relative_to(BACKEND_DIR).as_posix()
+        for path in workers.rglob("*.py")
+        if "knowledge_graph" in path.read_text(encoding="utf-8")
+    ]
+
+    assert referencing == [], (
+        "A worker now references the knowledge graph, so something may finally "
+        f"populate it: {referencing}. If so, turn feature_knowledge_graph on "
+        "and delete this test."
+    )

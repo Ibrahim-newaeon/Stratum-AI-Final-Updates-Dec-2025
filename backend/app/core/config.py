@@ -450,12 +450,20 @@ class Settings(BaseSettings):
     feature_what_if_simulator: bool = Field(default=True)
     feature_automation_rules: bool = Field(default=False)
     feature_gdpr_compliance: bool = Field(default=True)
-    # Knowledge Graph requires the Apache AGE Postgres extension, now built
-    # into the database image (backend/Dockerfile.postgres) with the graph and
-    # its labels created by migration 065. Kept as an operator kill switch —
-    # FEATURE_KNOWLEDGE_GRAPH=false returns the whole router to 503 rather than
-    # letting it 500, which is what it did when AGE was absent.
-    feature_knowledge_graph: bool = Field(default=True)
+    # Knowledge Graph. The original blocker is GONE: Apache AGE is built into
+    # the database image (backend/Dockerfile.postgres) and migration 065
+    # creates the graph and its labels, so the routes no longer 500.
+    #
+    # Still off, for a different reason — nothing writes to the graph.
+    # KnowledgeGraphSyncService has seven populate methods and a full_sync
+    # orchestrator, and nothing instantiates it: no Celery task, no beat, no
+    # endpoint (all 11 KG routes are GETs). Enabling this today would replace
+    # a 503 with a confident empty answer — /stats reporting zero nodes and
+    # /insights/problems returning [] read as "nothing is wrong", not as
+    # "no data has ever been loaded".
+    #
+    # Flip to True once a writer exists. Nothing else is needed.
+    feature_knowledge_graph: bool = Field(default=False)
     # Campaign-builder connector beat tasks (ad-account sync, token refresh,
     # health checks) hit live platform APIs — opt-in, default off (P1-2).
     enable_campaign_builder_beat: bool = Field(default=False)
