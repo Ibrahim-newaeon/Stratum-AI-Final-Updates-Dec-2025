@@ -55,8 +55,8 @@ google-cloud-aiplatform==1.164.0
 google-auth==2.56.3
 
 # LLM Integrations (Copilot)
-anthropic==0.122.0
-openai==2.53.0
+anthropic==0.121.0
+openai==3.0.0
 pgvector==0.5.0
 
 # Web Scraping (Module D)
@@ -88,9 +88,9 @@ mypy==2.3.0
 ruff==0.16.3
 
 # Ad Platform SDKs
-stripe>=15.3.0
+stripe>=15.5.0
 requests>=2.34.2
-facebook-business>=25.0.2
+facebook-business>=26.0.0
 google-ads>=31.3.0
 
 # Analytics & ML (scipy needed by ml/ab_testing.py)
@@ -98,7 +98,7 @@ scipy>=1.18.0
 
 # Monitoring & Visualization
 matplotlib>=3.11.0
-prometheus-fastapi-instrumentator>=8.0.2
+prometheus-fastapi-instrumentator>=8.1.0
 psutil>=7.2.2
 
 # PDF & Reporting
@@ -106,7 +106,12 @@ weasyprint>=69.0
 PyYAML>=6.0.3
 
 # AWS (S3 for CMS assets & report delivery)
-boto3>=1.34.0
+# boto3's real ceiling is set transitively, not here: aioboto3 15.5.0 pins
+# aiobotocore[boto3]==2.25.1, which pins boto3<1.40.62. Any bump past that is
+# unsatisfiable until aioboto3 ships a release built on a newer aiobotocore
+# (the newest, 3.9.0, still caps botocore<1.43.57). See the dependabot ignore
+# entry for boto3 in .github/dependabot.yml — drop both when upstream catches up.
+boto3>=1.40.61
 aioboto3>=15.5.0
 
 # ML Explainability (optional, used by ml/explainability.py)

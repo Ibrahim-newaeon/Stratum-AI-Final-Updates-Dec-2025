@@ -15,6 +15,22 @@ updates:
       - "backend"
     commit-message:
       prefix: "chore(deps)"
+    ignore:
+      # boto3 is capped transitively, not by our own constraint: aioboto3
+      # 15.5.0 pins aiobotocore[boto3]==2.25.1, which pins boto3<1.40.62.
+      # Anything above that is unsatisfiable — pip backtracks through every
+      # published aioboto3 and still fails (this is what sank PR #687, which
+      # went red on six jobs including Build Backend). Without this entry the
+      # same unmergeable PR reopens weekly and trains us to ignore red CI.
+      #
+      # REVISIT when aioboto3 ships on a newer aiobotocore; as of 2026-08-18
+      # even aiobotocore 3.9.0 caps botocore<1.43.57. Drop this entry and the
+      # matching comment in backend/requirements*.txt together.
+      #
+      # NOTE: this suppresses boto3 version updates. Re-check manually if a
+      # boto3 advisory lands — aioboto3 would need to move first regardless.
+      - dependency-name: "boto3"
+        versions: [">=1.40.62"]
     groups:
       python-minor:
         patterns:
