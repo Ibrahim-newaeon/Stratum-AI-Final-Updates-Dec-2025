@@ -42,7 +42,14 @@ pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def tenant_id():
-    return uuid4()
+    """An int, because ``tenants.id`` is ``Integer`` in this schema.
+
+    This fixture returned uuid4() and every node model annotated tenant_id as
+    UUID, so the two agreed with each other and with nothing else. The read
+    path interpolates whatever it is given into a Cypher string literal, which
+    is why the mismatch survived: reads worked, and no write path had ever run.
+    """
+    return 42
 
 
 @pytest.fixture
