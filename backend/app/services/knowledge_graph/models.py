@@ -99,6 +99,9 @@ class Platform(str, Enum):
     GOOGLE = "google"
     TIKTOK = "tiktok"
     SNAPCHAT = "snapchat"
+    # AdPlatform carries LINKEDIN; without it here every LinkedIn campaign
+    # silently lands in the graph labelled META.
+    LINKEDIN = "linkedin"
     WHATSAPP = "whatsapp"
     ORGANIC = "organic"
     DIRECT = "direct"
@@ -113,7 +116,7 @@ class GraphNode(BaseModel):
     """Base class for all graph nodes."""
 
     id: Optional[str] = Field(default=None, description="AGE vertex ID")
-    tenant_id: UUID = Field(..., description="Tenant isolation")
+    tenant_id: int = Field(..., description="Tenant isolation (tenants.id is Integer)")
     external_id: str = Field(..., description="External system ID")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -166,7 +169,7 @@ class GraphEdge(BaseModel):
     start_node_id: str = Field(..., description="Source vertex ID")
     end_node_id: str = Field(..., description="Target vertex ID")
     label: EdgeLabel = Field(..., description="Relationship type")
-    tenant_id: UUID = Field(..., description="Tenant isolation")
+    tenant_id: int = Field(..., description="Tenant isolation (tenants.id is Integer)")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     properties: dict[str, Any] = Field(default_factory=dict)
 

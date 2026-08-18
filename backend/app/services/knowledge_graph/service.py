@@ -10,7 +10,6 @@ from __future__ import annotations
 import json
 import logging
 from typing import Any, Optional
-from uuid import UUID
 
 from sqlalchemy import Result, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -149,13 +148,13 @@ class KnowledgeGraphService:
         return {}
 
     async def get_node(
-        self, tenant_id: UUID, label: NodeLabel, external_id: str
+        self, tenant_id: int, label: NodeLabel, external_id: str
     ) -> Optional[dict[str, Any]]:
         """
         Get a node by its external ID.
 
         Args:
-            tenant_id: Tenant UUID
+            tenant_id: Tenant ID
             label: Node label (Profile, Event, etc.)
             external_id: External system ID
 
@@ -178,13 +177,13 @@ class KnowledgeGraphService:
         return None
 
     async def delete_node(
-        self, tenant_id: UUID, label: NodeLabel, external_id: str
+        self, tenant_id: int, label: NodeLabel, external_id: str
     ) -> bool:
         """
         Delete a node and its relationships.
 
         Args:
-            tenant_id: Tenant UUID
+            tenant_id: Tenant ID
             label: Node label
             external_id: External system ID
 
@@ -259,7 +258,7 @@ class KnowledgeGraphService:
 
     async def get_edges(
         self,
-        tenant_id: UUID,
+        tenant_id: int,
         start_label: NodeLabel,
         start_external_id: str,
         edge_label: Optional[EdgeLabel] = None,
@@ -268,7 +267,7 @@ class KnowledgeGraphService:
         Get all edges from a node.
 
         Args:
-            tenant_id: Tenant UUID
+            tenant_id: Tenant ID
             start_label: Source node label
             start_external_id: Source node external ID
             edge_label: Optional filter by edge type
@@ -300,13 +299,13 @@ class KnowledgeGraphService:
     # =========================================================================
 
     async def get_revenue_by_channel(
-        self, tenant_id: UUID, days: int = 30
+        self, tenant_id: int, days: int = 30
     ) -> list[dict[str, Any]]:
         """
         Get revenue breakdown by acquisition channel.
 
         Args:
-            tenant_id: Tenant UUID
+            tenant_id: Tenant ID
             days: Lookback period in days
 
         Returns:
@@ -318,13 +317,13 @@ class KnowledgeGraphService:
         return [self._parse_agtype(row[0]) for row in result]
 
     async def get_revenue_by_campaign(
-        self, tenant_id: UUID, platform: Optional[str] = None, days: int = 30
+        self, tenant_id: int, platform: Optional[str] = None, days: int = 30
     ) -> list[dict[str, Any]]:
         """
         Get revenue breakdown by campaign.
 
         Args:
-            tenant_id: Tenant UUID
+            tenant_id: Tenant ID
             platform: Optional platform filter (meta, google, etc.)
             days: Lookback period in days
 
@@ -339,13 +338,13 @@ class KnowledgeGraphService:
         return [self._parse_agtype(row[0]) for row in result]
 
     async def get_customer_journey(
-        self, tenant_id: UUID, profile_external_id: str
+        self, tenant_id: int, profile_external_id: str
     ) -> dict[str, Any]:
         """
         Get complete customer journey for a profile.
 
         Args:
-            tenant_id: Tenant UUID
+            tenant_id: Tenant ID
             profile_external_id: Profile's external ID
 
         Returns:
@@ -362,13 +361,13 @@ class KnowledgeGraphService:
         return {}
 
     async def get_segment_revenue_performance(
-        self, tenant_id: UUID, days: int = 30
+        self, tenant_id: int, days: int = 30
     ) -> list[dict[str, Any]]:
         """
         Get revenue performance by customer segment.
 
         Args:
-            tenant_id: Tenant UUID
+            tenant_id: Tenant ID
             days: Lookback period in days
 
         Returns:
@@ -382,13 +381,13 @@ class KnowledgeGraphService:
         return [self._parse_agtype(row[0]) for row in result]
 
     async def get_rfm_segment_distribution(
-        self, tenant_id: UUID
+        self, tenant_id: int
     ) -> list[dict[str, Any]]:
         """
         Get RFM segment distribution and revenue contribution.
 
         Args:
-            tenant_id: Tenant UUID
+            tenant_id: Tenant ID
 
         Returns:
             List of RFM segment data
@@ -403,13 +402,13 @@ class KnowledgeGraphService:
     # =========================================================================
 
     async def get_blocked_automations(
-        self, tenant_id: UUID, days: int = 7
+        self, tenant_id: int, days: int = 7
     ) -> list[dict[str, Any]]:
         """
         Get automations that were blocked by trust gates.
 
         Args:
-            tenant_id: Tenant UUID
+            tenant_id: Tenant ID
             days: Lookback period in days
 
         Returns:
@@ -421,13 +420,13 @@ class KnowledgeGraphService:
         return [self._parse_agtype(row[0]) for row in result]
 
     async def get_signal_health_impact(
-        self, tenant_id: UUID, days: int = 30
+        self, tenant_id: int, days: int = 30
     ) -> list[dict[str, Any]]:
         """
         Analyze correlation between signal health and revenue.
 
         Args:
-            tenant_id: Tenant UUID
+            tenant_id: Tenant ID
             days: Lookback period in days
 
         Returns:
@@ -439,7 +438,7 @@ class KnowledgeGraphService:
         return [self._parse_agtype(row[0]) for row in result]
 
     async def trace_automation_decision(
-        self, tenant_id: UUID, automation_external_id: str
+        self, tenant_id: int, automation_external_id: str
     ) -> dict[str, Any]:
         """
         Trace the full decision path for an automation.
@@ -447,7 +446,7 @@ class KnowledgeGraphService:
         Shows: Signal -> TrustGate -> Automation -> Outcome
 
         Args:
-            tenant_id: Tenant UUID
+            tenant_id: Tenant ID
             automation_external_id: Automation's external ID
 
         Returns:
@@ -483,13 +482,13 @@ class KnowledgeGraphService:
     # =========================================================================
 
     async def get_multi_touch_paths(
-        self, tenant_id: UUID, min_touchpoints: int = 2, limit: int = 20
+        self, tenant_id: int, min_touchpoints: int = 2, limit: int = 20
     ) -> list[dict[str, Any]]:
         """
         Get multi-touch attribution paths to conversion.
 
         Args:
-            tenant_id: Tenant UUID
+            tenant_id: Tenant ID
             min_touchpoints: Minimum touchpoints in path
             limit: Maximum results
 
@@ -504,13 +503,13 @@ class KnowledgeGraphService:
         return [self._parse_agtype(row[0]) for row in result]
 
     async def get_channel_transition_matrix(
-        self, tenant_id: UUID, days: int = 30
+        self, tenant_id: int, days: int = 30
     ) -> list[dict[str, Any]]:
         """
         Get channel-to-channel transition probabilities for Markov attribution.
 
         Args:
-            tenant_id: Tenant UUID
+            tenant_id: Tenant ID
             days: Lookback period
 
         Returns:
@@ -539,7 +538,7 @@ class KnowledgeGraphService:
     # GRAPH STATISTICS
     # =========================================================================
 
-    async def get_graph_stats(self, tenant_id: UUID) -> dict[str, Any]:
+    async def get_graph_stats(self, tenant_id: int) -> dict[str, Any]:
         """
         Get overall graph statistics for a tenant.
 
@@ -605,7 +604,7 @@ class KnowledgeGraphService:
         return value
 
     async def execute_cypher(
-        self, cypher: str, tenant_id: Optional[UUID] = None
+        self, cypher: str, tenant_id: Optional[int] = None
     ) -> list[dict[str, Any]]:
         """
         Execute a raw Cypher query.

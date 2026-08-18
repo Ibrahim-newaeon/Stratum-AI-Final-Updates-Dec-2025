@@ -14,7 +14,6 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
 from typing import Any, Optional
-from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -136,14 +135,12 @@ class KnowledgeGraphInsightsEngine:
         self.session = session
         self.kg = KnowledgeGraphService(session)
 
-    async def detect_all_problems(
-        self, tenant_id: UUID, days: int = 7
-    ) -> list[Problem]:
+    async def detect_all_problems(self, tenant_id: int, days: int = 7) -> list[Problem]:
         """
         Run all problem detection algorithms and return sorted by severity.
 
         Args:
-            tenant_id: Tenant UUID
+            tenant_id: Tenant ID
             days: Lookback period for analysis
 
         Returns:
@@ -183,7 +180,7 @@ class KnowledgeGraphInsightsEngine:
         return problems
 
     async def _detect_revenue_decline(
-        self, tenant_id: UUID, days: int
+        self, tenant_id: int, days: int
     ) -> Optional[Problem]:
         """Detect significant revenue decline and trace the cause."""
 
@@ -242,7 +239,7 @@ class KnowledgeGraphInsightsEngine:
         return None
 
     async def _trace_revenue_decline_cause(
-        self, tenant_id: UUID, days: int
+        self, tenant_id: int, days: int
     ) -> dict[str, Any]:
         """Trace through the graph to find why revenue declined."""
 
@@ -410,7 +407,7 @@ class KnowledgeGraphInsightsEngine:
         return solutions
 
     async def _detect_blocked_automations(
-        self, tenant_id: UUID, days: int
+        self, tenant_id: int, days: int
     ) -> Optional[Problem]:
         """Detect high automation block rate."""
 
@@ -499,7 +496,7 @@ class KnowledgeGraphInsightsEngine:
         return None
 
     async def _detect_signal_degradation(
-        self, tenant_id: UUID, days: int
+        self, tenant_id: int, days: int
     ) -> list[Problem]:
         """Detect degraded signals and identify affected areas."""
 
@@ -590,7 +587,7 @@ class KnowledgeGraphInsightsEngine:
                 "Contact support if issue persists",
             ]
 
-    async def _detect_segment_issues(self, tenant_id: UUID, days: int) -> list[Problem]:
+    async def _detect_segment_issues(self, tenant_id: int, days: int) -> list[Problem]:
         """Detect underperforming segments."""
 
         problems = []
@@ -677,7 +674,7 @@ class KnowledgeGraphInsightsEngine:
         return problems
 
     async def _detect_trust_gate_bottlenecks(
-        self, tenant_id: UUID, days: int
+        self, tenant_id: int, days: int
     ) -> Optional[Problem]:
         """Detect if Trust Gate is consistently blocking specific action types."""
 
@@ -732,7 +729,7 @@ class KnowledgeGraphInsightsEngine:
         return None
 
     async def _detect_channel_inefficiency(
-        self, tenant_id: UUID, days: int
+        self, tenant_id: int, days: int
     ) -> Optional[Problem]:
         """Detect channels with poor ROI."""
 
@@ -799,7 +796,7 @@ class KnowledgeGraphInsightsEngine:
         return None
 
     async def get_problem_details(
-        self, tenant_id: UUID, problem_id: str
+        self, tenant_id: int, problem_id: str
     ) -> Optional[Problem]:
         """
         Get detailed information about a specific problem.
@@ -810,7 +807,7 @@ class KnowledgeGraphInsightsEngine:
         all_problems = await self.detect_all_problems(tenant_id)
         return next((p for p in all_problems if p.id == problem_id), None)
 
-    async def get_health_summary(self, tenant_id: UUID) -> dict[str, Any]:
+    async def get_health_summary(self, tenant_id: int) -> dict[str, Any]:
         """
         Get overall health summary based on Knowledge Graph analysis.
 
