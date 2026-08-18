@@ -67,6 +67,9 @@ services:
       - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required (min 32 chars)}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:?JWT_SECRET_KEY is required (min 32 chars)}
       - PII_ENCRYPTION_KEY=${PII_ENCRYPTION_KEY:?PII_ENCRYPTION_KEY is required (min 32 chars)}
+      - METRICS_API_KEY=${METRICS_API_KEY:?METRICS_API_KEY is required}
+      - DOCS_API_KEY=${DOCS_API_KEY:-}
+      - USE_MOCK_AD_DATA=false
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-stratum_staging}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-stratum_staging}
       - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum_staging}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-stratum_staging}
       - REDIS_URL=redis://redis:6379/0

@@ -94,7 +94,7 @@ For local development, no API key is required.
 
 | Protocol | Endpoint | Description |
 |----------|----------|-------------|
-| WebSocket | `wss://api.stratumai.app/ws?token=<jwt>` | Bi-directional real-time updates |
+| WebSocket | `wss://api.stratumai.app/ws` (subprotocol `bearer.<jwt>`) | Bi-directional real-time updates |
 | SSE | `GET /api/v1/events/stream` | Server-Sent Events (tenant-scoped) |
 | SSE | `GET /public/events/stream` | Public SSE (landing page) |
 
@@ -173,7 +173,7 @@ const campaigns = await fetch(`${API_URL}/campaigns`, {
 }).then(r => r.json());
 
 // Connect to WebSocket
-const ws = new WebSocket(`wss://api.stratumai.app/ws?token=${TOKEN}`);
+const ws = new WebSocket('wss://api.stratumai.app/ws', [`bearer.${TOKEN}`]);
 ws.onmessage = (event) => {
   const msg = JSON.parse(event.data);
   console.log('Real-time update:', msg);

@@ -69,10 +69,11 @@ services:
     environment:
       - APP_ENV=production
       - DEBUG=false
-      # docker-compose.yml defaults this to true for local work, and Settings
-      # rejects app_env=production with it on — so without this override the
-      # production stack cannot start at all. Found on the first real deploy.
+      # Settings rejects app_env=production with mock data on. Pin false here
+      # so a leftover USE_MOCK_AD_DATA=true in .env cannot start the stack.
       - USE_MOCK_AD_DATA=false
+      - METRICS_API_KEY=${METRICS_API_KEY:?METRICS_API_KEY is required}
+      - DOCS_API_KEY=${DOCS_API_KEY:-}
       - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-stratum_ai}?prepared_statement_cache_size=0
       - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-stratum_ai}

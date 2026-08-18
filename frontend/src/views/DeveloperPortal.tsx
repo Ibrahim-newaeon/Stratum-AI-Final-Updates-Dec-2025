@@ -50,7 +50,7 @@ const campaigns = await fetch(\`\${API_URL}/campaigns\`, {
 }).then(r => r.json());
 
 // Real-time WebSocket
-const ws = new WebSocket(\`wss://api.stratumai.app/ws?token=\${API_KEY}\`);
+const ws = new WebSocket('wss://api.stratumai.app/ws', [\`bearer.\${API_KEY}\`]);
 ws.onmessage = (event) => {
   const msg = JSON.parse(event.data);
   console.log('Live update:', msg);
