@@ -459,10 +459,11 @@ class Settings(BaseSettings):
     # health checks) hit live platform APIs — opt-in, default off (P1-2).
     enable_campaign_builder_beat: bool = Field(default=False)
     # Newsletter scheduled-send sweep dispatches campaigns whose scheduled_at
-    # has arrived — it sends live email, so the beat is opt-in, default off.
-    # (The manual send endpoint works independently once the task module is
-    # registered in the Celery include.)
-    enable_newsletter_beat: bool = Field(default=False)
+    # has arrived. Enabled: sending runs on a domain-restricted provider key.
+    # Kept as an operator kill switch — set ENABLE_NEWSLETTER_BEAT=false to
+    # stop scheduled sends without affecting the manual send endpoint, which
+    # dispatches independently of the beat.
+    enable_newsletter_beat: bool = Field(default=True)
     # Drip campaigns have no execution engine (no drip Celery task exists;
     # activate flips a flag and manual_trigger writes a "simulated" record) —
     # shelved off for launch; the whole /drip-campaigns router returns 503.

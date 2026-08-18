@@ -231,14 +231,17 @@ if settings.enable_campaign_builder_beat:
         }
     )
 
-# Newsletter scheduled-send sweep — every minute, dispatches campaigns whose
-# scheduled_at has arrived. Sends live email, so gated off by default; the
-# manual send endpoint works regardless (the task module is always in the
-# include above). Set ENABLE_NEWSLETTER_BEAT=true to enable scheduled sends.
+# Newsletter scheduled-send sweep — every five minutes, dispatches campaigns
+# whose scheduled_at has arrived. Five rather than one: the sweep queries for
+# due campaigns on every tick and then sends live email, and per-minute
+# granularity buys nothing for a scheduled newsletter while multiplying both
+# the query load and the blast radius of a bad campaign. The manual send
+# endpoint dispatches independently of this beat, so
+# ENABLE_NEWSLETTER_BEAT=false stops scheduled sends without disabling sending.
 if settings.enable_newsletter_beat:
     celery_app.conf.beat_schedule["process-scheduled-newsletters"] = {
         "task": "app.workers.newsletter_tasks.process_scheduled_campaigns",
-        "schedule": crontab(minute="*"),
+        "schedule": crontab(minute="*/5"),
         "options": {"queue": "default"},
     }
 
