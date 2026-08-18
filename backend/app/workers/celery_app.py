@@ -245,10 +245,10 @@ if settings.enable_newsletter_beat:
         "options": {"queue": "default"},
     }
 
-# The automation-rules evaluator reads ``rule.conditions`` but the model stores
-# flat ``condition_field/operator/value`` columns, so the task raises
-# AttributeError and dies on every 15-minute tick. Gated off until the rules
-# schema is reconciled (Tier 3). Set FEATURE_AUTOMATION_RULES=true to re-enable.
+# Scheduled since ff6823ca reconciled the evaluator with the flat
+# ``condition_field/operator/value`` schema (it previously read a non-existent
+# ``rule.conditions`` and raised AttributeError on every 15-minute tick).
+# Set FEATURE_AUTOMATION_RULES=false to disable.
 if settings.feature_automation_rules:
     celery_app.conf.beat_schedule["evaluate-active-rules"] = {
         "task": "app.workers.tasks.evaluate_all_rules",

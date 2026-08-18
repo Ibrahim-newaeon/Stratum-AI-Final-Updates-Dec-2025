@@ -33,10 +33,10 @@ async def require_automation_rules_enabled() -> None:
     """
     Gate the Automation Rules engine behind a feature flag.
 
-    The autonomous evaluator reads ``rule.conditions`` while the model stores
-    flat ``condition_field/operator/value`` columns, so the beat task dies with
-    an AttributeError. Until the schema is reconciled the surface is shelved:
-    every route returns 503 instead of shipping a control that fails silently.
+    Enabled by default since ff6823ca reconciled the beat evaluator with the
+    flat ``condition_field/operator/value`` schema. The gate is kept so an
+    operator can disable the surface with FEATURE_AUTOMATION_RULES=false —
+    every route then returns 503 rather than failing deep in an evaluation.
     """
     if not settings.feature_automation_rules:
         raise HTTPException(

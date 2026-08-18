@@ -440,15 +440,18 @@ class Settings(BaseSettings):
     # -------------------------------------------------------------------------
     # Feature Flags
     # -------------------------------------------------------------------------
-    # Competitor Intelligence and Automation Rules are shelved off for launch:
-    # the competitor refresh worker fabricates benchmarks with random.randint
-    # and the rules beat crashes on a schema mismatch (rule.conditions). Both
-    # the beat entries and the API routers are gated on these flags, so
-    # flipping either True re-enables the whole surface. Turn back on only once
-    # the worker uses a real data source / the rules schema is reconciled.
+    # Competitor Intelligence stays shelved: its refresh worker fabricates
+    # benchmarks with random.randint and no real ad-intelligence source is
+    # wired, so enabling it would publish invented numbers on /competitors.
+    # Both the beat entry and the API router are gated on this flag. Turn on
+    # only once the worker reads a real provider.
     feature_competitor_intel: bool = Field(default=False)
     feature_what_if_simulator: bool = Field(default=True)
-    feature_automation_rules: bool = Field(default=False)
+    # Automation Rules shipped once ff6823ca reconciled the beat evaluator with
+    # the flat condition_field/operator/value schema (it previously read a
+    # non-existent rule.conditions and raised AttributeError on every tick).
+    # Set FEATURE_AUTOMATION_RULES=false to disable.
+    feature_automation_rules: bool = Field(default=True)
     feature_gdpr_compliance: bool = Field(default=True)
     # Knowledge Graph. The original blocker is GONE: Apache AGE is built into
     # the database image (backend/Dockerfile.postgres) and migration 065
