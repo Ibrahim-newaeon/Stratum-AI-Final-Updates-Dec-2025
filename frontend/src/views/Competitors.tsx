@@ -1,26 +1,27 @@
 /**
  * Competitor Intelligence Page
  *
- * Track competitors, share of voice, keyword overlap, and market trends
- * Integrates with Meta Ads Library and Google Ads Transparency Center
+ * Shows what the scanner can actually source about a competitor: their site
+ * metadata and social links, and their Meta Ad Library activity.
+ *
+ * Estimated ad spend, share of voice and keyword overlap are NOT shown. They
+ * need a paid ad-intelligence provider that is not wired, so the API does not
+ * serve them. This page used to render all three from `?? 0` fallbacks over
+ * camelCase keys the API has never sent — every card read "$0/mo, 0% share of
+ * voice, 0% keyword overlap" and presented it as measurement. Add the panels
+ * back in the same change that wires a provider.
  */
 
-const COMPETITOR_COLORS = ['#ef4444', '#f59e0b', '#10b981', '#6366f1']
-
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { usePriceMetrics } from '@/hooks/usePriceMetrics'
 import { cn } from '@/lib/utils'
-import { useCompetitors, useShareOfVoice, useCreateCompetitor, useDeleteCompetitor } from '@/api/hooks'
-import apiClient from '@/api/client'
+import { useCompetitors, useCreateCompetitor, useDeleteCompetitor } from '@/api/hooks'
+import type { Competitor as ApiCompetitor } from '@/api/competitors'
 import {
   MagnifyingGlassIcon,
   PlusIcon,
   EyeIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
   GlobeAltIcon,
-  ChartBarIcon,
   ArrowPathIcon,
   EllipsisHorizontalIcon,
   XMarkIcon,
@@ -30,28 +31,15 @@ import {
 } from '@heroicons/react/24/outline'
 
 interface Competitor {
-  id: string
+  id: number
   name: string
   domain: string
-  logo: string | null
-  adSpend: number
-  adSpendTrend: number
-  shareOfVoice: number
-  keywordOverlap: number
-  creativesTracked: number
-  lastRefresh: Date
-  status: 'active' | 'paused'
-  country?: string
-  platforms?: string[]
-}
-
-interface KeywordOverlap {
-  keyword: string
-  yourPosition: number
-  competitorPosition: number
-  searchVolume: number
-  cpc: number
-  competitor: string
+  /** null = the Ad Library lookup could not run. Not the same as zero ads. */
+  activeAds: number | null
+  platforms: string[]
+  lastScanned: Date | null
+  source: ApiCompetitor['data_source']
+  fetchError: string | null
 }
 
 // Countries for Meta Ads Library and Google Transparency
@@ -83,9 +71,8 @@ const PLATFORMS = [
 
 export function Competitors() {
   const { t: _t } = useTranslation()
-  const { showPriceMetrics } = usePriceMetrics()
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCompetitor, setSelectedCompetitor] = useState<string | null>(null)
+  const [selectedCompetitor, setSelectedCompetitor] = useState<number | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -98,10 +85,6 @@ export function Competitors() {
   })
 
   const { data: competitorsData, isLoading: isLoadingCompetitors, refetch: refetchCompetitors } = useCompetitors()
-  // Get last 30 days for share of voice
-  const endDate = new Date().toISOString().split('T')[0]
-  const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  const { data: sovData } = useShareOfVoice(startDate, endDate)
   const createCompetitor = useCreateCompetitor()
   const deleteCompetitor = useDeleteCompetitor()
 
@@ -138,7 +121,7 @@ export function Competitors() {
   }
 
   // Handle delete competitor
-  const handleDeleteCompetitor = async (id: string) => {
+  const handleDeleteCompetitor = async (id: number) => {
     if (!confirm('Are you sure you want to delete this competitor?')) return
     try {
       await deleteCompetitor.mutateAsync(id)
@@ -158,90 +141,51 @@ export function Competitors() {
     }))
   }
 
-  // Map API competitors to view model
-  const rawCompetitors = Array.isArray(competitorsData) ? competitorsData : (competitorsData as unknown as { items?: unknown[] })?.items ?? []
-  const competitors: Competitor[] = (rawCompetitors as Array<Record<string, unknown>>).map((c) => ({
-    id: String(c.id),
-    name: String(c.name ?? ''),
-    domain: String(c.domain ?? ''),
-    logo: null,
-    adSpend: Number(c.estimatedSpend ?? 0),
-    adSpendTrend: Number(c.spendTrend ?? 0),
-    shareOfVoice: Number(c.shareOfVoice ?? 0),
-    keywordOverlap: Number(c.keywordOverlap ?? 0),
-    creativesTracked: Number(c.activeCreatives ?? 0),
-    lastRefresh: new Date(String(c.lastUpdated ?? c.lastRefreshedAt ?? Date.now())),
-    status: c.isActive !== false ? 'active' as const : 'paused' as const,
-    country: c.country as string | undefined,
-    platforms: c.platforms as string[] | undefined,
+  // Map API competitors to view model.
+  //
+  // Reads snake_case because that is what the API returns. The previous
+  // version read `c.estimatedSpend`, `c.shareOfVoice`, `c.activeCreatives` and
+  // `c.lastUpdated` — camelCase keys the backend has never sent — so every
+  // Number(... ?? 0) produced 0 and every card showed a confident zero.
+  const rawCompetitors: ApiCompetitor[] = Array.isArray(competitorsData)
+    ? competitorsData
+    : (competitorsData as unknown as { items?: ApiCompetitor[] })?.items ?? []
+
+  const competitors: Competitor[] = rawCompetitors.map((c) => ({
+    id: c.id,
+    name: c.name || c.domain,
+    domain: c.domain,
+    // Preserved as null when the Ad Library could not answer. Rendering this
+    // as 0 would claim the competitor runs no ads.
+    activeAds: c.ad_creatives_count,
+    platforms: c.detected_ad_platforms ?? [],
+    lastScanned: c.last_fetched_at ? new Date(c.last_fetched_at) : null,
+    source: c.data_source,
+    fetchError: c.fetch_error,
   }))
-
-  // Keyword overlaps — fetched from API
-  const [keywordOverlaps, setKeywordOverlaps] = useState<KeywordOverlap[]>([])
-  const [isLoadingKeywords, setIsLoadingKeywords] = useState(false)
-
-  // Fetch keyword overlaps when competitors change
-  useEffect(() => {
-    if (competitors.length === 0) {
-      setKeywordOverlaps([])
-      return
-    }
-    setIsLoadingKeywords(true)
-    apiClient.get('/competitors/keywords/overlap')
-      .then((res) => {
-        const data = res.data?.data || res.data || []
-        if (Array.isArray(data)) {
-          setKeywordOverlaps(data.map((kw: Record<string, unknown>) => ({
-            keyword: String(kw.keyword ?? ''),
-            yourPosition: Number(kw.yourPosition ?? kw.your_position ?? 0),
-            competitorPosition: Number(kw.competitorPosition ?? kw.competitor_position ?? 0),
-            searchVolume: Number(kw.searchVolume ?? kw.search_volume ?? 0),
-            cpc: Number(kw.cpc ?? 0),
-            competitor: String(kw.competitor ?? kw.competitorName ?? kw.competitor_name ?? ''),
-          })))
-        }
-      })
-      .catch(() => {
-        setKeywordOverlaps([])
-      })
-      .finally(() => setIsLoadingKeywords(false))
-  }, [competitors.length])
-
-  // Share of Voice data — transform API array into view shape
-  const shareOfVoice = sovData && sovData.length > 0
-    ? {
-        you: sovData[0].tenantShare,
-        competitors: sovData[0].data.map((d) => ({ name: d.competitorName, share: d.share })),
-      }
-    : {
-        you: 0,
-        competitors: competitors.map((c: Competitor) => ({ name: c.name, share: c.shareOfVoice })),
-      }
 
   const filteredCompetitors = competitors.filter((c) =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.domain.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const formatCurrency = (value: number) => {
-    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`
-    if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`
-    return `$${value}`
-  }
-
-  const formatLastRefresh = (date: Date) => {
+  const formatLastRefresh = (date: Date | null) => {
+    if (!date) return 'Never'
     const hours = Math.floor((Date.now() - date.getTime()) / (60 * 60 * 1000))
     if (hours < 1) return 'Just now'
     if (hours < 24) return `${hours}h ago`
     return `${Math.floor(hours / 24)}d ago`
   }
 
-  // Stats
+  // Stats — counts of things we observed, not estimates of things we did not.
+  // avgKeywordOverlap used to divide by competitors.length, so an empty list
+  // rendered NaN%.
+  const withKnownAdCount = competitors.filter((c) => c.activeAds !== null)
   const stats = {
     totalCompetitors: competitors.length,
-    activeTracking: competitors.filter((c) => c.status === 'active').length,
-    avgKeywordOverlap: Math.round(competitors.reduce((sum, c) => sum + c.keywordOverlap, 0) / competitors.length),
-    totalCreatives: competitors.reduce((sum, c) => sum + c.creativesTracked, 0),
+    scanned: competitors.filter((c) => c.source !== 'unavailable').length,
+    runningAds: withKnownAdCount.filter((c) => (c.activeAds ?? 0) > 0).length,
+    totalActiveAds: withKnownAdCount.reduce((sum, c) => sum + (c.activeAds ?? 0), 0),
   }
 
   return (
@@ -261,66 +205,25 @@ export function Competitors() {
         </button>
       </div>
 
-      {/* Stats */}
+      {/* Stats — observed counts only. "Avg Keyword Overlap" and "Creatives
+          Tracked" used to sit here reading columns nothing writes; the first
+          also divided by competitors.length, rendering NaN% on an empty list. */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="p-4 rounded-xl border bg-card">
           <div className="text-sm text-muted-foreground mb-1">Tracked Competitors</div>
           <div className="text-2xl font-bold">{stats.totalCompetitors}</div>
         </div>
         <div className="p-4 rounded-xl border bg-card">
-          <div className="text-sm text-muted-foreground mb-1">Active Tracking</div>
-          <div className="text-2xl font-bold text-green-500">{stats.activeTracking}</div>
+          <div className="text-sm text-muted-foreground mb-1">Successfully Scanned</div>
+          <div className="text-2xl font-bold">{stats.scanned}</div>
         </div>
         <div className="p-4 rounded-xl border bg-card">
-          <div className="text-sm text-muted-foreground mb-1">Avg Keyword Overlap</div>
-          <div className="text-2xl font-bold">{stats.avgKeywordOverlap}%</div>
+          <div className="text-sm text-muted-foreground mb-1">Running Ads</div>
+          <div className="text-2xl font-bold text-green-500">{stats.runningAds}</div>
         </div>
         <div className="p-4 rounded-xl border bg-card">
-          <div className="text-sm text-muted-foreground mb-1">Creatives Tracked</div>
-          <div className="text-2xl font-bold">{stats.totalCreatives}</div>
-        </div>
-      </div>
-
-      {/* Share of Voice */}
-      <div className="rounded-xl border bg-card p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <ChartBarIcon className="w-5 h-5 text-primary" />
-          <h2 className="font-semibold">Share of Voice</h2>
-        </div>
-        <div className="flex items-center gap-2 mb-4">
-          <div className="flex-1 h-8 rounded-full overflow-hidden flex bg-muted">
-            <div
-              className="h-full bg-primary"
-              style={{ width: `${shareOfVoice.you}%` }}
-              title={`You: ${shareOfVoice.you}%`}
-            />
-            {shareOfVoice.competitors.map((c, i) => (
-              <div
-                key={c.name}
-                className="h-full"
-                style={{
-                  width: `${c.share}%`,
-                  backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#6366f1'][i % 4],
-                }}
-                title={`${c.name}: ${c.share}%`}
-              />
-            ))}
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-primary" />
-            <span>You ({shareOfVoice.you}%)</span>
-          </div>
-          {shareOfVoice.competitors.map((c, i) => (
-            <div key={c.name} className="flex items-center gap-2">
-              <div
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: COMPETITOR_COLORS[i % 4] }}
-              />
-              <span>{c.name} ({c.share}%)</span>
-            </div>
-          ))}
+          <div className="text-sm text-muted-foreground mb-1">Active Ads Seen</div>
+          <div className="text-2xl font-bold">{stats.totalActiveAds}</div>
         </div>
       </div>
 
@@ -389,11 +292,17 @@ export function Competitors() {
               <div className="flex items-center gap-2">
                 <span className={cn(
                   'px-2 py-1 rounded-full text-xs',
-                  competitor.status === 'active'
-                    ? 'bg-green-500/10 text-green-500'
-                    : 'bg-muted text-muted-foreground'
+                  competitor.activeAds === null
+                    ? 'bg-muted text-muted-foreground'
+                    : competitor.activeAds > 0
+                      ? 'bg-green-500/10 text-green-500'
+                      : 'bg-muted text-muted-foreground'
                 )}>
-                  {competitor.status}
+                  {competitor.activeAds === null
+                    ? 'Ad activity unknown'
+                    : competitor.activeAds > 0
+                      ? 'Active on Meta'
+                      : 'No ads detected'}
                 </span>
                 <button aria-label="More options" className="p-1 rounded hover:bg-muted transition-colors">
                   <EllipsisHorizontalIcon className="w-5 h-5" />
@@ -401,51 +310,51 @@ export function Competitors() {
               </div>
             </div>
 
-            <div className={cn('grid gap-4 mb-4', showPriceMetrics ? 'grid-cols-2' : 'grid-cols-1')}>
-              {showPriceMetrics && (
+            <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <div className="text-sm text-muted-foreground">Est. Ad Spend</div>
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold">{formatCurrency(competitor.adSpend)}/mo</span>
-                  <span className={cn(
-                    'flex items-center text-xs',
-                    competitor.adSpendTrend >= 0 ? 'text-green-500' : 'text-red-500'
-                  )}>
-                    {competitor.adSpendTrend >= 0 ? (
-                      <ArrowTrendingUpIcon className="w-3 h-3" />
-                    ) : (
-                      <ArrowTrendingDownIcon className="w-3 h-3" />
-                    )}
-                    {Math.abs(competitor.adSpendTrend)}%
-                  </span>
+                <div className="text-sm text-muted-foreground">Active ads</div>
+                <div className="font-semibold">
+                  {competitor.activeAds === null ? (
+                    <span className="text-muted-foreground">Unknown</span>
+                  ) : (
+                    competitor.activeAds
+                  )}
                 </div>
               </div>
-              )}
               <div>
-                <div className="text-sm text-muted-foreground">Share of Voice</div>
-                <div className="font-semibold">{competitor.shareOfVoice}%</div>
+                <div className="text-sm text-muted-foreground">Platforms</div>
+                <div className="font-semibold">
+                  {competitor.platforms.length > 0 ? (
+                    competitor.platforms.join(', ')
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </div>
               </div>
             </div>
 
             <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-4">
-                <span className="text-muted-foreground">
-                  {competitor.keywordOverlap}% keyword overlap
-                </span>
-                <span className="text-muted-foreground">
-                  {competitor.creativesTracked} creatives
-                </span>
-              </div>
               <span className="text-muted-foreground">
-                Updated {formatLastRefresh(competitor.lastRefresh)}
+                {competitor.source === 'meta_ad_library'
+                  ? 'Meta Ad Library'
+                  : competitor.source === 'website_scrape'
+                    ? 'Website scrape'
+                    : 'Not reachable'}
+              </span>
+              <span className="text-muted-foreground">
+                Scanned {formatLastRefresh(competitor.lastScanned)}
               </span>
             </div>
+
+            {competitor.fetchError && (
+              <p className="mt-2 text-xs text-amber-600">{competitor.fetchError}</p>
+            )}
 
             {/* Quick Links to Ad Libraries */}
             {/* Quick Links - Search by competitor name */}
             <div className="flex items-center gap-2 mt-3 pt-3 border-t">
               <a
-                href={getMetaAdsLibraryUrl(competitor.name, competitor.country || 'SA')}
+                href={getMetaAdsLibraryUrl(competitor.name, 'SA')}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
@@ -483,111 +392,6 @@ export function Competitors() {
         ))}
       </div>
       )}
-
-      {/* Keyword Overlap Table */}
-      <div className="rounded-xl border bg-card overflow-hidden">
-        <div className="flex items-center justify-between p-4 border-b">
-          <div>
-            <h2 className="font-semibold">Keyword Overlap</h2>
-            <p className="text-xs text-muted-foreground mt-1">
-              Keywords where you and your competitors both appear in search results.
-              Lower position numbers mean higher ranking. Use this to identify opportunities
-              where you can outbid or outrank competitors on high-value keywords.
-            </p>
-          </div>
-          <button
-            onClick={() => {
-              setIsLoadingKeywords(true)
-              apiClient.get('/competitors/keywords/overlap')
-                .then((res) => {
-                  const data = res.data?.data || res.data || []
-                  if (Array.isArray(data)) {
-                    setKeywordOverlaps(data.map((kw: Record<string, unknown>) => ({
-                      keyword: String(kw.keyword ?? ''),
-                      yourPosition: Number(kw.yourPosition ?? kw.your_position ?? 0),
-                      competitorPosition: Number(kw.competitorPosition ?? kw.competitor_position ?? 0),
-                      searchVolume: Number(kw.searchVolume ?? kw.search_volume ?? 0),
-                      cpc: Number(kw.cpc ?? 0),
-                      competitor: String(kw.competitor ?? kw.competitorName ?? kw.competitor_name ?? ''),
-                    })))
-                  }
-                })
-                .catch(() => setKeywordOverlaps([]))
-                .finally(() => setIsLoadingKeywords(false))
-            }}
-            disabled={isLoadingKeywords}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border hover:bg-muted transition-colors disabled:opacity-50 flex-shrink-0"
-          >
-            <ArrowPathIcon className={cn('w-4 h-4', isLoadingKeywords && 'animate-spin')} />
-            Refresh
-          </button>
-        </div>
-
-        {isLoadingKeywords ? (
-          <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
-            <ArrowPathIcon className="w-4 h-4 animate-spin" />
-            Loading keyword data...
-          </div>
-        ) : keywordOverlaps.length > 0 ? (
-          <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-muted/50 border-b">
-              <tr>
-                <th className="p-4 text-left text-sm font-medium">Keyword</th>
-                <th className="p-4 text-center text-sm font-medium">Your Position</th>
-                <th className="p-4 text-center text-sm font-medium">Competitor</th>
-                <th className="p-4 text-center text-sm font-medium">Their Position</th>
-                <th className="p-4 text-right text-sm font-medium">Search Volume</th>
-                {showPriceMetrics && <th className="p-4 text-right text-sm font-medium">CPC</th>}
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {keywordOverlaps.map((kw, i) => (
-                <tr key={i} className="hover:bg-muted/30 transition-colors">
-                  <td className="p-4 font-medium">{kw.keyword}</td>
-                  <td className="p-4 text-center">
-                    <span className={cn(
-                      'px-2 py-1 rounded text-sm font-medium',
-                      kw.yourPosition <= 3 ? 'bg-green-500/10 text-green-500' :
-                      kw.yourPosition <= 5 ? 'bg-amber-500/10 text-amber-500' :
-                      'bg-muted text-muted-foreground'
-                    )}>
-                      #{kw.yourPosition}
-                    </span>
-                  </td>
-                  <td className="p-4 text-center text-sm text-muted-foreground">
-                    {kw.competitor}
-                  </td>
-                  <td className="p-4 text-center">
-                    <span className={cn(
-                      'px-2 py-1 rounded text-sm font-medium',
-                      kw.competitorPosition <= 3 ? 'bg-red-500/10 text-red-500' :
-                      kw.competitorPosition <= 5 ? 'bg-amber-500/10 text-amber-500' :
-                      'bg-muted text-muted-foreground'
-                    )}>
-                      #{kw.competitorPosition}
-                    </span>
-                  </td>
-                  <td className="p-4 text-right text-muted-foreground">
-                    {kw.searchVolume.toLocaleString()}
-                  </td>
-                  {showPriceMetrics && <td className="p-4 text-right font-medium">${kw.cpc.toFixed(2)}</td>}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <MagnifyingGlassIcon className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-            <p className="text-sm text-muted-foreground mb-1">No keyword overlap data available</p>
-            <p className="text-xs text-muted-foreground max-w-md mx-auto">
-              Add competitors and connect your ad platforms to see which keywords you both target.
-              This helps you identify opportunities to outrank competitors on high-value searches.
-            </p>
-          </div>
-        )}
-      </div>
 
       {/* No search results */}
       {!isLoadingCompetitors && competitors.length > 0 && filteredCompetitors.length === 0 && (

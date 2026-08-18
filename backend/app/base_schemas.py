@@ -626,46 +626,51 @@ class CompetitorUpdate(BaseSchema):
     is_primary: Optional[bool] = None
 
 
+class CompetitorScanRequest(BaseSchema):
+    """Preview scan of a domain, before it is saved as a competitor."""
+
+    domain: str = Field(..., min_length=3, max_length=255)
+    name: Optional[str] = Field(None, max_length=255)
+    country: str = Field(default="SA", min_length=2, max_length=2)
+    fb_page_name: Optional[str] = Field(
+        None,
+        max_length=255,
+        description="Facebook page name, if known — skips the name lookup",
+    )
+
+
 class CompetitorResponse(CompetitorBase, TimestampMixin):
-    """Competitor benchmark response."""
+    """Competitor benchmark response — only what a source actually fills.
+
+    The model still carries columns for estimated traffic, share of voice,
+    keyword counts, category rank and ad-spend estimates. Nothing writes them:
+    they need a paid ad-intelligence provider (Similarweb / SEMrush /
+    DataForSEO) that is not wired, so they are permanently NULL.
+
+    They are deliberately absent here rather than served as nulls. A null that
+    reaches a dashboard becomes a zero — the frontend proved it with
+    ``Number(c.shareOfVoice ?? 0)`` — and "competitor ad spend: $0" is a
+    confident wrong answer where "we don't track that" is the truth. Add them
+    back in the same change that wires the provider filling them.
+    """
 
     id: int
     tenant_id: int
 
-    # Scraped metadata
+    # Scraped from the competitor's own site
     meta_title: Optional[str]
     meta_description: Optional[str]
-    meta_keywords: Optional[List[str]]
     social_links: Optional[dict]
 
-    # Market intelligence
-    estimated_traffic: Optional[int]
-    traffic_trend: Optional[str]
-    top_keywords: Optional[List[dict]]
-    paid_keywords_count: Optional[int]
-    organic_keywords_count: Optional[int]
-
-    # Share of voice
-    share_of_voice: Optional[float]
-    category_rank: Optional[int]
-
-    # Ad intelligence
-    estimated_ad_spend_cents: Optional[int]
+    # Meta Ad Library. ad_creatives_count is None when the Ad Library query
+    # could not run (no token, API error) — which is "unknown", not "no ads".
     detected_ad_platforms: Optional[List[str]]
     ad_creatives_count: Optional[int]
 
-    # Metadata
+    # Provenance: meta_ad_library | website_scrape | unavailable
     data_source: str
     last_fetched_at: Optional[datetime]
     fetch_error: Optional[str]
-
-
-class CompetitorShareOfVoiceResponse(BaseSchema):
-    """Share of voice comparison response."""
-
-    competitors: List[dict]  # [{domain, share, trend}]
-    total_market: int
-    date_range: dict
 
 
 # =============================================================================

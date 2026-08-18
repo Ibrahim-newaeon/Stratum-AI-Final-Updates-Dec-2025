@@ -115,9 +115,6 @@ interface ChartCompetitorEntry {
 
 // ── Constants ──────────────────────────────────────────────────────
 
-// Colors for competitors in charts
-const COMPETITOR_COLORS = ['#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#6366f1', '#ec4899']
-
 export function Benchmarks() {
   const { t } = useTranslation()
   const [selectedIndustry, setSelectedIndustry] = useState('ecommerce')
@@ -177,19 +174,20 @@ export function Benchmarks() {
     return `https://adstransparency.google.com/?query=${encodeURIComponent(name)}`
   }
 
-  // Build competitor data for charts
+  // Build competitor data for charts.
+  //
+  // Tracked competitors are deliberately NOT plotted here. We have no source
+  // for a competitor's ROAS, CTR, CPC or share of voice — those need a paid
+  // ad-intelligence provider that is not wired. This block used to synthesize
+  // all four from the row's position in the array (`roas: 2.5 + index * 0.4`,
+  // `share: comp.shareOfVoice ?? 10 + index * 5`), which drew a competitive
+  // benchmark chart out of nothing but list order. It went unnoticed because
+  // /competitors was 503 behind a feature flag, so the array was always empty.
+  //
+  // What we can source about a competitor — Ad Library activity, site
+  // metadata — lives on the Competitors view instead.
   const chartCompetitors: ChartCompetitorEntry[] = [
     { name: 'Your Brand', roas: 3.5, ctr: 2.8, cpc: 1.2, share: 18, color: '#0ea5e9', isYou: true },
-    ...(competitorsData?.items || []).slice(0, 5).map((comp: Competitor, index: number) => ({
-      name: comp.name,
-      domain: comp.domain,
-      country: comp.country || 'SA',
-      roas: 2.5 + (index * 0.4),
-      ctr: 1.8 + (index * 0.3),
-      cpc: 0.8 + (index * 0.2),
-      share: comp.shareOfVoice ?? (10 + (index * 5)),
-      color: COMPETITOR_COLORS[index % COMPETITOR_COLORS.length],
-    })),
     { name: 'Industry Avg', roas: 3.0, ctr: 2.4, cpc: 1.3, share: 22, color: '#6b7280', isAvg: true },
   ]
 
@@ -428,13 +426,13 @@ export function Benchmarks() {
               <div key={competitor.id} className="p-3 rounded-lg border bg-background">
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <p className="font-medium text-sm">{competitor.name}</p>
+                    <p className="font-medium text-sm">{competitor.name || competitor.domain}</p>
                     <p className="text-xs text-muted-foreground">{competitor.domain}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <a
-                    href={getMetaAdsLibraryUrl(competitor.name, competitor.country || 'SA')}
+                    href={getMetaAdsLibraryUrl(competitor.name || competitor.domain, 'SA')}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 px-2 py-1 rounded text-xs bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 transition-colors"
@@ -444,7 +442,7 @@ export function Benchmarks() {
                     <ExternalLink className="w-3 h-3" />
                   </a>
                   <a
-                    href={getGoogleTransparencyUrl(competitor.name)}
+                    href={getGoogleTransparencyUrl(competitor.name || competitor.domain)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 px-2 py-1 rounded text-xs bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors"

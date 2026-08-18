@@ -1,61 +1,52 @@
 /**
  * Stratum AI - Competitor Intelligence API
  *
- * Competitor monitoring and share of voice tracking
+ * Competitor monitoring, limited to what the scanner can actually source:
+ * the competitor's own site metadata and social links, plus Meta Ad Library
+ * activity. Estimated traffic, share of voice, keyword sets and ad-spend
+ * estimates need a paid ad-intelligence provider that is not wired, so the
+ * API does not serve them and this client does not model them.
+ *
+ * Fields are snake_case because that is what the API returns. The previous
+ * version of this interface used camelCase keys the backend has never sent
+ * (`estimatedSpend`, `shareOfVoice`, `activeCreatives`), so every read was
+ * `undefined` and every consumer coerced it to 0.
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient, ApiResponse, PaginatedResponse } from './client'
 
 // Types
+/** Where a competitor's current record came from. */
+export type CompetitorDataSource = 'meta_ad_library' | 'website_scrape' | 'unavailable'
+
 export interface Competitor {
-  id: string
-  tenantId: number
-  name: string
+  id: number
+  tenant_id: number
   domain: string
-  country: string
-  platforms: string[]
-  createdAt: string
-  updatedAt: string
-  lastRefreshedAt: string | null
-  isActive?: boolean
-  estimatedSpend?: number
-  shareOfVoice?: number
-  activeCreatives?: number
-  lastUpdated?: string
-}
+  name: string | null
+  is_primary: boolean
+  fb_page_name: string | null
 
-export interface CompetitorMetrics {
-  competitorId: string
-  date: string
-  platform: string
-  shareOfVoice: number
-  estimatedSpend: number
-  impressionShare: number
-  adCount: number
-  topKeywords: string[]
-  sentiment: number // -1 to 1
-}
+  /** Scraped from the competitor's own site. */
+  meta_title: string | null
+  meta_description: string | null
+  social_links: Record<string, string | null> | null
 
-export interface ShareOfVoice {
-  date: string
-  data: {
-    competitorId: string
-    competitorName: string
-    share: number
-    trend: 'up' | 'down' | 'flat'
-  }[]
-  tenantShare: number
-}
+  /**
+   * Meta Ad Library. `null` means the lookup could not run (no Graph token,
+   * or an API error) — which is "unknown", NOT "no ads running". Render the
+   * two differently.
+   */
+  ad_creatives_count: number | null
+  detected_ad_platforms: string[] | null
 
-export interface KeywordOverlap {
-  keyword: string
-  competitorId: string
-  competitorName: string
-  yourPosition: number | null
-  competitorPosition: number
-  searchVolume: number
-  competitionLevel: 'low' | 'medium' | 'high'
+  data_source: CompetitorDataSource
+  last_fetched_at: string | null
+  fetch_error: string | null
+
+  created_at: string
+  updated_at: string
 }
 
 export interface CompetitorFilters {
@@ -133,7 +124,7 @@ export const competitorsApi = {
   /**
    * Get a single competitor
    */
-  getCompetitor: async (id: string): Promise<Competitor> => {
+  getCompetitor: async (id: number): Promise<Competitor> => {
     const response = await apiClient.get<ApiResponse<Competitor>>(`/competitors/${id}`)
     return response.data.data
   },
@@ -149,7 +140,7 @@ export const competitorsApi = {
   /**
    * Update a competitor
    */
-  updateCompetitor: async (id: string, data: Partial<CreateCompetitorRequest>): Promise<Competitor> => {
+  updateCompetitor: async (id: number, data: Partial<CreateCompetitorRequest>): Promise<Competitor> => {
     const response = await apiClient.patch<ApiResponse<Competitor>>(`/competitors/${id}`, data)
     return response.data.data
   },
@@ -157,56 +148,14 @@ export const competitorsApi = {
   /**
    * Delete a competitor
    */
-  deleteCompetitor: async (id: string): Promise<void> => {
+  deleteCompetitor: async (id: number): Promise<void> => {
     await apiClient.delete(`/competitors/${id}`)
-  },
-
-  /**
-   * Get share of voice data
-   */
-  getShareOfVoice: async (
-    startDate: string,
-    endDate: string,
-    platform?: string
-  ): Promise<ShareOfVoice[]> => {
-    const params: Record<string, string> = { start_date: startDate, end_date: endDate }
-    if (platform) params.platform = platform
-    const response = await apiClient.get<ApiResponse<ShareOfVoice[]>>(
-      '/competitors/share-of-voice',
-      { params }
-    )
-    return response.data.data
-  },
-
-  /**
-   * Get competitor keywords
-   */
-  getCompetitorKeywords: async (id: string): Promise<KeywordOverlap[]> => {
-    const response = await apiClient.get<ApiResponse<KeywordOverlap[]>>(
-      `/competitors/${id}/keywords`
-    )
-    return response.data.data
-  },
-
-  /**
-   * Get competitor metrics
-   */
-  getCompetitorMetrics: async (
-    id: string,
-    startDate: string,
-    endDate: string
-  ): Promise<CompetitorMetrics[]> => {
-    const response = await apiClient.get<ApiResponse<CompetitorMetrics[]>>(
-      `/competitors/${id}/metrics`,
-      { params: { start_date: startDate, end_date: endDate } }
-    )
-    return response.data.data
   },
 
   /**
    * Refresh competitor data
    */
-  refreshCompetitor: async (id: string): Promise<Competitor> => {
+  refreshCompetitor: async (id: number): Promise<Competitor> => {
     const response = await apiClient.post<ApiResponse<Competitor>>(`/competitors/${id}/refresh`)
     return response.data.data
   },
@@ -230,7 +179,7 @@ export function useCompetitors(filters: CompetitorFilters = {}) {
   })
 }
 
-export function useCompetitor(id: string) {
+export function useCompetitor(id: number) {
   return useQuery({
     queryKey: ['competitors', id],
     queryFn: () => competitorsApi.getCompetitor(id),
@@ -253,7 +202,7 @@ export function useUpdateCompetitor() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<CreateCompetitorRequest> }) =>
+    mutationFn: ({ id, data }: { id: number; data: Partial<CreateCompetitorRequest> }) =>
       competitorsApi.updateCompetitor(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['competitors'] })
@@ -270,31 +219,6 @@ export function useDeleteCompetitor() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['competitors'] })
     },
-  })
-}
-
-export function useShareOfVoice(startDate: string, endDate: string, platform?: string) {
-  return useQuery({
-    queryKey: ['competitors', 'sov', startDate, endDate, platform],
-    queryFn: () => competitorsApi.getShareOfVoice(startDate, endDate, platform),
-    enabled: !!startDate && !!endDate,
-    staleTime: 5 * 60 * 1000,
-  })
-}
-
-export function useCompetitorKeywords(id: string) {
-  return useQuery({
-    queryKey: ['competitors', id, 'keywords'],
-    queryFn: () => competitorsApi.getCompetitorKeywords(id),
-    enabled: !!id,
-  })
-}
-
-export function useCompetitorMetrics(id: string, startDate: string, endDate: string) {
-  return useQuery({
-    queryKey: ['competitors', id, 'metrics', startDate, endDate],
-    queryFn: () => competitorsApi.getCompetitorMetrics(id, startDate, endDate),
-    enabled: !!id && !!startDate && !!endDate,
   })
 }
 
