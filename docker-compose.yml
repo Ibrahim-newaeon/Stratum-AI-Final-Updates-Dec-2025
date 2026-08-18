@@ -3,12 +3,16 @@ services:
   # PostgreSQL 16 Database
   # ===========================================================================
   db:
-    # pgvector/pgvector:pg16 is the official PostgreSQL 16 image with the
-    # pgvector extension preinstalled — required by migration 049
-    # (copilot_doc_chunks uses a vector(1536) column / CREATE EXTENSION vector).
-    # Railway's managed Postgres ships pgvector; this keeps the compose stack
-    # at parity so `alembic upgrade head` runs the full migration set.
-    image: pgvector/pgvector:pg16
+    # Built, not pulled: the server needs two extensions and no published
+    # image carries both — pgvector for migration 049 (copilot_doc_chunks uses
+    # a vector(1536) column / CREATE EXTENSION vector) and Apache AGE for the
+    # knowledge graph's Cypher (migration 065). See backend/Dockerfile.postgres,
+    # which layers AGE onto the official pgvector/pgvector:pg16 base, so the
+    # pgvector parity this stack already relied on is unchanged.
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.postgres
+    image: stratum-postgres:pg16-age
     container_name: stratum_db
     restart: unless-stopped
     environment:

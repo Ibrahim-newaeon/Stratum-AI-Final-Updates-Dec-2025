@@ -138,24 +138,12 @@ jobs:
       APP_ENV: test
       PYTHONPATH: .
 
+    # Postgres is NOT a service container here. Service containers start before
+    # any step runs, so they can only use an already-published image, and no
+    # published image carries both pgvector (migration 049) and Apache AGE
+    # (migration 065). The integration harness runs the real Alembic chain, so
+    # it needs both — the database is built and started as a step instead.
     services:
-      postgres:
-        # pgvector image: the integration harness runs the real Alembic
-        # chain, which includes migration 049 (CREATE EXTENSION vector).
-        # Plain postgres:16 lacks it. Same as the load-tests job.
-        image: pgvector/pgvector:pg16
-        env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: stratum_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
       redis:
         image: redis:7-alpine
         ports:
@@ -184,6 +172,36 @@ jobs:
           # advisories that pip-audit reports against the installed environment.
           python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build the database image (pgvector + Apache AGE)
+        uses: docker/build-push-action@v7
+        with:
+          context: backend
+          file: backend/Dockerfile.postgres
+          tags: stratum-postgres:ci
+          load: true
+          # Compiling AGE is the slow part; cached, it is a no-op after the
+          # first run on a branch.
+          cache-from: type=gha,scope=postgres-age
+          cache-to: type=gha,mode=max,scope=postgres-age
+
+      - name: Start PostgreSQL
+        working-directory: .
+        run: |
+          docker run -d --name stratum-ci-db             -e POSTGRES_USER=test             -e POSTGRES_PASSWORD=test             -e POSTGRES_DB=stratum_test             -p 5432:5432             stratum-postgres:ci
+          for _ in $(seq 1 60); do
+            if docker exec stratum-ci-db pg_isready -U test -d stratum_test >/dev/null 2>&1; then
+              echo "postgres ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::postgres never became ready"
+          docker logs stratum-ci-db
+          exit 1
 
       - name: Run unit tests
         id: unit
@@ -763,23 +781,10 @@ jobs:
     needs: [backend-tests, frontend]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
+    # Built rather than pulled, for the same reason as backend-tests:
+    # `alembic upgrade head` now spans migration 049 (pgvector) and 065
+    # (Apache AGE), and no published image has both.
     services:
-      postgres:
-        # pgvector image: load-tests runs `alembic upgrade head`, which includes
-        # migration 049 (CREATE EXTENSION vector). Plain postgres:16 lacks it.
-        image: pgvector/pgvector:pg16
-        env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: stratum_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
       redis:
         image: redis:7-alpine
         ports:
@@ -809,6 +814,33 @@ jobs:
           # advisories that pip-audit reports against the installed environment.
           python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build the database image (pgvector + Apache AGE)
+        uses: docker/build-push-action@v7
+        with:
+          context: backend
+          file: backend/Dockerfile.postgres
+          tags: stratum-postgres:ci
+          load: true
+          cache-from: type=gha,scope=postgres-age
+          cache-to: type=gha,mode=max,scope=postgres-age
+
+      - name: Start PostgreSQL
+        run: |
+          docker run -d --name stratum-ci-db             -e POSTGRES_USER=test             -e POSTGRES_PASSWORD=test             -e POSTGRES_DB=stratum_test             -p 5432:5432             stratum-postgres:ci
+          for _ in $(seq 1 60); do
+            if docker exec stratum-ci-db pg_isready -U test -d stratum_test >/dev/null 2>&1; then
+              echo "postgres ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::postgres never became ready"
+          docker logs stratum-ci-db
+          exit 1
 
       - name: Start API server
         working-directory: backend

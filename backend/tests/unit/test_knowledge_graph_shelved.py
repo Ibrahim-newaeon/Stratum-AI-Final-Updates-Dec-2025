@@ -2,11 +2,12 @@
 # Stratum AI - Knowledge Graph Shelving Tests
 # =============================================================================
 """
-Tests for shelving the Knowledge Graph behind a feature flag (P1-6).
+Tests for gating the Knowledge Graph behind a feature flag (P1-6).
 
-The KG depends on the Apache AGE Postgres extension, which is not
-provisioned. The router-level gate must return 503 when the flag is off
-(the default) and allow requests through when it is explicitly enabled.
+The KG depends on the Apache AGE Postgres extension. AGE is now provisioned
+(backend/Dockerfile.postgres) and the graph created (migration 065), so the
+flag ships on and survives as an operator kill switch. The router-level gate
+must still return 503 when it is turned off.
 """
 
 import pytest
@@ -16,7 +17,7 @@ from app.api.v1.endpoints.knowledge_graph import require_knowledge_graph_enabled
 from app.core.config import settings
 
 
-async def test_disabled_by_default_returns_503(monkeypatch):
+async def test_disabled_returns_503(monkeypatch):
     monkeypatch.setattr(settings, "feature_knowledge_graph", False)
     with pytest.raises(HTTPException) as exc:
         await require_knowledge_graph_enabled()
@@ -29,6 +30,7 @@ async def test_enabled_passes(monkeypatch):
     assert await require_knowledge_graph_enabled() is None
 
 
-def test_flag_defaults_off():
-    # Shipped default must be off (KG undeployable without AGE).
-    assert settings.feature_knowledge_graph is False
+def test_flag_defaults_on():
+    # AGE is provisioned by the custom database image and the graph by
+    # migration 065, so the shipped default is on.
+    assert settings.feature_knowledge_graph is True

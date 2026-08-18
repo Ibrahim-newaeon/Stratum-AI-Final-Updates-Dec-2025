@@ -450,11 +450,12 @@ class Settings(BaseSettings):
     feature_what_if_simulator: bool = Field(default=True)
     feature_automation_rules: bool = Field(default=False)
     feature_gdpr_compliance: bool = Field(default=True)
-    # Knowledge Graph requires the Apache AGE Postgres extension (not
-    # provisioned in the default image); shelved off by default until AGE is
-    # available. (Restored: lost in a #307/#308 merge while knowledge_graph.py
-    # still references it — its absence 500s every KG route.)
-    feature_knowledge_graph: bool = Field(default=False)
+    # Knowledge Graph requires the Apache AGE Postgres extension, now built
+    # into the database image (backend/Dockerfile.postgres) with the graph and
+    # its labels created by migration 065. Kept as an operator kill switch —
+    # FEATURE_KNOWLEDGE_GRAPH=false returns the whole router to 503 rather than
+    # letting it 500, which is what it did when AGE was absent.
+    feature_knowledge_graph: bool = Field(default=True)
     # Campaign-builder connector beat tasks (ad-account sync, token refresh,
     # health checks) hit live platform APIs — opt-in, default off (P1-2).
     enable_campaign_builder_beat: bool = Field(default=False)
