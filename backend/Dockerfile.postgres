@@ -21,11 +21,15 @@ FROM pgvector/pgvector:pg16 AS age-builder
 # cannot change what this image contains.
 ARG AGE_REF=PG16/v1.6.0-rc0
 
+# ca-certificates is not optional here: the postgres base image ships without a
+# CA bundle, so `git clone` over HTTPS fails verification ("CAfile: none")
+# before it reaches the network at all.
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
         build-essential \
         postgresql-server-dev-16 \
+        ca-certificates \
         git \
         flex \
         bison; \

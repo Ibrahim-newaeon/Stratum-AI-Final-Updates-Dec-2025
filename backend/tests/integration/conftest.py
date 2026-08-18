@@ -522,10 +522,9 @@ def setup_test_database(sync_engine):
     """
     from pathlib import Path
 
+    from alembic import command
     from alembic.config import Config
     from sqlalchemy import text
-
-    from alembic import command
 
     with sync_engine.begin() as conn:
         # Clean slate: nukes tables, enum types, and the vector extension
