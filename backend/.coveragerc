@@ -17,7 +17,12 @@ omit =
     */__pycache__/*
     */migrations/*
     */alembic/*
-    app/main.py
+    # app/main.py is deliberately NOT omitted. It holds the docs gate, the
+    # /metrics gate and the WebSocket subprotocol auth — the four P1 findings
+    # closed in #699 all live in this file. Excluding it meant a regression
+    # there could never show up as a coverage drop. Most of it executes on
+    # import (create_application) plus the direct gate tests in
+    # test_metrics_endpoint_auth.py.
     app/workers/celery_app.py
     # ---------------------------------------------------------------------
     # Cut from launch (backend/docs/06-deploy/launch-scope-decisions.md,
