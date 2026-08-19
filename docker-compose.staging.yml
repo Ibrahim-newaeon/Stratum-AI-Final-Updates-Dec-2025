@@ -16,7 +16,26 @@ services:
   # PostgreSQL 16 Database
   # ===========================================================================
   db:
-    image: postgres:16-alpine
+    # Built, not pulled. postgres:16-alpine carries neither extension this
+    # stack requires: pgvector for migration 049 (copilot_doc_chunks uses a
+    # vector(1536) column) and Apache AGE for the knowledge graph's Cypher
+    # (migration 065). Against the stock image `alembic upgrade head` dies at
+    # 049, long before it reaches AGE — so staging could never have been
+    # brought up from a fresh database.
+    #
+    # Repeated rather than inherited: this file is standalone, run as
+    # `docker compose -f docker-compose.staging.yml up -d` with its own api,
+    # worker and frontend, so nothing from docker-compose.yml applies here.
+    #
+    # Note the base changes from Alpine to Debian bookworm along with the
+    # image. Same PostgreSQL 16, same on-disk format, so an existing
+    # staging_postgres_data volume keeps working; the difference is libc and
+    # the default collation provider, which matters only if staging is ever
+    # compared byte-for-byte against a text index built under musl.
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.postgres
+    image: stratum-postgres:pg16-age
     container_name: stratum_staging_db
     restart: unless-stopped
     environment:

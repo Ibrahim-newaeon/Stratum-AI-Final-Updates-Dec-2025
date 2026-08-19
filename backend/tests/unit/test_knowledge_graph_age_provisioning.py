@@ -16,8 +16,9 @@ was in place.
 """
 
 import ast
+import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pytest
 
@@ -219,6 +220,50 @@ def test_compose_db_service_builds_that_image():
     # The stock image no longer satisfies the stack; catching a revert here is
     # cheaper than catching it when CREATE EXTENSION age fails mid-migration.
     assert "image: pgvector/pgvector:pg16" not in compose
+
+
+def _db_service_image(compose_path: Path) -> Optional[str]:
+    """Return the ``image:`` a compose file pins for its own ``db`` service.
+
+    None means the file either has no ``db`` service or builds one rather than
+    pulling it. Parsed by indentation rather than with a YAML library because
+    the test suite does not depend on one, and the shape being checked is two
+    levels deep and stable.
+    """
+    in_db = False
+    for line in compose_path.read_text(encoding="utf-8").splitlines():
+        if re.match(r"^  [a-z_-]+:\s*$", line):
+            in_db = line.strip().rstrip(":") in ("db", "postgres", "database")
+            continue
+        if in_db and (match := re.match(r"^    image:\s*(\S+)", line)):
+            return match.group(1)
+    return None
+
+
+def test_no_compose_file_pins_a_postgres_without_the_extensions():
+    """Every environment's database needs pgvector AND AGE, not just the default.
+
+    ``docker-compose.staging.yml`` is standalone -- its usage line is ``docker
+    compose -f docker-compose.staging.yml up -d`` with its own api, worker and
+    frontend -- so it inherits nothing from ``docker-compose.yml`` and pinned
+    ``postgres:16-alpine``. That image carries neither extension, which fails
+    ``CREATE EXTENSION vector`` in migration 049 before AGE is even reached.
+
+    Checked across every compose file rather than staging alone: the next
+    environment file added would otherwise repeat the same mistake silently.
+    """
+    offenders = {}
+    for compose in sorted(REPO_ROOT.glob("docker-compose*.yml")):
+        image = _db_service_image(compose)
+        if image is None:
+            continue
+        if not image.startswith("stratum-postgres:"):
+            offenders[compose.name] = image
+
+    assert offenders == {}, (
+        "these compose files pull a Postgres image without pgvector/AGE: "
+        f"{offenders}. Build from backend/Dockerfile.postgres instead."
+    )
 
 
 # =============================================================================
