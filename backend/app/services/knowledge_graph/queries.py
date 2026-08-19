@@ -373,60 +373,38 @@ class RevenueAnalyticsQueries:
 
     @staticmethod
     def revenue_by_channel(tenant_id: int, days: int = 30) -> tuple[str, dict]:
-        """Get revenue breakdown by acquisition channel."""
+        """Revenue per channel, read off the Channel rollup.
+
+        This used to traverse ``(r:Revenue)-[:ATTRIBUTED_TO]->(ch:Channel)``,
+        which cannot be populated: daily_attributed_revenue is a period
+        aggregate with no conversion id and Revenue nodes are per event, so
+        nothing joins the two. The totals live on the Channel node instead
+        (see sync_channels), and are read directly.
+
+        ``days`` is therefore not a filter — the node carries a fixed rollup
+        window. It is returned as ``window_days`` so a caller asking for 7 can
+        see it is looking at 90 rather than silently believing otherwise.
+        """
+        cypher = f"""
+            MATCH (ch:Channel {{tenant_id: '{tenant_id}'}})
+            RETURN ch.name AS channel,
+                   ch.channel_type AS channel_type,
+                   ch.total_conversions AS transactions,
+                   ch.total_revenue_cents AS revenue_cents,
+                   ch.spend_cents AS spend_cents,
+                   ch.roas AS roas,
+                   ch.window_days AS window_days
+            ORDER BY revenue_cents DESC
+        """
         return (
-            CypherQueryBuilder(tenant_id)
-            .match_node("r", NodeLabel.REVENUE)
-            .match_edge(
-                "r", EdgeLabel.ATTRIBUTED_TO, "ch", NodeLabel.CHANNEL, direction="->"
-            )
-            .where_last_n_days("r.occurred_at", days)
-            .return_fields(
-                [
-                    "ch.name AS channel",
-                    "ch.channel_type AS channel_type",
-                    "count(r) AS transactions",
-                    "sum(r.amount_cents) AS revenue_cents",
-                    "avg(r.amount_cents) AS avg_order_cents",
-                ]
-            )
-            .order_by("revenue_cents", desc=True)
-            .build()
+            f"""
+            SELECT * FROM cypher('{CypherQueryBuilder.graph_name}', $$
+                {cypher}
+            $$) AS (result agtype);
+            """,
+            {"requested_days": days},
         )
 
-    @staticmethod
-    def revenue_by_campaign(
-        tenant_id: int, platform: Optional[str] = None, days: int = 30
-    ) -> tuple[str, dict]:
-        """Get revenue breakdown by campaign."""
-        builder = (
-            CypherQueryBuilder(tenant_id)
-            .match_node("r", NodeLabel.REVENUE)
-            .match_edge(
-                "r", EdgeLabel.ATTRIBUTED_TO, "c", NodeLabel.CAMPAIGN, direction="->"
-            )
-            .where_last_n_days("r.occurred_at", days)
-        )
-        if platform:
-            builder.where("c.platform", "=", platform)
-
-        return (
-            builder.return_fields(
-                [
-                    "c.name AS campaign_name",
-                    "c.platform AS platform",
-                    "c.spend_cents AS spend_cents",
-                    "sum(r.amount_cents) AS revenue_cents",
-                    "count(r) AS conversions",
-                    "CASE WHEN c.spend_cents > 0 THEN sum(r.amount_cents) * 1.0 / c.spend_cents ELSE 0 END AS roas",
-                ]
-            )
-            .order_by("revenue_cents", desc=True)
-            .limit(50)
-            .build()
-        )
-
-    @staticmethod
     def customer_journey(tenant_id: int, profile_external_id: str) -> tuple[str, dict]:
         """Get full customer journey for a profile."""
         return (

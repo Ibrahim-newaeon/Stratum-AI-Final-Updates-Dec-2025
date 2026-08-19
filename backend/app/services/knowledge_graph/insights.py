@@ -733,13 +733,18 @@ class KnowledgeGraphInsightsEngine:
     ) -> Optional[Problem]:
         """Detect channels with poor ROI."""
 
+        # Reads the Channel rollup rather than traversing ATTRIBUTED_TO to
+        # per-event Revenue, which cannot be populated — daily_attributed_
+        # revenue is a period aggregate with no conversion id. `days` is not a
+        # filter here; the node carries its own rollup window (window_days).
         cypher = f"""
-            MATCH (ch:Channel {{tenant_id: '{tenant_id}'}})<-[:ATTRIBUTED_TO]-(r:Revenue)
-            WHERE r.occurred_at >= datetime() - duration({{days: {days}}})
-            WITH ch, sum(r.amount_cents) AS revenue, count(r) AS conversions
+            MATCH (ch:Channel {{tenant_id: '{tenant_id}'}})
             RETURN ch.name AS channel, ch.channel_type AS type,
-                   revenue, conversions,
-                   CASE WHEN conversions > 0 THEN revenue / conversions ELSE 0 END AS avg_order
+                   ch.total_revenue_cents AS revenue,
+                   ch.total_conversions AS conversions,
+                   CASE WHEN ch.total_conversions > 0
+                        THEN ch.total_revenue_cents / ch.total_conversions
+                        ELSE 0 END AS avg_order
             ORDER BY revenue DESC
         """
 
