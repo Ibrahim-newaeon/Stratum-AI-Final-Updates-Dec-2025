@@ -94,6 +94,53 @@ interface BenchmarkData {
   osData: OsBreakdown[] | null
 }
 
+// ── API mapping ────────────────────────────────────────────────────
+
+/** One metric row as the API returns it. */
+interface ApiBenchmarkMetric {
+  metric: string
+  your_value: number
+  benchmark_median: number
+  your_percentile: number
+  is_higher_better: boolean
+}
+
+const METRIC_LABELS: Record<string, { label: string; format?: 'percent' | 'currency' }> = {
+  roas: { label: 'ROAS' },
+  ctr: { label: 'CTR', format: 'percent' },
+  cvr: { label: 'Conv. Rate', format: 'percent' },
+  cpc: { label: 'CPC', format: 'currency' },
+  cpm: { label: 'CPM', format: 'currency' },
+  cpa: { label: 'CPA', format: 'currency' },
+}
+
+/**
+ * Map the API's metric rows onto the card shape.
+ *
+ * The two differ deliberately: the API speaks in metric names and percentiles,
+ * the card speaks in labels and formats. Assigning the response straight to
+ * `benchmarkData.metrics` renders `undefined` in every card, which formatValue
+ * would then show as "—" — indistinguishable from having no data.
+ *
+ * `invertTrend` follows `is_higher_better` from the server rather than being
+ * hardcoded here: for CPC and CPA, being below the median is the good outcome.
+ */
+function mapBenchmarkMetrics(rows: ApiBenchmarkMetric[]): BenchmarkMetric[] {
+  return rows.map((row) => {
+    const meta = METRIC_LABELS[row.metric] ?? { label: row.metric.toUpperCase() }
+    return {
+      label: meta.label,
+      yours: row.your_value,
+      industry: row.benchmark_median,
+      percentile: row.your_percentile,
+      trend: row.your_percentile >= 50 ? ('up' as const) : ('down' as const),
+      format: meta.format,
+      invertTrend: !row.is_higher_better,
+      tooltip: `Your ${meta.label} sits at the ${Math.round(row.your_percentile)}th percentile of the industry reference table.`,
+    }
+  })
+}
+
 // ── Constants ──────────────────────────────────────────────────────
 
 export function Benchmarks() {
@@ -123,19 +170,27 @@ export function Benchmarks() {
       if (selectedPlatform !== 'all') params.platform = selectedPlatform
       if (selectedIndustry) params.industry = selectedIndustry
 
-      const [metricsRes, geoRes, audienceRes] = await Promise.allSettled([
-        apiClient.get('/benchmarks/metrics', { params }),
-        apiClient.get('/benchmarks/geographic', { params }),
-        apiClient.get('/benchmarks/audience', { params }),
-      ])
+      // /audit-services/benchmarks/metrics, not /benchmarks/metrics. No router
+      // declares a /benchmarks prefix — the real benchmark routes live under
+      // /audit-services. This call 404'd into the Promise.allSettled below and
+      // the whole view fell back to zeros, so every card read "—" and the radar
+      // sat at the origin: "we measured you and you scored nothing" rather than
+      // "this never loaded".
+      //
+      // /benchmarks/geographic and /benchmarks/audience are not fetched at all
+      // any more. They never existed either, and there is nothing honest to
+      // point them at: crm.touchpoints carries device_type and country, but as
+      // touchpoint counts, while these panels want impressions, CTR and ROAS
+      // per geography and device. Serving counts under those labels would
+      // invent the numbers.
+      const metricsRes = await apiClient
+        .get('/audit-services/benchmarks/metrics', { params })
+        .catch(() => null)
 
+      const payload = metricsRes ? (metricsRes.data?.data ?? metricsRes.data) : null
       setBenchmarkData((prev) => ({
         ...prev,
-        metrics: metricsRes.status === 'fulfilled' ? (metricsRes.value.data?.data || metricsRes.value.data) : prev.metrics,
-        geoData: geoRes.status === 'fulfilled' ? (geoRes.value.data?.data || geoRes.value.data) : prev.geoData,
-        languageData: audienceRes.status === 'fulfilled' ? (audienceRes.value.data?.data?.languages || null) : prev.languageData,
-        deviceData: audienceRes.status === 'fulfilled' ? (audienceRes.value.data?.data?.devices || null) : prev.deviceData,
-        osData: audienceRes.status === 'fulfilled' ? (audienceRes.value.data?.data?.operating_systems || null) : prev.osData,
+        metrics: payload?.metrics ? mapBenchmarkMetrics(payload.metrics) : prev.metrics,
       }))
       refetchCompetitors()
     } catch {
@@ -537,8 +592,8 @@ export function Benchmarks() {
           ) : (
             <div className="text-center py-8">
               <Globe className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-              <p className="text-sm text-muted-foreground mb-1">No language data available yet</p>
-              <p className="text-xs text-muted-foreground">Click refresh to load audience insights from your connected platforms.</p>
+              <p className="text-sm text-muted-foreground mb-1">Language breakdown not available</p>
+              <p className="text-xs text-muted-foreground">This needs per-language impression and CTR data, which we don't collect yet.</p>
             </div>
           )}
         </div>
@@ -585,8 +640,8 @@ export function Benchmarks() {
           ) : (
             <div className="text-center py-8">
               <Smartphone className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-              <p className="text-sm text-muted-foreground mb-1">No device data available yet</p>
-              <p className="text-xs text-muted-foreground">Click refresh to load device breakdown from your connected platforms.</p>
+              <p className="text-sm text-muted-foreground mb-1">Device breakdown not available</p>
+              <p className="text-xs text-muted-foreground">Touchpoints record a device type, but not the impressions and CTR this panel reports.</p>
             </div>
           )}
         </div>
@@ -625,8 +680,8 @@ export function Benchmarks() {
         ) : (
           <div className="text-center py-8">
             <Monitor className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-            <p className="text-sm text-muted-foreground mb-1">No operating system data available yet</p>
-            <p className="text-xs text-muted-foreground">Click refresh to load OS breakdown from your connected platforms.</p>
+            <p className="text-sm text-muted-foreground mb-1">OS breakdown not available</p>
+            <p className="text-xs text-muted-foreground">This needs per-OS delivery data, which we don't collect yet.</p>
           </div>
         )}
       </div>
@@ -668,8 +723,8 @@ export function Benchmarks() {
         ) : (
           <div className="text-center py-8">
             <Globe className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-            <p className="text-sm text-muted-foreground mb-1">No geographic data available yet</p>
-            <p className="text-xs text-muted-foreground">Click refresh to load regional performance from your connected platforms.</p>
+            <p className="text-sm text-muted-foreground mb-1">Regional performance not available</p>
+            <p className="text-xs text-muted-foreground">Touchpoints record a country, but not the impressions and ROAS this panel reports.</p>
           </div>
         )}
       </div>
