@@ -168,6 +168,35 @@ class TestRoute:
         # nothing mounts.
         assert "/audit-services/benchmarks/metrics" in paths
 
+    def test_a_named_industry_resolves_to_its_own_percentiles(self):
+        """The behavioural version of the casing fix, and the one that matters.
+
+        Grepping for ``.upper()`` proves a spelling changed; this proves the
+        answer changed. Gaming's reference row differs from the fallback --
+        median CTR 2.2 vs 1.8, CPC 0.40 vs 0.80 -- so a lookup that silently
+        lands on Industry.OTHER returns visibly wrong percentiles for a gaming
+        tenant.
+
+        Note the blast radius was narrower than "every tenant got wrong
+        numbers": ecommerce happens to share the fallback's values, so those
+        tenants were unaffected by coincidence. finance, gaming and saas were
+        not.
+        """
+        service = CompetitorBenchmarkingService()
+
+        def median(industry: Industry, metric: str) -> float:
+            result = service.get_benchmark(
+                tenant_id="1",
+                industry=industry,
+                region=Region.GLOBAL,
+                platform="meta",
+                metrics={metric: 1.0},
+            )
+            return result.metrics[metric].benchmark_median
+
+        assert median(Industry.GAMING, "ctr") != median(Industry.OTHER, "ctr")
+        assert median(Industry.GAMING, "cpc") != median(Industry.OTHER, "cpc")
+
     def test_the_industry_lookup_is_not_case_broken(self):
         """Industry values are lowercase; .upper() raised and fell through.
 
