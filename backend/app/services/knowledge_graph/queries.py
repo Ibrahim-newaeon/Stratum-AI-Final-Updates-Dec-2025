@@ -46,7 +46,7 @@ class CypherQueryBuilder:
         )
     """
 
-    tenant_id: UUID
+    tenant_id: int
     graph_name: str = "stratum_knowledge_graph"
     _match_clauses: list[str] = field(default_factory=list)
     _where_clauses: list[str] = field(default_factory=list)
@@ -372,7 +372,7 @@ class RevenueAnalyticsQueries:
     """Pre-built Cypher queries for revenue analytics."""
 
     @staticmethod
-    def revenue_by_channel(tenant_id: UUID, days: int = 30) -> tuple[str, dict]:
+    def revenue_by_channel(tenant_id: int, days: int = 30) -> tuple[str, dict]:
         """Get revenue breakdown by acquisition channel."""
         return (
             CypherQueryBuilder(tenant_id)
@@ -396,7 +396,7 @@ class RevenueAnalyticsQueries:
 
     @staticmethod
     def revenue_by_campaign(
-        tenant_id: UUID, platform: Optional[str] = None, days: int = 30
+        tenant_id: int, platform: Optional[str] = None, days: int = 30
     ) -> tuple[str, dict]:
         """Get revenue breakdown by campaign."""
         builder = (
@@ -427,7 +427,7 @@ class RevenueAnalyticsQueries:
         )
 
     @staticmethod
-    def customer_journey(tenant_id: UUID, profile_external_id: str) -> tuple[str, dict]:
+    def customer_journey(tenant_id: int, profile_external_id: str) -> tuple[str, dict]:
         """Get full customer journey for a profile."""
         return (
             CypherQueryBuilder(tenant_id)
@@ -445,7 +445,7 @@ class RevenueAnalyticsQueries:
         )
 
     @staticmethod
-    def blocked_automations(tenant_id: UUID, days: int = 7) -> tuple[str, dict]:
+    def blocked_automations(tenant_id: int, days: int = 7) -> tuple[str, dict]:
         """Get automations that were blocked by trust gates."""
         return (
             CypherQueryBuilder(tenant_id)
@@ -469,7 +469,7 @@ class RevenueAnalyticsQueries:
         )
 
     @staticmethod
-    def signal_health_impact(tenant_id: UUID, days: int = 30) -> tuple[str, dict]:
+    def signal_health_impact(tenant_id: int, days: int = 30) -> tuple[str, dict]:
         """Analyze correlation between signal health and revenue."""
         return (
             CypherQueryBuilder(tenant_id)
@@ -491,9 +491,7 @@ class RevenueAnalyticsQueries:
         )
 
     @staticmethod
-    def segment_revenue_performance(
-        tenant_id: UUID, days: int = 30
-    ) -> tuple[str, dict]:
+    def segment_revenue_performance(tenant_id: int, days: int = 30) -> tuple[str, dict]:
         """Get revenue performance by customer segment."""
         return (
             CypherQueryBuilder(tenant_id)
@@ -518,7 +516,7 @@ class RevenueAnalyticsQueries:
 
     @staticmethod
     def multi_touch_attribution_paths(
-        tenant_id: UUID, min_touchpoints: int = 2, limit: int = 20
+        tenant_id: int, min_touchpoints: int = 2, limit: int = 20
     ) -> tuple[str, dict]:
         """Get multi-touch attribution paths to conversion."""
         # This is a more complex traversal query
@@ -544,7 +542,7 @@ class RevenueAnalyticsQueries:
         return sql, {}
 
     @staticmethod
-    def rfm_segment_trends(tenant_id: UUID) -> tuple[str, dict]:
+    def rfm_segment_trends(tenant_id: int) -> tuple[str, dict]:
         """Get RFM segment distribution and revenue contribution."""
         return (
             CypherQueryBuilder(tenant_id)

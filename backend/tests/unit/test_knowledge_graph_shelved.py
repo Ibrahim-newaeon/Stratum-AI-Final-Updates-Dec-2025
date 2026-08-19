@@ -8,9 +8,12 @@ AGE is now provisioned (backend/Dockerfile.postgres) and the graph created
 (migration 065), so the extension is no longer what holds this back — the
 routes would resolve rather than 500.
 
-The flag stays off for a second reason: nothing writes to the graph. Enabling
-it would turn a 503 into a confidently empty answer, which is the worse of the
-two. The router-level gate must keep returning 503 while that is true.
+The flag stays off for a second reason: the graph starts empty. A writer now
+exists -- scripts/backfill_knowledge_graph.py -- but it is a manual run, so in
+any environment where it has not been run the routes would turn a 503 into a
+confidently empty answer, which is the worse of the two. The router-level gate
+must keep returning 503 until the backfill has actually populated that
+environment.
 """
 
 import pytest
@@ -34,7 +37,9 @@ async def test_enabled_passes(monkeypatch):
 
 
 def test_flag_defaults_off():
-    # Not because AGE is missing any more. Off because nothing populates the
-    # graph, so the routes would answer "no problems found" when the truth is
-    # "no data has ever been loaded". See app/core/config.py for the note.
+    # Not because AGE is missing any more, and not because no writer exists --
+    # scripts/backfill_knowledge_graph.py is that writer. Off because running
+    # it is a deploy step, and until it has run against a given environment the
+    # routes there answer "no problems found" when the truth is "no data has
+    # ever been loaded". See app/core/config.py for the note.
     assert settings.feature_knowledge_graph is False
