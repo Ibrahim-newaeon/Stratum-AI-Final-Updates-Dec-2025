@@ -1,0 +1,100 @@
+# =============================================================================
+# Stratum AI - Deploy
+# =============================================================================
+# Staging deploys itself whenever CI passes on main. Production is a button.
+#
+# This exists because nothing connected GitHub to the server: every deploy was
+# someone typing `git pull` by hand, and on 2026-08-19 production was found 37
+# commits behind main, three days stale, with no alert anywhere. CI validated
+# compose config and built images to GHCR on tags, but nothing ever shipped.
+#
+# The SSH key is pinned in authorized_keys to a forced command that accepts
+# only `deploy staging`, `deploy prod` and `status`, so a leaked key cannot
+# open a root shell. It does still run the repo's deploy script as root, which
+# means merge access to main is deploy access -- inherent to auto-deploy, and
+# the reason production stayed a manual trigger.
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Where to deploy"
+        required: true
+        type: choice
+        default: staging
+        options: [staging, prod]
+
+concurrency:
+  # One deploy at a time per target. Two overlapping deploys race on the same
+  # checkout and the same database.
+  group: deploy-${{ inputs.target || 'staging' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.target || 'staging' }}
+    runs-on: ubuntu-latest
+    # workflow_run fires on failure too; only a green CI run may deploy.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    timeout-minutes: 45
+
+    steps:
+      - name: Authorise production deploys
+        if: inputs.target == 'prod'
+        env:
+          ACTOR: ${{ github.actor }}
+        run: |
+          # Deliberately a log line rather than a gate. Add a GitHub
+          # Environment with required reviewers on this job to make it a gate;
+          # this records who pressed the button in the meantime.
+          echo "Production deploy requested by $ACTOR"
+
+      - name: Configure SSH
+        env:
+          DEPLOY_KEY: ${{ secrets.STRATUM_DEPLOY_KEY }}
+          KNOWN_HOSTS: ${{ secrets.STRATUM_DEPLOY_KNOWN_HOSTS }}
+        run: |
+          test -n "$DEPLOY_KEY" || { echo "STRATUM_DEPLOY_KEY is not set"; exit 1; }
+          test -n "$KNOWN_HOSTS" || { echo "STRATUM_DEPLOY_KNOWN_HOSTS is not set"; exit 1; }
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # The host key is pinned rather than accepted on first use, so a
+          # redirected DNS record cannot collect the deploy key.
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Report drift before deploying
+        env:
+          HOST: ${{ secrets.STRATUM_DEPLOY_HOST }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o ConnectTimeout=20 \
+            "root@$HOST" status
+
+      - name: Deploy
+        env:
+          HOST: ${{ secrets.STRATUM_DEPLOY_HOST }}
+          TARGET: ${{ inputs.target || 'staging' }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o ConnectTimeout=20 \
+            -o ServerAliveInterval=30 -o ServerAliveCountMax=20 \
+            "root@$HOST" "deploy $TARGET"
+
+      - name: Confirm what is now running
+        if: always()
+        env:
+          HOST: ${{ secrets.STRATUM_DEPLOY_HOST }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o ConnectTimeout=20 \
+            "root@$HOST" status || true
+
+      - name: Discard the key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

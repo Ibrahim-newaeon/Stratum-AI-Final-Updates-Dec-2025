@@ -1,0 +1,75 @@
+# =============================================================================
+# Stratum AI - Deployment drift alarm
+# =============================================================================
+# Fails when the production checkout falls behind main, so GitHub's normal
+# failed-workflow notification arrives instead of nobody noticing.
+#
+# Staging deploys itself on green CI and production is a button someone has to
+# press, which means production can still drift -- that is the intended
+# trade-off, not an oversight. What was missing was any signal that it had.
+# On 2026-08-19 production sat 37 commits and three days behind with nothing
+# reporting it.
+#
+# The threshold is 1: any drift at all is worth seeing, because the question is
+# never "how far behind" but "is anything unreleased".
+name: Deploy Drift
+
+on:
+  schedule:
+    # 08:00 and 16:00 UTC (11:00 and 19:00 in Riyadh, where the team is), so a
+    # drift that appears overnight is seen at the start of the day.
+    - cron: "0 8,16 * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Production vs main
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Configure SSH
+        env:
+          DEPLOY_KEY: ${{ secrets.STRATUM_DEPLOY_KEY }}
+          KNOWN_HOSTS: ${{ secrets.STRATUM_DEPLOY_KNOWN_HOSTS }}
+        run: |
+          test -n "$DEPLOY_KEY" || { echo "STRATUM_DEPLOY_KEY is not set"; exit 1; }
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Compare each checkout against main
+        env:
+          HOST: ${{ secrets.STRATUM_DEPLOY_HOST }}
+        run: |
+          set -euo pipefail
+          status=$(ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o ConnectTimeout=20 \
+            "root@$HOST" status)
+          echo "$status"
+          echo
+
+          behind=$(printf '%s\n' "$status" | sed -n 's#^/opt/stratum .*behind=\([0-9]*\).*#\1#p')
+          if [ -z "$behind" ]; then
+            echo "::error::could not read production drift from the status output"
+            exit 1
+          fi
+
+          {
+            echo "## Deployment drift"
+            echo
+            echo '```'
+            printf '%s\n' "$status"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$behind" -gt 0 ]; then
+            echo "::error::production is $behind commit(s) behind main -- run the Deploy workflow with target=prod"
+            exit 1
+          fi
+          echo "production is up to date with main"
+
+      - name: Discard the key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
