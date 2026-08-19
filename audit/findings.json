@@ -1,0 +1,380 @@
+{
+  "audit_metadata": {
+    "date": "2026-08-18",
+    "repo": "Stratum-AI-Final-Updates-Dec-2025",
+    "commit": "17d40c3a984c194e4c3f8f72d7378ad8d3f04af1",
+    "auditor_mode": "read-only",
+    "verdict": "NOT_READY",
+    "p0_count": 0,
+    "p1_count": 4,
+    "p2_count": 9,
+    "p3_count": 2
+  },
+  "findings": [
+    {
+      "id": "F-001",
+      "phase": "backend",
+      "title": "OpenAPI documentation publicly accessible when DOCS_API_KEY is unset in production",
+      "severity": "P1",
+      "evidence": [
+        {
+          "file": "backend/app/main.py:343-345",
+          "excerpt": "if not DOCS_API_KEY:\n    return"
+        }
+      ],
+      "observation": "In production, verify_docs_access skips authentication entirely when DOCS_API_KEY environment variable is empty, leaving /docs, /redoc, and /openapi.json open.",
+      "risk": "Attackers can enumerate the full API surface, accelerating targeted exploitation.",
+      "recommendation": "Fail closed in production when DOCS_API_KEY is unset, or disable doc routes entirely. Set a strong DOCS_API_KEY in all prod/staging environments immediately.",
+      "effort": "S",
+      "blocks_production": true,
+      "assumptions": [],
+      "confidence": "HIGH",
+      "needs_human_review": false,
+      "missing_data": []
+    },
+    {
+      "id": "F-002",
+      "phase": "backend",
+      "title": "/metrics endpoint publicly readable when METRICS_API_KEY is unset",
+      "severity": "P1",
+      "evidence": [
+        {
+          "file": "backend/app/main.py:54-58",
+          "excerpt": "if not api_key:\n    return True"
+        },
+        {
+          "file": "backend/app/middleware/tenant.py:31",
+          "excerpt": "/metrics,"
+        },
+        {
+          "file": "backend/app/main.py:788-794",
+          "excerpt": "The registry carries tenant_id-labeled series ... production MUST set it because /metrics is tenant-exempt"
+        }
+      ],
+      "observation": "Metrics exposition allows unauthenticated access when METRICS_API_KEY is empty. Endpoint is listed in PUBLIC_ENDPOINTS bypassing tenant middleware.",
+      "risk": "Leakage of per-tenant operational metrics and infrastructure reconnaissance.",
+      "recommendation": "Require METRICS_API_KEY in production; restrict /metrics at ingress to scraper IPs; never deploy with empty key.",
+      "effort": "S",
+      "blocks_production": true,
+      "assumptions": [],
+      "confidence": "HIGH",
+      "needs_human_review": false,
+      "missing_data": []
+    },
+    {
+      "id": "F-003",
+      "phase": "architecture",
+      "title": "WebSocket authentication accepts JWT via query string parameter",
+      "severity": "P1",
+      "evidence": [
+        {
+          "file": "backend/app/main.py:876-877",
+          "excerpt": "tenant_id: Optional[int] = Query(default=None),\ntoken: Optional[str] = Query(default=None),"
+        },
+        {
+          "file": "backend/app/main.py:825-828",
+          "excerpt": "Do NOT add a query-string token parameter — tokens in URLs leak via server logs, Referer headers, and browser history."
+        }
+      ],
+      "observation": "SSE endpoint documentation warns against query-string tokens, but the WebSocket endpoint still accepts token as a query parameter.",
+      "risk": "JWT leakage via access logs, Referer headers, and browser history enables session hijacking.",
+      "recommendation": "Authenticate WebSocket via Sec-WebSocket-Protocol bearer token or post-connect auth message; remove query param token.",
+      "effort": "M",
+      "blocks_production": true,
+      "assumptions": [],
+      "confidence": "HIGH",
+      "needs_human_review": false,
+      "missing_data": []
+    },
+    {
+      "id": "F-004",
+      "phase": "infra",
+      "title": "Development docker-compose defaults USE_MOCK_AD_DATA to true",
+      "severity": "P1",
+      "evidence": [
+        {
+          "file": "docker-compose.yml:103",
+          "excerpt": "- USE_MOCK_AD_DATA=${USE_MOCK_AD_DATA:-true}"
+        },
+        {
+          "file": "backend/app/core/config.py:562-565",
+          "excerpt": "if self.use_mock_ad_data is True:\n    raise ValueError(\n        f\"use_mock_ad_data must be False in {self.app_env} — production must use real API data\"\n    )"
+        }
+      ],
+      "observation": "Default dev compose enables mock ad platform data. Production validator rejects mock data only when APP_ENV is production/staging.",
+      "risk": "Mis-deployed stack with wrong APP_ENV or wrong compose file could serve fabricated metrics to paying customers.",
+      "recommendation": "Always deploy with docker-compose.prod.yml; add deploy checklist; consider default false even in dev compose.",
+      "effort": "S",
+      "blocks_production": true,
+      "assumptions": [
+        "ASSUMPTION: Operators might accidentally use docker-compose.yml instead of prod overlay — confidence MEDIUM"
+      ],
+      "confidence": "HIGH",
+      "needs_human_review": false,
+      "missing_data": []
+    },
+    {
+      "id": "F-005",
+      "phase": "frontend",
+      "title": "Node.js version mismatch between CI (24) and frontend Dockerfile (26)",
+      "severity": "P2",
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml:42",
+          "excerpt": "NODE_VERSION: \"24\""
+        },
+        {
+          "file": "frontend/Dockerfile:6",
+          "excerpt": "FROM node:26-alpine AS development"
+        },
+        {
+          "file": ".github/workflows/ci.yml:28-32",
+          "excerpt": "Node 26 is too new. Measured on this workflow: the suite starts, then every storage-backed test fails..."
+        }
+      ],
+      "observation": "CI tests on Node 24; production Docker image builds with Node 26. CI comments document vitest/jsdom storage regression on Node 26.",
+      "risk": "Production build/runtime behavior may diverge from tested behavior; latent frontend bugs in Node 26-only code paths.",
+      "recommendation": "Align Dockerfile to Node 24 until Node 26 storage issue is fixed, or fix CI to Node 26 with passing tests.",
+      "effort": "S",
+      "blocks_production": false,
+      "assumptions": [],
+      "confidence": "HIGH",
+      "needs_human_review": false,
+      "missing_data": []
+    },
+    {
+      "id": "F-006",
+      "phase": "testing",
+      "title": "E2E Playwright tests excluded from release gate",
+      "severity": "P2",
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml:732",
+          "excerpt": "needs: [backend-quality, backend-tests, backend-security, frontend, security, secrets, deploy-config]"
+        },
+        {
+          "file": ".github/workflows/ci.yml:479-517",
+          "excerpt": "e2e:\n    name: E2E Tests"
+        }
+      ],
+      "observation": "e2e job exists and runs on PR/push but is not listed in the release gate needs array.",
+      "risk": "Merged code can break critical user flows (auth, onboarding, dashboard) without blocking release.",
+      "recommendation": "Add e2e to release gate needs once flake rate is acceptable.",
+      "effort": "S",
+      "blocks_production": false,
+      "assumptions": [],
+      "confidence": "HIGH",
+      "needs_human_review": false,
+      "missing_data": []
+    },
+    {
+      "id": "F-007",
+      "phase": "frontend",
+      "title": "Ukrainian translation file exists but is not registered in i18n",
+      "severity": "P2",
+      "evidence": [
+        {
+          "file": "frontend/src/i18n/locales/uk/translation.json",
+          "excerpt": "(file exists on disk)"
+        },
+        {
+          "file": "frontend/src/i18n.ts:9-16",
+          "excerpt": "const resources = {\n  en: { translation: enTranslations },\n  ar: { translation: arTranslations },\n}"
+        }
+      ],
+      "observation": "uk/translation.json is present but not imported or added to i18n resources.",
+      "risk": "Incomplete localization for Ukrainian users; stale translation file may drift from en source.",
+      "recommendation": "Import uk translations in i18n.ts or remove unused locale file.",
+      "effort": "S",
+      "blocks_production": false,
+      "assumptions": [],
+      "confidence": "HIGH",
+      "needs_human_review": false,
+      "missing_data": []
+    },
+    {
+      "id": "F-008",
+      "phase": "frontend",
+      "title": "i18next configured with escapeValue false",
+      "severity": "P2",
+      "evidence": [
+        {
+          "file": "frontend/src/i18n.ts:25-27",
+          "excerpt": "interpolation: {\n  escapeValue: false,\n},"
+        }
+      ],
+      "observation": "i18next will not HTML-escape interpolated values.",
+      "risk": "Stored XSS if user-controlled strings are passed to translation interpolation.",
+      "recommendation": "Audit all t() calls with dynamic values; enable escapeValue or sanitize inputs.",
+      "effort": "M",
+      "blocks_production": false,
+      "assumptions": [
+        "ASSUMPTION: Most t() keys use static strings only — confidence MEDIUM"
+      ],
+      "confidence": "HIGH",
+      "needs_human_review": true,
+      "missing_data": []
+    },
+    {
+      "id": "F-009",
+      "phase": "backend",
+      "title": "Stripe webhook idempotency fails open when Redis is unavailable",
+      "severity": "P2",
+      "evidence": [
+        {
+          "file": "backend/app/api/v1/endpoints/stripe_webhook.py:67-77",
+          "excerpt": "# Deliberately fail open. The handlers re-fetch state from Stripe and\n# are idempotent, so a duplicate is close to harmless; refusing the\n# event instead would leave subscription state stale..."
+        }
+      ],
+      "observation": "When Redis SET NX fails, webhook processing continues without duplicate guard.",
+      "risk": "Duplicate subscription state transitions or duplicate emails during Redis outage.",
+      "recommendation": "Document accepted risk or fail closed with 503 to trigger Stripe retry when Redis unavailable.",
+      "effort": "M",
+      "blocks_production": false,
+      "assumptions": [],
+      "confidence": "HIGH",
+      "needs_human_review": true,
+      "missing_data": []
+    },
+    {
+      "id": "F-010",
+      "phase": "infra",
+      "title": "Conflicting environment example templates",
+      "severity": "P2",
+      "evidence": [
+        {
+          "file": "backend/.env.example:38-39",
+          "excerpt": "USE_MOCK_AD_DATA=true"
+        },
+        {
+          "file": "backend/app/core/config.py:122-125",
+          "excerpt": "use_mock_ad_data: bool = Field(\n    default=False,"
+        },
+        {
+          "file": ".env.example:14-17",
+          "excerpt": "METRICS_API_KEY="
+        }
+      ],
+      "observation": "Root .env.example and backend/.env.example disagree on defaults and variable coverage.",
+      "risk": "Operator confusion leading to misconfiguration at deploy time.",
+      "recommendation": "Consolidate to single documented template aligned with config.py defaults.",
+      "effort": "M",
+      "blocks_production": false,
+      "assumptions": [],
+      "confidence": "HIGH",
+      "needs_human_review": true,
+      "missing_data": []
+    },
+    {
+      "id": "F-011",
+      "phase": "frontend",
+      "title": "Tenant ID persisted in localStorage",
+      "severity": "P2",
+      "evidence": [
+        {
+          "file": "frontend/src/api/client.ts:46-60",
+          "excerpt": "localStorage.setItem('tenant_id', String(tenantId));\n...\nconst stored = localStorage.getItem('tenant_id');"
+        }
+      ],
+      "observation": "Access tokens correctly use sessionStorage but tenant_id uses localStorage.",
+      "risk": "XSS could exfiltrate tenant context; cross-tab tenant confusion on shared machines.",
+      "recommendation": "Move tenant_id to sessionStorage or memory-only; validate server-side regardless.",
+      "effort": "S",
+      "blocks_production": false,
+      "assumptions": [],
+      "confidence": "HIGH",
+      "needs_human_review": false,
+      "missing_data": []
+    },
+    {
+      "id": "F-012",
+      "phase": "data",
+      "title": "Default asset storage is local filesystem without durable volume in base compose",
+      "severity": "P2",
+      "evidence": [
+        {
+          "file": "backend/app/core/config.py:391-398",
+          "excerpt": "asset_storage_backend: str = Field(default=\"local\")\nasset_upload_dir: str = Field(default=\"uploads/assets\")"
+        },
+        {
+          "file": "docker-compose.yml:167-168",
+          "excerpt": "volumes:\n  - ./backend:/app"
+        }
+      ],
+      "observation": "Uploaded assets default to local path; dev compose bind-mounts source over container.",
+      "risk": "Creative asset loss on container restart/redeploy in production if S3 not configured.",
+      "recommendation": "Set asset_storage_backend=s3 and configure bucket for production.",
+      "effort": "M",
+      "blocks_production": false,
+      "assumptions": [],
+      "confidence": "HIGH",
+      "needs_human_review": false,
+      "missing_data": []
+    },
+    {
+      "id": "F-013",
+      "phase": "business",
+      "title": "Competitor intelligence feature uses fabricated data when enabled",
+      "severity": "P2",
+      "evidence": [
+        {
+          "file": "backend/app/core/config.py:426-432",
+          "excerpt": "the competitor refresh worker fabricates benchmarks with random.randint\n...\nfeature_competitor_intel: bool = Field(default=False)"
+        }
+      ],
+      "observation": "Feature flag defaults off with explicit comment that enabled worker uses random data.",
+      "risk": "If flag accidentally enabled in prod, customers receive false competitive benchmarks.",
+      "recommendation": "Keep flag false for launch; add runtime warning if enabled without real provider.",
+      "effort": "S",
+      "blocks_production": false,
+      "assumptions": [],
+      "confidence": "HIGH",
+      "needs_human_review": false,
+      "missing_data": []
+    },
+    {
+      "id": "F-014",
+      "phase": "business",
+      "title": "Campaign publish workflow disabled — no live platform integration",
+      "severity": "P2",
+      "evidence": [
+        {
+          "file": "backend/app/core/config.py:453-457",
+          "excerpt": "enable_campaign_publish: bool = Field(default=False)"
+        }
+      ],
+      "observation": "Publish endpoint returns 503 when flag false; drafts available without platform sync.",
+      "risk": "Product expectation mismatch if marketing promises live campaign publishing at launch.",
+      "recommendation": "Confirm launch scope excludes publish; keep flag false until adapter implemented.",
+      "effort": "L",
+      "blocks_production": false,
+      "assumptions": [
+        "ASSUMPTION: Draft-only campaign builder is acceptable for v1 — confidence MEDIUM"
+      ],
+      "confidence": "HIGH",
+      "needs_human_review": true,
+      "missing_data": []
+    },
+    {
+      "id": "F-015",
+      "phase": "testing",
+      "title": "Application entrypoint main.py excluded from coverage measurement",
+      "severity": "P3",
+      "evidence": [
+        {
+          "file": "backend/.coveragerc:20",
+          "excerpt": "app/main.py"
+        }
+      ],
+      "observation": "main.py omitted from coverage report omit list.",
+      "risk": "Regressions in middleware ordering, health checks, or metrics gating may go unnoticed.",
+      "recommendation": "Add targeted integration tests for main.py routes; consider removing omit.",
+      "effort": "M",
+      "blocks_production": false,
+      "assumptions": [],
+      "confidence": "HIGH",
+      "needs_human_review": false,
+      "missing_data": []
+    }
+  ]
+}
