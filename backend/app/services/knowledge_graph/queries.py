@@ -92,12 +92,16 @@ class CypherQueryBuilder:
         edge_alias: Optional[str] = None,
         direction: str = "->",  # "->" or "<-" or "--"
     ) -> CypherQueryBuilder:
-        """Add a MATCH clause for an edge."""
-        edge_part = (
-            f"[{edge_alias or ''}:{edge_label.value}]"
-            if edge_alias
-            else f"[:{edge_label.value}]"
-        )
+        """Add a MATCH clause for an edge.
+
+        The relationship is always named, even when the caller does not care
+        about it. ``[:LABEL]`` puts a colon after a non-word character, which
+        SQLAlchemy's ``text()`` reads as a bind parameter -- the query then
+        fails with ``A value is required for bind parameter 'LABEL'`` without
+        ever reaching Postgres. The generated name is positional so two
+        relationships in one query cannot collide.
+        """
+        edge_part = f"[{edge_alias or f'rel{len(self._match_clauses)}'}:{edge_label.value}]"
         end_part = f"({end_alias}:{end_label.value})" if end_label else f"({end_alias})"
 
         if direction == "->":
@@ -119,8 +123,10 @@ class CypherQueryBuilder:
     ) -> CypherQueryBuilder:
         """Add an OPTIONAL MATCH clause for an edge."""
         end_part = f"({end_alias}:{end_label.value})" if end_label else f"({end_alias})"
+        # Named for the same reason as match_edge above; a distinct prefix
+        # keeps it clear of the aliases the required matches generate.
         self._optional_matches.append(
-            f"({start_alias})-[:{edge_label.value}]->{end_part}"
+            f"({start_alias})-[opt{len(self._optional_matches)}:{edge_label.value}]->{end_part}"
         )
         return self
 
@@ -170,7 +176,9 @@ class CypherQueryBuilder:
         self._return_fields = fields
         return self
 
-    def return_count(self, alias: str, as_name: str = "count") -> CypherQueryBuilder:
+    # "count" is not available as an alias: AGE rejects `RETURN count(n) AS
+    # count` with a syntax error at the alias.
+    def return_count(self, alias: str, as_name: str = "item_count") -> CypherQueryBuilder:
         """Return count of nodes."""
         self._return_fields.append(f"count({alias}) AS {as_name}")
         return self
@@ -499,8 +507,8 @@ class RevenueAnalyticsQueries:
         """Get multi-touch attribution paths to conversion."""
         # This is a more complex traversal query
         cypher = f"""
-            MATCH (p:Profile {{tenant_id: '{tenant_id}'}})-[:PERFORMED]->(e:Event)-[:GENERATED]->(r:Revenue)
-            MATCH path = (p)-[:RECEIVED*1..10]->(t:Touchpoint)
+            MATCH (p:Profile {{tenant_id: '{tenant_id}'}})-[perf:PERFORMED]->(e:Event)-[gen:GENERATED]->(r:Revenue)
+            MATCH path = (p)-[rec:RECEIVED*1..10]->(t:Touchpoint)
             WHERE t.timestamp < r.occurred_at
             WITH p, r, collect(t) AS touchpoints
             WHERE size(touchpoints) >= {min_touchpoints}

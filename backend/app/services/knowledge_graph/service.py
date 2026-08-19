@@ -454,8 +454,8 @@ class KnowledgeGraphService:
         """
         cypher = f"""
             MATCH (a:Automation {{tenant_id: '{tenant_id}', external_id: '{automation_external_id}'}})
-            OPTIONAL MATCH (s:Signal)-[:EVALUATED_BY]->(tg:TrustGate)-[decision:TRIGGERED|BLOCKED]->(a)
-            OPTIONAL MATCH (a)-[:PRODUCED]->(r:Revenue)
+            OPTIONAL MATCH (s:Signal)-[ev:EVALUATED_BY]->(tg:TrustGate)-[decision:TRIGGERED|BLOCKED]->(a)
+            OPTIONAL MATCH (a)-[prod:PRODUCED]->(r:Revenue)
             RETURN {{
                 automation: properties(a),
                 signals: collect(DISTINCT properties(s)),
@@ -516,8 +516,8 @@ class KnowledgeGraphService:
             List of channel transitions with counts
         """
         cypher = f"""
-            MATCH (p:Profile {{tenant_id: '{tenant_id}'}})-[:RECEIVED]->(t1:Touchpoint)
-            MATCH (p)-[:RECEIVED]->(t2:Touchpoint)
+            MATCH (p:Profile {{tenant_id: '{tenant_id}'}})-[r1:RECEIVED]->(t1:Touchpoint)
+            MATCH (p)-[r2:RECEIVED]->(t2:Touchpoint)
             WHERE t2.timestamp > t1.timestamp
               AND t2.timestamp < t1.timestamp + duration({{days: 7}})
             WITH t1.channel AS from_channel, t2.channel AS to_channel, count(*) AS transitions
@@ -551,7 +551,7 @@ class KnowledgeGraphService:
         for label in NodeLabel:
             cypher = f"""
                 MATCH (n:{label.value} {{tenant_id: '{tenant_id}'}})
-                RETURN count(n) AS count
+                RETURN count(n) AS node_count
             """
             query = f"""
                 SELECT * FROM cypher('{self.GRAPH_NAME}', $$
@@ -562,14 +562,14 @@ class KnowledgeGraphService:
             row = result.fetchone()
             if row:
                 data = self._parse_agtype(row[0])
-                stats[f"{label.value.lower()}_count"] = data.get("count", 0)
+                stats[f"{label.value.lower()}_count"] = data.get("node_count", 0)
 
         # Count edges
         for edge in EdgeLabel:
             cypher = f"""
                 MATCH ()-[r:{edge.value}]->()
                 WHERE r.tenant_id = '{tenant_id}'
-                RETURN count(r) AS count
+                RETURN count(r) AS edge_count
             """
             query = f"""
                 SELECT * FROM cypher('{self.GRAPH_NAME}', $$
@@ -580,7 +580,7 @@ class KnowledgeGraphService:
             row = result.fetchone()
             if row:
                 data = self._parse_agtype(row[0])
-                stats[f"{edge.value.lower()}_edges"] = data.get("count", 0)
+                stats[f"{edge.value.lower()}_edges"] = data.get("edge_count", 0)
 
         return stats
 

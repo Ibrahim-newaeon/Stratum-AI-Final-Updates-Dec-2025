@@ -184,17 +184,30 @@ class KnowledgeGraphInsightsEngine:
     ) -> Optional[Problem]:
         """Detect significant revenue decline and trace the cause."""
 
-        # Query revenue trends
+        # Query revenue trends. Three things here are AGE's constraints rather
+        # than choices, and all three failed when this first ran against a live
+        # graph:
+        #
+        # * ``reduce()`` is openCypher, not AGE -- it raises a syntax error at
+        #   the ``|``. The two totals come from UNWIND + sum() instead.
+        # * ``ORDER BY`` cannot see an alias produced by an aggregating WITH
+        #   ("could not find rte for date"), so the ordering gets a WITH of its
+        #   own to project the aliases forward first.
+        # * UNWIND of an empty list yields no rows, which would drop the whole
+        #   result when a tenant has fewer than ``days`` distinct dates. The
+        #   ``+ [0]`` keeps each slice non-empty and cannot change a sum.
         cypher = f"""
             MATCH (r:Revenue {{tenant_id: '{tenant_id}'}})
             WITH r.occurred_at AS date, sum(r.amount_cents) AS daily_revenue
+            WITH date, daily_revenue
             ORDER BY date DESC
             LIMIT {days * 2}
-            WITH collect({{date: date, revenue: daily_revenue}}) AS data
-            WITH data[0..{days}] AS recent, data[{days}..] AS previous
-            WITH
-                reduce(s = 0, x IN recent | s + x.revenue) AS recent_total,
-                reduce(s = 0, x IN previous | s + x.revenue) AS previous_total
+            WITH collect(daily_revenue) AS data
+            WITH data[0..{days}] + [0] AS recent, data[{days}..] + [0] AS previous
+            UNWIND recent AS recent_day
+            WITH previous, sum(recent_day) AS recent_total
+            UNWIND previous AS previous_day
+            WITH recent_total, sum(previous_day) AS previous_total
             RETURN recent_total, previous_total,
                    CASE WHEN previous_total > 0
                         THEN (recent_total - previous_total) * 1.0 / previous_total
@@ -247,9 +260,10 @@ class KnowledgeGraphInsightsEngine:
 
         # Check if campaigns are underperforming
         campaign_query = f"""
-            MATCH (c:Campaign {{tenant_id: '{tenant_id}'}})-[:DROVE]->(r:Revenue)
+            MATCH (c:Campaign {{tenant_id: '{tenant_id}'}})-[drove:DROVE]->(r:Revenue)
             WHERE r.occurred_at >= datetime() - duration({{days: {days}}})
             WITH c, sum(r.amount_cents) AS revenue
+            WITH c, revenue
             ORDER BY revenue DESC
             LIMIT 5
             RETURN c.name AS campaign, c.platform AS platform,
@@ -260,7 +274,7 @@ class KnowledgeGraphInsightsEngine:
 
         # Check for blocked automations
         blocked_query = f"""
-            MATCH (tg:TrustGate {{tenant_id: '{tenant_id}', decision: 'block'}})-[:BLOCKED]->(a:Automation)
+            MATCH (tg:TrustGate {{tenant_id: '{tenant_id}', decision: 'block'}})-[blk:BLOCKED]->(a:Automation)
             WHERE tg.evaluated_at >= datetime() - duration({{days: {days}}})
             RETURN count(a) AS blocked_count,
                    collect(DISTINCT a.action_type)[0..5] AS action_types,
@@ -433,7 +447,7 @@ class KnowledgeGraphInsightsEngine:
             if block_rate > self.BLOCK_RATE_THRESHOLD and data.get("total", 0) > 10:
                 # Get details on what's being blocked
                 detail_query = f"""
-                    MATCH (tg:TrustGate {{tenant_id: '{tenant_id}', decision: 'block'}})-[:BLOCKED]->(a:Automation)
+                    MATCH (tg:TrustGate {{tenant_id: '{tenant_id}', decision: 'block'}})-[blk:BLOCKED]->(a:Automation)
                     WHERE tg.evaluated_at >= datetime() - duration({{days: {days}}})
                     RETURN a.action_type AS action_type, a.platform AS platform,
                            count(*) AS count, avg(tg.signal_health_score) AS avg_health
@@ -594,8 +608,8 @@ class KnowledgeGraphInsightsEngine:
 
         # Query segment performance
         cypher = f"""
-            MATCH (seg:Segment {{tenant_id: '{tenant_id}'}})<-[:BELONGS_TO]-(p:Profile)
-                  -[:PERFORMED]->(e:Event)-[:GENERATED]->(r:Revenue)
+            MATCH (seg:Segment {{tenant_id: '{tenant_id}'}})<-[member:BELONGS_TO]-(p:Profile)
+                  -[perf:PERFORMED]->(e:Event)-[gen:GENERATED]->(r:Revenue)
             WHERE r.occurred_at >= datetime() - duration({{days: {days}}})
             WITH seg, count(DISTINCT p) AS converting_profiles,
                  sum(r.amount_cents) AS revenue, seg.profile_count AS total_profiles
@@ -679,7 +693,7 @@ class KnowledgeGraphInsightsEngine:
         """Detect if Trust Gate is consistently blocking specific action types."""
 
         cypher = f"""
-            MATCH (tg:TrustGate {{tenant_id: '{tenant_id}'}})-[:BLOCKED]->(a:Automation)
+            MATCH (tg:TrustGate {{tenant_id: '{tenant_id}'}})-[blk:BLOCKED]->(a:Automation)
             WHERE tg.evaluated_at >= datetime() - duration({{days: {days}}})
             WITH a.action_type AS action_type, count(*) AS blocked_count,
                  avg(tg.signal_health_score) AS avg_health_at_block
