@@ -94,24 +94,63 @@ class TestReadSurfaces:
         assert resp.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_share_of_voice(self, authenticated_client: AsyncClient):
+    async def test_share_of_voice_is_gone(self, authenticated_client: AsyncClient):
+        """It summed a column nothing writes and called the result a market.
+
+        ``total_market = sum(c.estimated_traffic or 0)`` over a column no code
+        path populates, so it reported a market size of 0 as a measurement.
+        Removed rather than fixed: share of voice needs a paid ad-intelligence
+        provider, and there is nothing to serve until one is wired.
+
+        422, not 404 — the path now falls through to ``/{competitor_id}`` and
+        fails to parse "share-of-voice" as an int.
+        """
         await _create(authenticated_client, domain="sov.com")
         resp = await authenticated_client.get("/api/v1/competitors/share-of-voice")
-        assert resp.status_code == 200
-        data = resp.json()["data"]
-        assert "competitors" in data
-        assert "total_market" in data
+        assert resp.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_keywords(self, authenticated_client: AsyncClient):
+    async def test_keywords_is_gone(self, authenticated_client: AsyncClient):
+        """``top_keywords`` is never written, so this only ever returned [].
+
+        An empty keyword list is indistinguishable from "this competitor buys
+        no keywords", which is a claim we cannot make.
+        """
         created = await _create(authenticated_client, domain="kw.com")
         resp = await authenticated_client.get(
             f"/api/v1/competitors/{created['id']}/keywords"
         )
+        assert resp.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_response_omits_metrics_no_source_fills(
+        self, authenticated_client: AsyncClient
+    ):
+        """A null that reaches a dashboard becomes a zero, so they are absent.
+
+        The frontend proved it: ``Number(c.shareOfVoice ?? 0)`` rendered
+        "0% share of voice" on every card.
+        """
+        created = await _create(authenticated_client, domain="lean.com")
+        resp = await authenticated_client.get(f"/api/v1/competitors/{created['id']}")
+
         assert resp.status_code == 200
         body = resp.json()["data"]
-        assert body["domain"] == "kw.com"
-        assert "keywords" in body
+        for absent in (
+            "estimated_traffic",
+            "traffic_trend",
+            "top_keywords",
+            "paid_keywords_count",
+            "organic_keywords_count",
+            "share_of_voice",
+            "category_rank",
+            "estimated_ad_spend_cents",
+        ):
+            assert absent not in body, f"{absent} is served but nothing fills it"
+
+        # What the scanner does source stays.
+        for present in ("data_source", "ad_creatives_count", "detected_ad_platforms"):
+            assert present in body
 
 
 # =============================================================================
