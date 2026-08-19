@@ -60,9 +60,6 @@ export {
   useCreateCompetitor,
   useUpdateCompetitor,
   useDeleteCompetitor,
-  useShareOfVoice,
-  useCompetitorKeywords,
-  useCompetitorMetrics,
   useRefreshCompetitor,
   useScanCompetitor,
 } from './competitors'

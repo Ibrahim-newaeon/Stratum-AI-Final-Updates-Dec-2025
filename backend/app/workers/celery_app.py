@@ -92,9 +92,8 @@ celery_app.conf.update(
 # Beat schedule for periodic tasks
 celery_app.conf.beat_schedule = {
     # NOTE: "evaluate-active-rules" and "refresh-competitor-data" are NOT in
-    # this static schedule — they are gated behind feature flags below (the
-    # rules task crashes on a schema mismatch and the competitor task
-    # fabricates benchmarks, so both are shelved off for launch).
+    # this static schedule — they are registered behind feature flags below so
+    # a deployment can disable either without a code change. Both default on.
     # Sync campaign data every hour
     "sync-all-campaigns": {
         "task": "app.workers.tasks.sync_all_campaigns",
@@ -256,10 +255,12 @@ if settings.feature_automation_rules:
         "options": {"queue": "rules"},
     }
 
-# The competitor refresh worker fabricates estimated spend/impressions/CTR with
-# random.randint (no real ad-intelligence source is wired), so it would write
-# fake benchmarks that surface on /competitors. Gated off until a real source
-# lands. Set FEATURE_COMPETITOR_INTEL=true to re-enable.
+# Scheduled since _apply_scan_result stopped fabricating spend/impressions/CTR
+# and started writing only what scan_competitor sources — site metadata, social
+# links, and the Meta Ad Library active-ad count. Without a Meta Graph token in
+# settings.meta_access_token the scan still runs, but records
+# data_source="website_scrape" and leaves the ad count None rather than 0.
+# Set FEATURE_COMPETITOR_INTEL=false to disable.
 if settings.feature_competitor_intel:
     celery_app.conf.beat_schedule["refresh-competitor-data"] = {
         "task": "app.workers.tasks.refresh_all_competitors",

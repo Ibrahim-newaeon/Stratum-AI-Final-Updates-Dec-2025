@@ -4,20 +4,23 @@
 """
 Tests for the Automation Rules and Competitor Intelligence feature gates.
 
-Both shipped behind flags (Tier 2 flag-off). They have since diverged:
+Both shipped behind flags (Tier 2 flag-off). Both are now ON:
 
-* **Automation Rules is ON.** The gate existed because the beat evaluator read
+* **Automation Rules.** The gate existed because the beat evaluator read
   ``rule.conditions`` while the model stores flat
   ``condition_field/operator/value`` columns, raising AttributeError every
   15 minutes. ``ff6823ca`` (Tier 3) reconciled the evaluator with the flat
-  schema — see ``test_rules_worker_eval.py`` — so the flag defaults on and the
-  beat entry is scheduled.
-* **Competitor Intelligence stays OFF.** Its refresh worker still fabricates
-  spend/impressions/CTR with ``random.randint``; no real source is wired.
-  Turning it on would publish invented benchmarks to ``/competitors``.
+  schema — see ``test_rules_worker_eval.py``.
+* **Competitor Intelligence.** The gate existed because the refresh worker
+  fabricated spend/impressions/CTR with ``random.randint``.
+  ``_apply_scan_result`` was rewritten to write honest nulls, and the API
+  stopped serving the columns no source fills — see
+  ``test_competitor_intel_ungated.py``, which pins the un-gating and the
+  no-fabrication invariant.
 
 The router dependency still returns 503 whenever a flag is off, which is what
-the disabled-path tests below pin.
+the disabled-path tests below pin — both surfaces can still be switched off per
+deployment without a code change.
 """
 
 import pytest
@@ -63,15 +66,15 @@ def test_rules_flag_defaults_on():
     assert settings.feature_automation_rules is True
 
 
-def test_competitor_flag_defaults_off():
-    """Competitor intel stays shelved while the worker invents its numbers."""
-    assert settings.feature_competitor_intel is False
+def test_competitor_flag_defaults_on():
+    """Competitor intel ships: the worker stopped inventing its numbers."""
+    assert settings.feature_competitor_intel is True
 
 
 # --- Beat schedule reflects the flags ---
-def test_beat_includes_rules_and_excludes_competitor():
+def test_beat_includes_both_flagged_entries():
     scheduled = set(celery_app.conf.beat_schedule.keys())
     assert "evaluate-active-rules" in scheduled
-    assert "refresh-competitor-data" not in scheduled
+    assert "refresh-competitor-data" in scheduled
     # A healthy always-on entry stays scheduled (sanity: we didn't nuke beat).
     assert "sync-all-campaigns" in scheduled

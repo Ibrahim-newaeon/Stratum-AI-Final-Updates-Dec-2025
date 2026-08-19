@@ -440,12 +440,17 @@ class Settings(BaseSettings):
     # -------------------------------------------------------------------------
     # Feature Flags
     # -------------------------------------------------------------------------
-    # Competitor Intelligence stays shelved: its refresh worker fabricates
-    # benchmarks with random.randint and no real ad-intelligence source is
-    # wired, so enabling it would publish invented numbers on /competitors.
-    # Both the beat entry and the API router are gated on this flag. Turn on
-    # only once the worker reads a real provider.
-    feature_competitor_intel: bool = Field(default=False)
+    # Competitor Intelligence ships on. It was shelved because the refresh
+    # worker fabricated benchmarks with random.randint; _apply_scan_result now
+    # writes only what scan_competitor sources (site metadata, social links,
+    # Meta Ad Library active-ad count and platforms) and leaves everything a
+    # paid provider would be needed for as NULL.
+    #
+    # The API no longer serves those NULL columns at all — a null that reaches
+    # a dashboard becomes a zero, and "competitor ad spend: $0" is worse than
+    # not offering the number. Wire a provider and add the fields back in the
+    # same change. Set FEATURE_COMPETITOR_INTEL=false to turn the surface off.
+    feature_competitor_intel: bool = Field(default=True)
     feature_what_if_simulator: bool = Field(default=True)
     # Automation Rules shipped once ff6823ca reconciled the beat evaluator with
     # the flat condition_field/operator/value schema (it previously read a

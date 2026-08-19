@@ -21,7 +21,7 @@ from app.schemas import (
     APIResponse,
     CompetitorCreate,
     CompetitorResponse,
-    CompetitorShareOfVoiceResponse,
+    CompetitorScanRequest,
     CompetitorUpdate,
     PaginatedResponse,
 )
@@ -33,10 +33,14 @@ async def require_competitor_intel_enabled() -> None:
     """
     Gate Competitor Intelligence behind a feature flag.
 
-    The refresh worker fabricates estimated spend/impressions/CTR with
-    random.randint (no real ad-intelligence source is wired), so the numbers
-    served here are invented. Until a real source lands the surface is shelved:
-    every route returns 503 instead of presenting fabricated benchmarks.
+    Defaults on. The flag was held shut because the refresh worker fabricated
+    spend/impressions/CTR with random.randint; ``_apply_scan_result`` was
+    rewritten to write honest nulls instead, and this surface now serves only
+    what the scanner can actually source — site metadata, social links, and
+    the Meta Ad Library active-ad count and platforms.
+
+    Kept wired so a deployment can turn the surface off (FEATURE_COMPETITOR_
+    INTEL=false) without a code change.
     """
     if not settings.feature_competitor_intel:
         raise HTTPException(
@@ -68,8 +72,12 @@ async def list_competitors(
     if is_primary is not None:
         query = query.where(CompetitorBenchmark.is_primary == is_primary)
 
-    query = query.order_by(CompetitorBenchmark.share_of_voice.desc().nullslast()).limit(
-        1000
+    # Ordered by observed Ad Library activity, then domain for stability.
+    # This used to order by share_of_voice, a column no code path writes, so
+    # every row sorted by NULL — arbitrary order presented as a ranking.
+    query = query.order_by(
+        CompetitorBenchmark.ad_creatives_count.desc().nullslast(),
+        CompetitorBenchmark.domain.asc(),
     )
     query = query.offset(skip).limit(limit)
 
@@ -79,53 +87,6 @@ async def list_competitors(
     return APIResponse(
         success=True,
         data=[CompetitorResponse.model_validate(c) for c in competitors],
-    )
-
-
-@router.get(
-    "/share-of-voice", response_model=APIResponse[CompetitorShareOfVoiceResponse]
-)
-async def get_share_of_voice(
-    request: Request,
-    db: AsyncSession = Depends(get_async_session),
-):
-    """
-    Get share of voice comparison across all tracked competitors.
-    """
-    tenant_id = getattr(request.state, "tenant_id", None)
-
-    result = await db.execute(
-        select(CompetitorBenchmark)
-        .where(CompetitorBenchmark.tenant_id == tenant_id)
-        .order_by(CompetitorBenchmark.share_of_voice.desc().nullslast())
-        .limit(1000)
-    )
-    competitors = result.scalars().all()
-
-    total_traffic = sum(c.estimated_traffic or 0 for c in competitors)
-
-    comparison = [
-        {
-            "domain": c.domain,
-            "name": c.name,
-            "share_of_voice": c.share_of_voice,
-            "estimated_traffic": c.estimated_traffic,
-            "traffic_trend": c.traffic_trend,
-            "is_primary": c.is_primary,
-        }
-        for c in competitors
-    ]
-
-    return APIResponse(
-        success=True,
-        data=CompetitorShareOfVoiceResponse(
-            competitors=comparison,
-            total_market=total_traffic,
-            date_range={
-                "start": "calculated_dynamically",
-                "end": datetime.now(timezone.utc).date().isoformat(),
-            },
-        ),
     )
 
 
@@ -314,45 +275,46 @@ async def refresh_competitor_data(
     )
 
 
-@router.get("/{competitor_id}/keywords")
-async def get_competitor_keywords(
+@router.post("/scan")
+async def scan_competitor_preview(
     request: Request,
-    competitor_id: int,
-    db: AsyncSession = Depends(get_async_session),
-    keyword_type: str = Query("all", pattern="^(all|paid|organic)$"),
-    limit: int = Query(50, ge=1, le=200),
+    payload: CompetitorScanRequest,
 ):
     """
-    Get top keywords for a competitor.
+    Scan a domain and report what we can actually source about it.
+
+    Runs the same scanner the refresh worker uses — website scrape for social
+    links and meta tags, plus a Meta Ad Library lookup when a Graph token is
+    configured — and returns the raw result without persisting anything. Used
+    by the add-competitor flow to show, before saving, exactly which of the
+    two sources answered.
+
+    Nothing here is estimated. Where the Ad Library query cannot run the
+    result carries ``ad_library.error`` and a manual ``search_url``, rather
+    than an ad count of zero.
     """
+    from app.services.competitor_scraper import scan_competitor
+
     tenant_id = getattr(request.state, "tenant_id", None)
 
-    result = await db.execute(
-        select(CompetitorBenchmark).where(
-            CompetitorBenchmark.id == competitor_id,
-            CompetitorBenchmark.tenant_id == tenant_id,
+    try:
+        result = await scan_competitor(
+            domain=payload.domain,
+            name=payload.name or payload.domain,
+            country=payload.country,
+            fb_page_name=payload.fb_page_name,
+            access_token=settings.meta_access_token,
         )
-    )
-    competitor = result.scalar_one_or_none()
-
-    if not competitor:
+    except Exception as exc:
+        logger.warning(
+            "competitor_scan_failed",
+            tenant_id=tenant_id,
+            domain=payload.domain,
+            error=str(exc),
+        )
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Competitor not found",
-        )
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Could not reach the competitor's site or the Ad Library.",
+        ) from exc
 
-    keywords = competitor.top_keywords or []
-
-    # Filter by type if specified
-    if keyword_type != "all":
-        keywords = [k for k in keywords if k.get("type") == keyword_type]
-
-    return APIResponse(
-        success=True,
-        data={
-            "domain": competitor.domain,
-            "keywords": keywords[:limit],
-            "total_paid": competitor.paid_keywords_count,
-            "total_organic": competitor.organic_keywords_count,
-        },
-    )
+    return APIResponse(success=True, data=result)
