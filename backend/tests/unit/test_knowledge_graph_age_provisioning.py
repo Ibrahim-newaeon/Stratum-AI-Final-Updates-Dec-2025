@@ -270,35 +270,42 @@ def test_no_compose_file_pins_a_postgres_without_the_extensions():
 # Flag
 # =============================================================================
 def test_knowledge_graph_flag_stays_off():
-    """Provisioned, but still gated -- and not for the original reason.
+    """Provisioned and writable, and still gated -- for the third reason now.
 
-    AGE is installed and the graph exists, so the routes would resolve rather
-    than 500. What is missing is a writer: enabling this now would answer
-    "no problems found" when the truth is "no data has ever been loaded",
-    and a confident wrong answer is worse than an honest 503.
+    AGE is installed, the graph exists, and a writer exists: the backfill
+    script plus a beat-scheduled incremental sync. What is still true is that
+    running the backfill is a *deploy step*, performed per environment. Until
+    it has run against a given database, that database's graph is empty, and
+    the routes there would answer "no problems found" when the truth is "no
+    data has ever been loaded".
+
+    So this flag is flipped per environment after the backfill, not once in
+    source. The default stays off because the default environment is the one
+    where nobody has run it yet.
     """
     assert settings.feature_knowledge_graph is False
 
 
-def test_nothing_populates_the_graph_yet():
-    """The reason the flag is off, pinned as an executable fact.
+def test_freshness_is_wired_to_the_same_flag():
+    """Replaces test_nothing_populates_the_graph_yet, which has served its purpose.
 
-    KnowledgeGraphSyncService has seven populate methods and a full_sync
-    orchestrator, and nothing instantiates it -- no Celery task, no beat entry,
-    and every KG route is a GET.
+    That test scanned app/workers/ for any knowledge-graph reference and failed
+    the moment one appeared, on the theory that a writer appearing was the
+    moment to flip the flag. A writer has appeared, and the theory was only
+    half right: population is still per environment, so the flag did not move.
 
-    When this test fails, a writer has appeared, and that is the moment to flip
-    feature_knowledge_graph to True. It is a reminder, not a prohibition.
+    What replaces it is the invariant that actually matters now. Enabling the
+    graph has to enable its upkeep in the same breath -- a graph that is
+    switched on without the incremental sync scheduled is a snapshot that
+    starts decaying immediately, and stale nodes are answered from just as
+    confidently as fresh ones. See test_knowledge_graph_incremental_task.py.
     """
-    workers = BACKEND_DIR / "app" / "workers"
-    referencing = [
-        path.relative_to(BACKEND_DIR).as_posix()
-        for path in workers.rglob("*.py")
-        if "knowledge_graph" in path.read_text(encoding="utf-8")
-    ]
-
-    assert referencing == [], (
-        "A worker now references the knowledge graph, so something may finally "
-        f"populate it: {referencing}. If so, turn feature_knowledge_graph on "
-        "and delete this test."
+    celery_app_source = (BACKEND_DIR / "app" / "workers" / "celery_app.py").read_text(
+        encoding="utf-8"
     )
+
+    assert "sync-knowledge-graph" in celery_app_source, (
+        "the incremental sync lost its beat entry; the graph would go stale "
+        "the moment the backfill finished"
+    )
+    assert "app.workers.tasks.sync_knowledge_graph_incremental" in celery_app_source

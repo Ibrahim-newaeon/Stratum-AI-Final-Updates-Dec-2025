@@ -61,6 +61,9 @@ from app.workers.tasks.helpers import (
     calculate_task_confidence,
     publish_event,
 )
+from app.workers.tasks.knowledge_graph import (
+    sync_knowledge_graph_incremental,
+)
 from app.workers.tasks.ml import (
     generate_roas_alerts,
     run_all_tenant_predictions,
@@ -132,4 +135,6 @@ __all__ = [
     "sync_all_campaigns",
     # Sync tasks
     "sync_campaign_data",
+    # Knowledge graph tasks
+    "sync_knowledge_graph_incremental",
 ]
