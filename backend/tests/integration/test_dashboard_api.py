@@ -1090,9 +1090,15 @@ class TestCompetitorIntel:
         resp = await authenticated_client.get(f"{_BASE}/competitor-intel")
         assert resp.status_code == 200, resp.text
         data = resp.json()["data"]
-        assert data["market_position"]
         assert 0 <= data["competitive_pressure"] <= 100
-        assert isinstance(data["competitors"], list)
+        assert isinstance(data["platform_competition"], list)
+
+        # This endpoint sees only the tenant's own campaigns. It used to return
+        # five invented companies and a share of voice that was a constant.
+        assert "competitors" not in data
+        assert "your_estimated_sov" not in data
+        assert "market_position" not in data
+        assert "estimated_market_spend" not in data
 
 
 class TestCollaborativeAnnotations:

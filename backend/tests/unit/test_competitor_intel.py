@@ -3,9 +3,15 @@
 # =============================================================================
 """Unit tests for app.analytics.logic.competitor_intel.
 
-Pure competitive-analysis logic, no I/O. Covers the competition/position/threat
-classifiers, competition scoring, competitor-profile + opportunity generation,
-and the build_competitor_intel entry point.
+Pure competitive-analysis logic, no I/O. Covers the competition-level
+classifier, competition scoring, opportunity generation, and the
+build_competitor_intel entry point.
+
+The market-position and threat-level classifiers, the competitor-profile
+generator, and the saturation term in the score are all gone: each was computed
+from ``your_spend * MARKET_MULTIPLIER``, so none of them carried information
+about anything outside the tenant's own campaigns. See
+``test_competitor_intel_no_fabrication.py`` for what replaced them.
 """
 
 import pytest
@@ -41,20 +47,6 @@ class TestClassifiers:
     def test_competition_level(self, score, level):
         assert ci._competition_level(score) == level
 
-    @pytest.mark.parametrize(
-        "sov,pos",
-        [(25, "leader"), (15, "challenger"), (8, "mid-pack"), (3, "underdog")],
-    )
-    def test_market_position(self, sov, pos):
-        assert ci._market_position(sov) == pos
-
-    @pytest.mark.parametrize(
-        "ratio,threat",
-        [(3.0, "critical"), (1.5, "high"), (0.7, "medium"), (0.3, "low")],
-    )
-    def test_threat_level(self, ratio, threat):
-        assert ci._threat_level(ratio) == threat
-
 
 # =============================================================================
 # Competition score
@@ -62,54 +54,29 @@ class TestClassifiers:
 class TestCompetitionScore:
     def test_high_competition_low_roas(self):
         score = ci._estimate_competition_score(
-            your_spend=100,
-            market_spend=10000,
             your_roas=1.5,
             cpm=20,
             benchmark_cpm=10,
         )
-        # cpm 40 + saturation ~29 + roas 30 -> ~99
-        assert score == pytest.approx(99.0, abs=1.0)
+        # cpm ratio 2.0 -> min(70, 60) = 60, roas < 2 -> 40
+        assert score == pytest.approx(100.0, abs=1.0)
 
     def test_low_competition_high_roas(self):
         score = ci._estimate_competition_score(
-            your_spend=5000,
-            market_spend=10000,
             your_roas=8.0,
             cpm=5,
             benchmark_cpm=10,
         )
-        # low cpm ratio, high SOV, high ROAS -> low score
+        # cpm ratio 0.5 -> 17.5, roas >= 5 -> 5
         assert score < 40
 
     def test_score_capped_at_100(self):
         score = ci._estimate_competition_score(
-            your_spend=1,
-            market_spend=1_000_000,
             your_roas=0.5,
             cpm=100,
             benchmark_cpm=1,
         )
         assert score <= 100
-
-
-# =============================================================================
-# Competitor generation
-# =============================================================================
-class TestCompetitors:
-    def test_generates_five_profiles(self):
-        comps = ci._generate_competitors({"meta": {"spend": 1000}}, total_spend=1000)
-        assert len(comps) == 5
-        names = {c.name for c in comps}
-        assert "Apex Digital Group" in names
-        # strongest competitor (2.5x spend) is "stronger" and high/critical threat
-        apex = next(c for c in comps if c.name == "Apex Digital Group")
-        assert apex.relative_strength == "stronger"
-        assert apex.threat_level in {"high", "critical"}
-        # weakest (0.3x) is weaker / low threat
-        pinpoint = next(c for c in comps if c.name == "PinPoint Ads")
-        assert pinpoint.relative_strength == "weaker"
-        assert pinpoint.threat_level == "low"
 
 
 # =============================================================================
@@ -119,7 +86,7 @@ class TestBuild:
     def test_empty(self):
         resp = build_competitor_intel([])
         assert isinstance(resp, CompetitorIntelResponse)
-        assert resp.market_position == "unknown"
+        assert resp.platform_competition == []
         assert "No campaign data" in resp.summary
 
     def test_full_structure(self):
@@ -128,9 +95,9 @@ class TestBuild:
             _campaign("google", 800, 4000, 60),
         ]
         resp = build_competitor_intel(campaigns)
-        assert resp.market_position in {"leader", "challenger", "mid-pack", "underdog"}
         assert resp.platform_competition
-        assert len(resp.competitors) == 5
+        assert {p.platform for p in resp.platform_competition} == {"Meta", "Google"}
+        assert 0 <= resp.competitive_pressure <= 100
         # opportunities generated (untapped channels at minimum)
         assert resp.opportunities
 

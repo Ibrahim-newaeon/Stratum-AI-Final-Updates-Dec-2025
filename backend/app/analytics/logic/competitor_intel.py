@@ -2,12 +2,30 @@
 # Feature #15 — Competitor Intelligence Automation
 # =============================================================================
 """
-Automated competitive intelligence from campaign and market signals.
+Your paid-media position per platform, from your own campaigns.
+
+This module receives one input: the tenant's campaigns. It has no competitor
+data, no market panel and no ad-intelligence provider, so it reports only what
+those campaigns support — spend, ROAS, CTR and CPM per platform, and how your
+CPM compares to a published industry average.
+
+Three things it used to return were manufactured from that same nothing and
+have been removed rather than relabelled:
+
+* Five invented competitor companies ("Apex Digital Group", "VeloMedia", ...)
+  with spends that were the tenant's own spend times a hard-coded multiplier.
+  Every tenant saw the same five names.
+* ``your_estimated_sov`` — ``spend / (spend * MARKET_MULTIPLIER)``, which is
+  ``100 / MARKET_MULTIPLIER``: a constant fixed by platform mix alone. A
+  meta-only tenant read 12.5% at $1k/month and 12.5% at $5M/month.
+  ``market_position`` thresholded that constant, so it never moved either.
+* ``estimated_market_spend`` — your own spend times the same multiplier.
+
+A share of voice that cannot move is not a weaker measurement; it is not one.
+Restoring any of them means wiring a real market source first.
 
 Analyses:
-- Market position estimation (share of voice, relative ROAS)
-- Competitor spend pattern detection
-- Platform-level competitive pressure scoring
+- Platform-level competitive pressure from measured CPM and ROAS
 - Opportunity identification (gaps, timing, underserved segments)
 - Strategic recommendations
 """
@@ -21,19 +39,6 @@ from pydantic import BaseModel, Field
 # ── Response models ──────────────────────────────────────────────────────────
 
 
-class CompetitorProfile(BaseModel):
-    """Competitor profile derived from market signals."""
-
-    competitor_id: str = ""
-    name: str = ""
-    estimated_spend: float = 0.0
-    estimated_sov: float = 0.0  # share of voice %
-    relative_strength: str = "unknown"  # stronger / similar / weaker
-    primary_platforms: list[str] = Field(default_factory=list)
-    threat_level: str = "medium"  # low / medium / high / critical
-    trend: str = "stable"  # growing / stable / declining
-
-
 class PlatformCompetition(BaseModel):
     """Competitive landscape for a single platform."""
 
@@ -41,10 +46,11 @@ class PlatformCompetition(BaseModel):
     your_spend: float = 0.0
     your_roas: float = 0.0
     your_ctr: float = 0.0
-    estimated_market_cpm: float = 0.0  # cost per thousand
+    # Ours, computed from the spend and impressions given — not a measurement
+    # of what anyone else pays. It was called estimated_market_cpm.
+    your_cpm: float = 0.0  # cost per thousand
     competition_level: str = "medium"  # low / medium / high / saturated
     competition_score: float = 0.0  # 0-100
-    your_position: str = "mid-pack"  # leader / challenger / mid-pack / underdog
     opportunity_score: float = 0.0  # 0-100 (higher = more opportunity)
     avg_cpc_trend: str = "stable"  # rising / stable / falling
 
@@ -74,35 +80,22 @@ class CompetitorIntelResponse(BaseModel):
     """Full competitor intelligence dashboard response."""
 
     summary: str = ""
-    your_estimated_sov: float = 0.0
-    market_position: str = "mid-pack"
     competitive_pressure: float = 0.0  # 0-100
     pressure_trend: str = "stable"  # increasing / stable / decreasing
-    competitors: list[CompetitorProfile] = Field(default_factory=list)
     platform_competition: list[PlatformCompetition] = Field(default_factory=list)
     opportunities: list[MarketOpportunity] = Field(default_factory=list)
     insights: list[CompetitorInsight] = Field(default_factory=list)
     total_your_spend: float = 0.0
-    estimated_market_spend: float = 0.0
     platforms_tracked: int = 0
     opportunities_count: int = 0
 
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
-# Market multipliers (estimated market size relative to your spend)
-MARKET_MULTIPLIERS = {
-    "meta": 8,
-    "google": 10,
-    "tiktok": 6,
-    "snapchat": 5,
-    "linkedin": 7,
-    "twitter": 6,
-    "pinterest": 5,
-    "default": 7,
-}
-
-# Avg CPM benchmarks by platform (USD)
+# Published industry average CPMs by platform (USD). These are an external
+# reference point, not something this system measured — comparing your CPM to a
+# published average is a real and useful thing to do, presenting the average as
+# observed market data would not be.
 CPM_BENCHMARKS = {
     "meta": 11.0,
     "google": 3.5,
@@ -130,30 +123,7 @@ def _competition_level(score: float) -> str:
     return "low"
 
 
-def _market_position(sov: float) -> str:
-    if sov >= 25:
-        return "leader"
-    if sov >= 15:
-        return "challenger"
-    if sov >= 8:
-        return "mid-pack"
-    return "underdog"
-
-
-def _threat_level(spend_ratio: float) -> str:
-    """Threat based on competitor spend vs yours."""
-    if spend_ratio >= 3:
-        return "critical"
-    if spend_ratio >= 1.5:
-        return "high"
-    if spend_ratio >= 0.7:
-        return "medium"
-    return "low"
-
-
 def _estimate_competition_score(
-    your_spend: float,
-    market_spend: float,
     your_roas: float,
     cpm: float,
     benchmark_cpm: float,
@@ -161,21 +131,20 @@ def _estimate_competition_score(
     """Score how competitive a platform is (0-100, higher = more competitive)."""
     score = 0.0
 
-    # CPM pressure (40 pts) — higher CPMs indicate more competition
+    # CPM pressure (60 pts) — higher CPMs indicate more competition
     if benchmark_cpm > 0:
         cpm_ratio = cpm / benchmark_cpm
-        score += min(cpm_ratio * 25, 40)
+        score += min(cpm_ratio * 35, 60)
 
-    # Market saturation (30 pts) — your share of estimated market
-    if market_spend > 0:
-        sov = your_spend / market_spend
-        # Lower SOV = more competitive (harder to break through)
-        score += max(30 - sov * 100, 0)
+    # The "market saturation" term that used to sit here contributed
+    # your_spend / (your_spend * MARKET_MULTIPLIER) — a constant. It shifted
+    # every score by the same amount and told you nothing, so the remaining
+    # two measured components carry the full 100.
 
-    # ROAS pressure (30 pts) — low ROAS suggests high competition driving up costs
+    # ROAS pressure (40 pts) — low ROAS suggests high competition driving up costs
     if your_roas > 0:
         if your_roas < 2:
-            score += 30
+            score += 40
         elif your_roas < 3:
             score += 20
         elif your_roas < 5:
@@ -184,50 +153,6 @@ def _estimate_competition_score(
             score += 5
 
     return min(score, 100)
-
-
-def _generate_competitors(
-    platform_data: dict[str, dict],
-    total_spend: float,
-) -> list[CompetitorProfile]:
-    """Build competitor profiles from market signal analysis."""
-    competitors = []
-    competitor_profiles = [
-        {"name": "Apex Digital Group", "spend_mult": 2.5, "trend": "stable"},
-        {"name": "VeloMedia", "spend_mult": 1.8, "trend": "growing"},
-        {"name": "Horizon Ads Co.", "spend_mult": 1.2, "trend": "stable"},
-        {"name": "RisePoint Media", "spend_mult": 0.6, "trend": "growing"},
-        {"name": "PinPoint Ads", "spend_mult": 0.3, "trend": "stable"},
-    ]
-
-    platforms = list(platform_data.keys())
-
-    for i, profile in enumerate(competitor_profiles):
-        spend = total_spend * profile["spend_mult"]
-        sov = (spend / (total_spend * 8)) * 100
-        spend_ratio = profile["spend_mult"]
-
-        n_plats = min(len(platforms), max(1, 3 - i // 2))
-        primary = [p.replace("_", " ").title() for p in platforms[:n_plats]]
-
-        competitors.append(
-            CompetitorProfile(
-                competitor_id=f"comp_{i + 1}",
-                name=profile["name"],
-                estimated_spend=round(spend, 0),
-                estimated_sov=round(sov, 1),
-                relative_strength=(
-                    "stronger"
-                    if spend_ratio > 1.3
-                    else "similar" if spend_ratio > 0.7 else "weaker"
-                ),
-                primary_platforms=primary,
-                threat_level=_threat_level(spend_ratio),
-                trend=profile["trend"],
-            )
-        )
-
-    return competitors
 
 
 def _find_opportunities(
@@ -307,7 +232,6 @@ def build_competitor_intel(
     if not campaigns:
         return CompetitorIntelResponse(
             summary="No campaign data available for competitive analysis.",
-            market_position="unknown",
         )
 
     # Aggregate by platform
@@ -331,14 +255,6 @@ def build_competitor_intel(
     total_spend = sum(d["spend"] for d in platform_data.values())
     total_revenue = sum(d["revenue"] for d in platform_data.values())
 
-    # Estimate total market
-    estimated_market = sum(
-        d["spend"] * MARKET_MULTIPLIERS.get(p, MARKET_MULTIPLIERS["default"])
-        for p, d in platform_data.items()
-    )
-    your_sov = (total_spend / estimated_market * 100) if estimated_market > 0 else 0
-    position = _market_position(your_sov)
-
     # Platform competition
     platform_competition: list[PlatformCompetition] = []
     competition_scores: list[float] = []
@@ -358,12 +274,7 @@ def build_competitor_intel(
             if data["impressions"] > 0
             else benchmark_cpm
         )
-        market_mult = MARKET_MULTIPLIERS.get(plat, MARKET_MULTIPLIERS["default"])
-        plat_market = data["spend"] * market_mult
-
         comp_score = _estimate_competition_score(
-            your_spend=data["spend"],
-            market_spend=plat_market,
             your_roas=your_roas,
             cpm=actual_cpm,
             benchmark_cpm=benchmark_cpm,
@@ -380,12 +291,9 @@ def build_competitor_intel(
                 your_spend=round(data["spend"], 2),
                 your_roas=round(your_roas, 2),
                 your_ctr=round(your_ctr, 2),
-                estimated_market_cpm=round(actual_cpm, 2),
+                your_cpm=round(actual_cpm, 2),
                 competition_level=_competition_level(comp_score),
                 competition_score=round(comp_score, 1),
-                your_position=_market_position(
-                    data["spend"] / plat_market * 100 if plat_market > 0 else 0
-                ),
                 opportunity_score=round(opp_score, 1),
                 avg_cpc_trend=(
                     "rising"
@@ -405,33 +313,11 @@ def build_competitor_intel(
         else "stable" if avg_pressure > 35 else "decreasing"
     )
 
-    # Competitors
-    competitors = _generate_competitors(platform_data, total_spend)
-
     # Opportunities
     opportunities = _find_opportunities(platform_competition, total_spend)
 
     # Insights
     insights: list[CompetitorInsight] = []
-
-    if position == "leader":
-        insights.append(
-            CompetitorInsight(
-                title="You're the market leader",
-                description=f"With ~{your_sov:.1f}% share of voice, focus on defending position and efficiency.",
-                severity="positive",
-                action_label="Defend Position",
-            )
-        )
-    elif position == "underdog":
-        insights.append(
-            CompetitorInsight(
-                title="Low share of voice — growth opportunity",
-                description=f"At ~{your_sov:.1f}% SOV, there's significant room to grow. Focus on high-ROAS channels.",
-                severity="info",
-                action_label="Increase Investment",
-            )
-        )
 
     saturated = [p for p in platform_competition if p.competition_level == "saturated"]
     if saturated:
@@ -445,20 +331,10 @@ def build_competitor_intel(
             )
         )
 
-    growing = [
-        c
-        for c in competitors
-        if c.trend == "growing" and c.threat_level in ("high", "critical")
-    ]
-    if growing:
-        insights.append(
-            CompetitorInsight(
-                title=f"{len(growing)} growing competitor{'s' if len(growing) > 1 else ''} detected",
-                description=f"{growing[0].name} is increasing spend aggressively. Monitor and defend key positions.",
-                severity="warning",
-                action_label="Monitor Threats",
-            )
-        )
+    # A "N growing competitors detected" insight used to sit here, naming one
+    # of the five invented companies and reporting that it was "increasing
+    # spend aggressively". Nothing detected anything: the trend was a literal
+    # in the hard-coded profile list.
 
     if opportunities:
         insights.append(
@@ -472,7 +348,6 @@ def build_competitor_intel(
 
     # Summary
     summary = (
-        f"{your_sov:.1f}% share of voice ({position}). "
         f"Competitive pressure is {avg_pressure:.0f}/100 ({pressure_trend}). "
         f"Tracking {len(platform_data)} platform{'s' if len(platform_data) != 1 else ''} "
         f"with {len(opportunities)} opportunit{'ies' if len(opportunities) != 1 else 'y'} identified."
@@ -480,16 +355,12 @@ def build_competitor_intel(
 
     return CompetitorIntelResponse(
         summary=summary,
-        your_estimated_sov=round(your_sov, 1),
-        market_position=position,
         competitive_pressure=round(avg_pressure, 1),
         pressure_trend=pressure_trend,
-        competitors=competitors,
         platform_competition=platform_competition,
         opportunities=opportunities,
         insights=insights,
         total_your_spend=round(total_spend, 2),
-        estimated_market_spend=round(estimated_market, 2),
         platforms_tracked=len(platform_data),
         opportunities_count=len(opportunities),
     )

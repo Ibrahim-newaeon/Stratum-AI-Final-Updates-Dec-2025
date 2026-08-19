@@ -2,11 +2,6 @@ import { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
   RadarChart,
@@ -14,7 +9,6 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar,
-  Cell,
 } from 'recharts'
 import {
   Trophy,
@@ -100,19 +94,6 @@ interface BenchmarkData {
   osData: OsBreakdown[] | null
 }
 
-interface ChartCompetitorEntry {
-  name: string
-  domain?: string
-  country?: string
-  roas: number
-  ctr: number
-  cpc: number
-  share: number
-  color: string
-  isYou?: boolean
-  isAvg?: boolean
-}
-
 // ── Constants ──────────────────────────────────────────────────────
 
 export function Benchmarks() {
@@ -173,23 +154,6 @@ export function Benchmarks() {
   const getGoogleTransparencyUrl = (name: string) => {
     return `https://adstransparency.google.com/?query=${encodeURIComponent(name)}`
   }
-
-  // Build competitor data for charts.
-  //
-  // Tracked competitors are deliberately NOT plotted here. We have no source
-  // for a competitor's ROAS, CTR, CPC or share of voice — those need a paid
-  // ad-intelligence provider that is not wired. This block used to synthesize
-  // all four from the row's position in the array (`roas: 2.5 + index * 0.4`,
-  // `share: comp.shareOfVoice ?? 10 + index * 5`), which drew a competitive
-  // benchmark chart out of nothing but list order. It went unnoticed because
-  // /competitors was 503 behind a feature flag, so the array was always empty.
-  //
-  // What we can source about a competitor — Ad Library activity, site
-  // metadata — lives on the Competitors view instead.
-  const chartCompetitors: ChartCompetitorEntry[] = [
-    { name: 'Your Brand', roas: 3.5, ctr: 2.8, cpc: 1.2, share: 18, color: '#0ea5e9', isYou: true },
-    { name: 'Industry Avg', roas: 3.0, ctr: 2.4, cpc: 1.3, share: 22, color: '#6b7280', isAvg: true },
-  ]
 
   // Check if user has competitors
   const hasCompetitors = (competitorsData?.items?.length || 0) > 0
@@ -460,41 +424,39 @@ export function Benchmarks() {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Competitor Comparison */}
+        {/* Competitor comparison.
+
+            The chart that stood here plotted two hard-coded rows — "Your Brand"
+            at ROAS 3.5 / CTR 2.8 / CPC 1.2 and "Industry Avg" at 3.0 / 2.4 / 1.3
+            — plus one row per tracked competitor whose ROAS, CTR, CPC and share
+            were computed from the row's index in the array. None of the numbers
+            came from anywhere.
+
+            We have no source for a competitor's ROAS or for an industry average;
+            both need a paid provider. The tenant's own figures are real but live
+            on Campaigns and Overview, where they are labelled as theirs. */}
         <div className="rounded-xl border bg-card p-5">
-          <h2 className="font-semibold mb-4">{t('benchmarks.competitorComparison')}</h2>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartCompetitors} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis type="number" tick={{ fontSize: 12 }} />
-                <YAxis
-                  dataKey="name"
-                  type="category"
-                  tick={{ fontSize: 12 }}
-                  width={100}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '0.5rem',
-                  }}
-                />
-                <Bar dataKey="roas" name="ROAS" radius={[0, 4, 4, 0]}>
-                  {chartCompetitors.map((entry: ChartCompetitorEntry, index: number) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={entry.isYou ? '#0ea5e9' : entry.isAvg ? '#6b7280' : entry.color || '#94a3b8'}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          <h2 className="font-semibold mb-2">{t('benchmarks.competitorComparison')}</h2>
+          <div className="h-[300px] flex flex-col items-center justify-center text-center gap-2 px-6">
+            <Info className="w-6 h-6 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              Competitor ROAS, CTR and CPC are not available.
+            </p>
+            <p className="text-xs text-muted-foreground/70 max-w-sm">
+              These need an ad-intelligence provider. What we can observe about a
+              competitor — their Meta Ad Library activity and site metadata — is
+              on the Competitors page.
+            </p>
+            <Link
+              to="/competitors"
+              className="mt-1 text-xs font-medium text-primary hover:underline"
+            >
+              Go to Competitors
+            </Link>
           </div>
         </div>
 
-        {/* Performance Radar */}
+        {/* Performance Radar */}        {/* Performance Radar */}
         <div className="rounded-xl border bg-card p-5">
           <h2 className="font-semibold mb-4">{t('benchmarks.performanceRadar')}</h2>
           <div className="h-[300px]">

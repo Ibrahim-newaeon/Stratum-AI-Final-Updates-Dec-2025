@@ -1626,26 +1626,15 @@ export function useCreativeScoring(enabled = true) {
 // Feature #15 — Competitor Intelligence Automation
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export interface CompetitorProfile {
-  competitor_id: string;
-  name: string;
-  estimated_spend: number;
-  estimated_sov: number;
-  relative_strength: 'stronger' | 'similar' | 'weaker';
-  primary_platforms: string[];
-  threat_level: 'low' | 'medium' | 'high' | 'critical';
-  trend: 'growing' | 'stable' | 'declining';
-}
-
 export interface PlatformCompetition {
   platform: string;
   your_spend: number;
   your_roas: number;
   your_ctr: number;
-  estimated_market_cpm: number;
+  /** Ours, from our own spend and impressions — not what the market pays. */
+  your_cpm: number;
   competition_level: 'low' | 'medium' | 'high' | 'saturated';
   competition_score: number;
-  your_position: string;
   opportunity_score: number;
   avg_cpc_trend: 'rising' | 'stable' | 'falling';
 }
@@ -1667,18 +1656,21 @@ export interface CompetitorInsight {
   action_label: string;
 }
 
+/**
+ * This endpoint sees only the tenant's own campaigns — no competitor data, no
+ * market panel. It used to also return five invented companies, a share of
+ * voice that was `100 / MARKET_MULTIPLIER` (a constant), and an "estimated
+ * market spend" that was our own spend times the same multiplier. All removed
+ * server-side; restoring any of them means wiring a real market source first.
+ */
 export interface CompetitorIntelResponse {
   summary: string;
-  your_estimated_sov: number;
-  market_position: string;
   competitive_pressure: number;
   pressure_trend: 'increasing' | 'stable' | 'decreasing';
-  competitors: CompetitorProfile[];
   platform_competition: PlatformCompetition[];
   opportunities: MarketOpportunity[];
   insights: CompetitorInsight[];
   total_your_spend: number;
-  estimated_market_spend: number;
   platforms_tracked: number;
   opportunities_count: number;
 }
