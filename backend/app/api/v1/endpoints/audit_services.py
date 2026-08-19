@@ -40,6 +40,7 @@ from fastapi import (
     status,
 )
 from pydantic import BaseModel, Field
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -917,12 +918,12 @@ async def compare_to_benchmarks(
     service = CompetitorBenchmarkingService()
 
     try:
-        industry_enum = Industry(request.industry.upper())
+        industry_enum = Industry(request.industry.lower())
     except ValueError:
         industry_enum = Industry.OTHER
 
     try:
-        region_enum = Region(request.region.upper())
+        region_enum = Region(request.region.lower())
     except ValueError:
         region_enum = Region.GLOBAL
 
@@ -1909,3 +1910,167 @@ async def get_audit_services_info():
             "/admin/rate-limits",
         ],
     }
+
+
+# =============================================================================
+# Benchmarks — your own metrics against the static reference table
+# =============================================================================
+class BenchmarkMetricRow(BaseModel):
+    """One metric, your value against the reference percentiles."""
+
+    metric: str
+    your_value: float
+    benchmark_p25: float
+    benchmark_median: float
+    benchmark_p75: float
+    benchmark_p90: float
+    your_percentile: float
+    performance_level: str
+    is_higher_better: bool
+
+
+class BenchmarkMetricsResponse(BaseModel):
+    """Benchmark comparison, with the provenance of the comparison values.
+
+    ``benchmark_source`` and ``benchmark_sample_size`` are not decoration. The
+    percentiles come from a static reference table, not from measuring other
+    tenants — ``CompetitorBenchmarkingService`` stamps ``sample_size=0`` to say
+    so, and a caller that does not see that will read "industry median" as a
+    measurement of somebody.
+    """
+
+    industry: str
+    region: str
+    platform: str
+    metrics: list[BenchmarkMetricRow]
+    overall_percentile: float
+    performance_level: str
+    recommendations: list[str]
+
+    benchmark_source: str = "static_reference_table"
+    benchmark_sample_size: int = 0
+
+
+def compute_tenant_metrics(campaigns: list[Any]) -> dict[str, float]:
+    """Derive the tenant's own ad metrics from their campaign totals.
+
+    Totals are summed before dividing rather than averaging per-campaign
+    ratios: a campaign with 100 impressions would otherwise weigh the same as
+    one with a million.
+
+    A metric whose denominator is zero is **omitted**, not reported as zero.
+    Zero CTR places a tenant in the bottom percentile of a benchmark they never
+    entered, which is a worse answer than no answer.
+    """
+    impressions = sum(int(getattr(c, "impressions", 0) or 0) for c in campaigns)
+    clicks = sum(int(getattr(c, "clicks", 0) or 0) for c in campaigns)
+    conversions = sum(int(getattr(c, "conversions", 0) or 0) for c in campaigns)
+    spend_cents = sum(int(getattr(c, "total_spend_cents", 0) or 0) for c in campaigns)
+    revenue_cents = sum(int(getattr(c, "revenue_cents", 0) or 0) for c in campaigns)
+
+    spend = spend_cents / 100
+    metrics: dict[str, float] = {}
+
+    if impressions > 0:
+        metrics["ctr"] = clicks / impressions * 100
+        metrics["cpm"] = spend / impressions * 1000
+    if clicks > 0:
+        metrics["cvr"] = conversions / clicks * 100
+        metrics["cpc"] = spend / clicks
+    if conversions > 0:
+        metrics["cpa"] = spend / conversions
+    if spend > 0:
+        metrics["roas"] = (revenue_cents / 100) / spend
+
+    return metrics
+
+
+@router.get("/benchmarks/metrics", response_model=BenchmarkMetricsResponse)
+async def get_benchmark_metrics(
+    industry: str = Query(default="ecommerce"),
+    region: str = Query(default="global"),
+    platform: str = Query(default="meta"),
+    days: int = Query(default=30, ge=1, le=365),
+    db: AsyncSession = Depends(get_db),
+    tenant_id: int = Depends(get_tenant_id),
+    current_user: User = Depends(get_current_user),
+) -> BenchmarkMetricsResponse:
+    """Compare this tenant's own metrics to the industry reference percentiles.
+
+    The Benchmarks view fetched ``/benchmarks/metrics``, which is mounted
+    nowhere — no router declares that prefix, the real benchmark routes live
+    under ``/audit-services/``. The call 404'd into a Promise.allSettled and
+    the whole view silently fell back to zeros, so every card read "—" and the
+    radar sat at the origin.
+
+    Your side of the comparison is measured from your campaigns. The other side
+    is a static reference table; the response says which is which.
+    """
+    from app.base_models import Campaign
+
+    result = await db.execute(
+        select(Campaign).where(
+            Campaign.tenant_id == tenant_id,
+            Campaign.is_deleted.is_(False),
+        )
+    )
+    campaigns = list(result.scalars().all())
+    metrics = compute_tenant_metrics(campaigns)
+
+    if not metrics:
+        # No campaigns, or none with a usable denominator. An empty metric list
+        # is the honest answer; zeros would be scored against the benchmark.
+        return BenchmarkMetricsResponse(
+            industry=industry,
+            region=region,
+            platform=platform,
+            metrics=[],
+            overall_percentile=0.0,
+            performance_level="unknown",
+            recommendations=[],
+        )
+
+    try:
+        industry_enum = Industry(industry.lower())
+    except ValueError:
+        industry_enum = Industry.OTHER
+    try:
+        region_enum = Region(region.lower())
+    except ValueError:
+        region_enum = Region.GLOBAL
+
+    comparison = CompetitorBenchmarkingService().get_benchmark(
+        tenant_id=str(tenant_id),
+        industry=industry_enum,
+        region=region_enum,
+        platform=platform,
+        metrics=metrics,
+        period_days=days,
+    )
+
+    return BenchmarkMetricsResponse(
+        industry=industry_enum.value,
+        region=region_enum.value,
+        platform=platform,
+        metrics=[
+            BenchmarkMetricRow(
+                metric=name,
+                your_value=m.your_value,
+                benchmark_p25=m.benchmark_p25,
+                benchmark_median=m.benchmark_median,
+                benchmark_p75=m.benchmark_p75,
+                benchmark_p90=m.benchmark_p90,
+                your_percentile=m.your_percentile,
+                performance_level=getattr(
+                    m.performance_level, "value", str(m.performance_level)
+                ),
+                is_higher_better=m.is_higher_better,
+            )
+            for name, m in comparison.metrics.items()
+        ],
+        overall_percentile=comparison.overall_percentile,
+        performance_level=getattr(
+            comparison.performance_level, "value", str(comparison.performance_level)
+        ),
+        recommendations=list(comparison.recommendations),
+    )
