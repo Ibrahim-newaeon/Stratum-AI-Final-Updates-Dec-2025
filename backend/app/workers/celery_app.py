@@ -255,6 +255,18 @@ if settings.feature_automation_rules:
         "options": {"queue": "rules"},
     }
 
+# The knowledge graph is only scheduled where it is enabled, and it is enabled
+# per environment only after scripts/backfill_knowledge_graph.py has actually
+# run there. Syncing the last 90 minutes into a graph that was never backfilled
+# leaves a graph containing the last 90 minutes, which reads as a complete
+# graph of a very quiet tenant.
+if settings.feature_knowledge_graph:
+    celery_app.conf.beat_schedule["sync-knowledge-graph"] = {
+        "task": "app.workers.tasks.sync_knowledge_graph_incremental",
+        "schedule": crontab(minute="*/30"),
+        "options": {"queue": "default"},
+    }
+
 # Scheduled since _apply_scan_result stopped fabricating spend/impressions/CTR
 # and started writing only what scan_competitor sources — site metadata, social
 # links, and the Meta Ad Library active-ad count. Without a Meta Graph token in
