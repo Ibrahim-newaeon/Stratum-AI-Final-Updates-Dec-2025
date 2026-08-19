@@ -32,7 +32,9 @@ class TestSummariseJourney:
         are all null rather than an empty list, so counting list length would
         report one event where there are none.
         """
-        summary = summarise_journey(_raw([{"event_type": None, "timestamp": None, "revenue": None}]))
+        summary = summarise_journey(
+            _raw([{"event_type": None, "timestamp": None, "revenue": None}])
+        )
 
         assert summary["total_events"] == 0
 
@@ -40,8 +42,16 @@ class TestSummariseJourney:
         summary = summarise_journey(
             _raw(
                 [
-                    {"event_type": "purchase", "timestamp": "2026-08-01T00:00:00", "revenue": 5000},
-                    {"event_type": "purchase", "timestamp": "2026-08-03T00:00:00", "revenue": 1000},
+                    {
+                        "event_type": "purchase",
+                        "timestamp": "2026-08-01T00:00:00",
+                        "revenue": 5000,
+                    },
+                    {
+                        "event_type": "purchase",
+                        "timestamp": "2026-08-03T00:00:00",
+                        "revenue": 1000,
+                    },
                 ]
             )
         )
@@ -53,8 +63,16 @@ class TestSummariseJourney:
         summary = summarise_journey(
             _raw(
                 [
-                    {"event_type": "page_view", "timestamp": "2026-08-01T00:00:00", "revenue": None},
-                    {"event_type": "purchase", "timestamp": "2026-08-02T00:00:00", "revenue": 2500},
+                    {
+                        "event_type": "page_view",
+                        "timestamp": "2026-08-01T00:00:00",
+                        "revenue": None,
+                    },
+                    {
+                        "event_type": "purchase",
+                        "timestamp": "2026-08-02T00:00:00",
+                        "revenue": 2500,
+                    },
                 ]
             )
         )
@@ -66,8 +84,16 @@ class TestSummariseJourney:
         summary = summarise_journey(
             _raw(
                 [
-                    {"event_type": "b", "timestamp": "2026-08-05T00:00:00", "revenue": None},
-                    {"event_type": "a", "timestamp": "2026-08-01T00:00:00", "revenue": None},
+                    {
+                        "event_type": "b",
+                        "timestamp": "2026-08-05T00:00:00",
+                        "revenue": None,
+                    },
+                    {
+                        "event_type": "a",
+                        "timestamp": "2026-08-01T00:00:00",
+                        "revenue": None,
+                    },
                 ]
             )
         )
@@ -91,7 +117,15 @@ class TestSummariseJourney:
 
     def test_stage_transitions_stay_empty_because_the_graph_has_no_history(self):
         summary = summarise_journey(
-            _raw([{"event_type": "purchase", "timestamp": "2026-08-01T00:00:00", "revenue": 100}])
+            _raw(
+                [
+                    {
+                        "event_type": "purchase",
+                        "timestamp": "2026-08-01T00:00:00",
+                        "revenue": 100,
+                    }
+                ]
+            )
         )
 
         assert summary["stage_transitions"] == []
@@ -99,7 +133,9 @@ class TestSummariseJourney:
     def test_an_unparseable_timestamp_does_not_sink_the_whole_summary(self):
         """Timestamps arrive as whatever was written to the graph."""
         summary = summarise_journey(
-            _raw([{"event_type": "purchase", "timestamp": "not-a-date", "revenue": 100}])
+            _raw(
+                [{"event_type": "purchase", "timestamp": "not-a-date", "revenue": 100}]
+            )
         )
 
         assert summary["total_events"] == 1

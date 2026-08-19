@@ -34,7 +34,6 @@ def _days_ago_iso(days: int) -> str:
     return (datetime.now(UTC) - timedelta(days=days)).isoformat()
 
 
-
 class ProblemSeverity(str, Enum):
     """Severity levels for detected problems."""
 

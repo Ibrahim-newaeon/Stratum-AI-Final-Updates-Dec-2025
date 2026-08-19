@@ -102,9 +102,9 @@ def test_no_query_aliases_an_aggregate_as_count():
     straight past ``count(*) AS count,`` in the middle of a RETURN list.
     """
     offenders = _offenders(lambda text: re.search(r"\bAS\s+count\b", text) is not None)
-    assert offenders == [], (
-        f"AGE rejects 'AS count' -- rename the alias at: {offenders}"
-    )
+    assert (
+        offenders == []
+    ), f"AGE rejects 'AS count' -- rename the alias at: {offenders}"
 
 
 def test_no_query_uses_an_anonymous_relationship_pattern():
@@ -119,9 +119,9 @@ def test_no_query_uses_an_anonymous_relationship_pattern():
 def test_no_query_uses_reduce():
     """AGE does not implement ``reduce()``."""
     offenders = _offenders(lambda text: "reduce(" in text)
-    assert offenders == [], (
-        f"AGE does not implement reduce() -- aggregate another way, at: {offenders}"
-    )
+    assert (
+        offenders == []
+    ), f"AGE does not implement reduce() -- aggregate another way, at: {offenders}"
 
 
 def test_no_query_calls_datetime_or_duration():
@@ -131,9 +131,7 @@ def test_no_query_calls_datetime_or_duration():
     calls ``isoformat()``), so a cutoff computed in Python and compared as a
     string is both correct and cheaper than a temporal function would be.
     """
-    offenders = _offenders(
-        lambda text: "datetime()" in text or "duration(" in text
-    )
+    offenders = _offenders(lambda text: "datetime()" in text or "duration(" in text)
     assert offenders == [], (
         "AGE has no datetime()/duration() -- interpolate an ISO cutoff "
         f"computed in Python, at: {offenders}"
@@ -248,7 +246,9 @@ class TestBuilderNamesEveryRelationship:
             ["p.external_id AS profile_id", "p.lifecycle_stage AS lifecycle"]
         ).build()
 
-        assert "RETURN {profile_id: profile_id, lifecycle: lifecycle} AS result" in query
+        assert (
+            "RETURN {profile_id: profile_id, lifecycle: lifecycle} AS result" in query
+        )
 
     def test_build_keeps_an_ordering_alias_in_scope(self):
         """Sorting by an alias only the RETURN created would lose it.
@@ -289,9 +289,9 @@ class TestBuilderNamesEveryRelationship:
         query, _ = builder.return_fields(["p.external_id AS profile_id"]).build()
 
         assert "WHERE" in query and "OPTIONAL MATCH" in query
-        assert query.index("WHERE") < query.index("OPTIONAL MATCH"), (
-            f"tenant filter does not constrain the required match: {query}"
-        )
+        assert query.index("WHERE") < query.index(
+            "OPTIONAL MATCH"
+        ), f"tenant filter does not constrain the required match: {query}"
 
     def test_return_count_does_not_default_to_the_reserved_alias(self):
         """``return_count`` defaulted to ``AS count``, which AGE rejects."""
@@ -319,7 +319,9 @@ def _orders_by_alias_from_aggregating_clause(text: str) -> bool:
             upper = previous.upper()
             if not upper.startswith(("WITH ", "RETURN ")):
                 continue
-            aggregates = re.search(r"\b(sum|count|collect|avg|min|max)\s*\(", previous, re.I)
+            aggregates = re.search(
+                r"\b(sum|count|collect|avg|min|max)\s*\(", previous, re.I
+            )
             alias = re.search(r"\bAS\s+(\w+)\s*$", previous)
             sorted_by = line[len("ORDER BY") :].strip().split()[0].rstrip(",")
             if aggregates and alias and sorted_by == alias.group(1):

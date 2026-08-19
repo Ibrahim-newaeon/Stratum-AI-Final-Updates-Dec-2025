@@ -102,7 +102,9 @@ class CypherQueryBuilder:
         ever reaching Postgres. The generated name is positional so two
         relationships in one query cannot collide.
         """
-        edge_part = f"[{edge_alias or f'rel{len(self._match_clauses)}'}:{edge_label.value}]"
+        edge_part = (
+            f"[{edge_alias or f'rel{len(self._match_clauses)}'}:{edge_label.value}]"
+        )
         end_part = f"({end_alias}:{end_label.value})" if end_label else f"({end_alias})"
 
         if direction == "->":
@@ -179,7 +181,9 @@ class CypherQueryBuilder:
 
     # "count" is not available as an alias: AGE rejects `RETURN count(n) AS
     # count` with a syntax error at the alias.
-    def return_count(self, alias: str, as_name: str = "item_count") -> CypherQueryBuilder:
+    def return_count(
+        self, alias: str, as_name: str = "item_count"
+    ) -> CypherQueryBuilder:
         """Return count of nodes."""
         self._return_fields.append(f"count({alias}) AS {as_name}")
         return self

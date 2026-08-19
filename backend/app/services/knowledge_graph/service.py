@@ -53,7 +53,9 @@ def summarise_journey(raw: dict[str, Any]) -> dict[str, Any]:
     duration_days: Optional[float] = None
     if first_seen and last_seen and first_seen != last_seen:
         try:
-            span = datetime.fromisoformat(last_seen) - datetime.fromisoformat(first_seen)
+            span = datetime.fromisoformat(last_seen) - datetime.fromisoformat(
+                first_seen
+            )
             duration_days = round(span.total_seconds() / 86400, 2)
         except ValueError:
             # Timestamps are whatever was written to the graph; an unparseable
@@ -71,7 +73,6 @@ def summarise_journey(raw: dict[str, Any]) -> dict[str, Any]:
         "stage_transitions": [],
         "journey_duration_days": duration_days,
     }
-
 
 
 class KnowledgeGraphService:
