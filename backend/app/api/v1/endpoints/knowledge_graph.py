@@ -18,6 +18,7 @@ from app.services.knowledge_graph import (
     KnowledgeGraphService,
     ProblemCategory,
     ProblemSeverity,
+    coverage,
 )
 from app.tenancy.deps import get_current_user, get_db
 
@@ -87,11 +88,18 @@ class HealthSummaryResponse(BaseModel):
 
 
 class ProblemsListResponse(BaseModel):
-    """List of detected problems."""
+    """List of detected problems, plus the categories we could not check.
+
+    ``unavailable`` is not decoration. Three of the six detectors traverse
+    graph relationships that nothing writes, so they return no findings however
+    bad things are. Without this field, "0 blocked automations" reads as good
+    news. See services/knowledge_graph/coverage.py.
+    """
 
     problems: list[ProblemResponse]
     total: int
     by_severity: dict[str, int]
+    unavailable: list[dict[str, Any]] = []
 
 
 class RevenueByChannelResponse(BaseModel):
@@ -209,6 +217,9 @@ async def get_detected_problems(
         problems=[ProblemResponse(**p.to_dict()) for p in problems],
         total=len(problems),
         by_severity=by_severity,
+        # Three of the six detectors cannot run. Reported so a short problems
+        # list is read as "we checked what we could", not "all clear".
+        unavailable=coverage.unavailable_report(),
     )
 
 
@@ -250,6 +261,7 @@ async def get_revenue_by_channel(
 
     Uses Knowledge Graph to trace revenue attribution through touchpoints.
     """
+    coverage.require_supported("revenue_by_channel")
     kg = KnowledgeGraphService(db)
     results = await kg.get_revenue_by_channel(current_user.tenant_id, days=days)
 
@@ -335,6 +347,7 @@ async def get_blocked_automations(
 
     Includes block reason and signal health at time of block.
     """
+    coverage.require_supported("blocked_automations")
     kg = KnowledgeGraphService(db)
     return await kg.get_blocked_automations(current_user.tenant_id, days=days)
 
@@ -350,6 +363,7 @@ async def trace_automation_decision(
 
     Shows: Signal -> TrustGate -> Automation -> Outcome
     """
+    coverage.require_supported("automation_trace")
     kg = KnowledgeGraphService(db)
     trace = await kg.trace_automation_decision(current_user.tenant_id, automation_id)
 
