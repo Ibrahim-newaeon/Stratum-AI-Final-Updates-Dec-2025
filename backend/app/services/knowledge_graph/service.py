@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import datetime
 from typing import Any, Optional
 
 from sqlalchemy import Result, text
@@ -23,6 +24,54 @@ from .models import (
 from .queries import CypherQueryBuilder, RevenueAnalyticsQueries
 
 logger = logging.getLogger(__name__)
+
+
+def summarise_journey(raw: dict[str, Any]) -> dict[str, Any]:
+    """Expand the journey query's three fields into the nine the API returns.
+
+    ``CustomerJourneyResponse`` promises totals, a first/last seen range and a
+    duration; the Cypher returns ``profile_id``, ``lifecycle`` and a list of
+    events. Everything else is derivable from that list, and was previously
+    left at the response model's defaults -- a profile with one purchase and
+    5000 cents of revenue was reported as having zero of each.
+
+    ``total_revenue`` is in cents, matching ``Revenue.amount_cents`` and every
+    other knowledge-graph surface. ``stage_transitions`` stays empty: the graph
+    records no lifecycle history, and an invented one would read as real.
+    """
+    journey = raw.get("journey") or []
+    # OPTIONAL MATCH makes collect() yield one all-null row rather than an
+    # empty list, so entries are counted by having an event_type, not by length.
+    events = [entry for entry in journey if entry and entry.get("event_type")]
+
+    timestamps = sorted(
+        entry["timestamp"] for entry in events if entry.get("timestamp")
+    )
+    first_seen = timestamps[0] if timestamps else None
+    last_seen = timestamps[-1] if timestamps else None
+
+    duration_days: Optional[float] = None
+    if first_seen and last_seen and first_seen != last_seen:
+        try:
+            span = datetime.fromisoformat(last_seen) - datetime.fromisoformat(first_seen)
+            duration_days = round(span.total_seconds() / 86400, 2)
+        except ValueError:
+            # Timestamps are whatever was written to the graph; an unparseable
+            # one costs the duration, not the rest of the summary.
+            duration_days = None
+
+    return {
+        "profile_id": raw.get("profile_id"),
+        "lifecycle_stage": raw.get("lifecycle"),
+        "first_seen_at": first_seen,
+        "last_seen_at": last_seen,
+        "total_events": len(events),
+        "total_revenue": float(sum(entry.get("revenue") or 0 for entry in events)),
+        "touchpoints": events,
+        "stage_transitions": [],
+        "journey_duration_days": duration_days,
+    }
+
 
 
 class KnowledgeGraphService:
@@ -193,7 +242,7 @@ class KnowledgeGraphService:
         cypher = f"""
             MATCH (n:{label.value} {{tenant_id: '{tenant_id}', external_id: '{external_id}'}})
             DETACH DELETE n
-            RETURN count(n) AS deleted
+            RETURN {{deleted: count(n)}} AS result
         """
         query = f"""
             SELECT * FROM cypher('{self.GRAPH_NAME}', $$
@@ -280,7 +329,8 @@ class KnowledgeGraphService:
         cypher = f"""
             MATCH (n:{start_label.value} {{tenant_id: '{tenant_id}', external_id: '{start_external_id}'}})
                   -[r{edge_filter}]->(m)
-            RETURN type(r) AS relationship, properties(r) AS edge_props, labels(m) AS target_labels, properties(m) AS target_props
+            RETURN {{relationship: type(r), edge_props: properties(r),
+                    target_labels: labels(m), target_props: properties(m)}} AS result
         """
         query = f"""
             SELECT * FROM cypher('{self.GRAPH_NAME}', $$
@@ -357,7 +407,7 @@ class KnowledgeGraphService:
         row = result.fetchone()
 
         if row:
-            return self._parse_agtype(row[0])
+            return summarise_journey(self._parse_agtype(row[0]))
         return {}
 
     async def get_segment_revenue_performance(
@@ -514,16 +564,26 @@ class KnowledgeGraphService:
 
         Returns:
             List of channel transitions with counts
+
+        Note:
+            The pair is ordered but no longer capped at seven days. AGE has no
+            interval arithmetic, and the timestamps are ISO-8601 strings, so
+            ``t1.timestamp + duration({days: 7})`` cannot be expressed -- it
+            failed with ``function duration does not exist``. Every later
+            touchpoint for the same profile now counts as a transition, which
+            widens the window rather than narrowing it. Restoring the cap needs
+            a numeric timestamp on Touchpoint to compare against.
         """
         cypher = f"""
             MATCH (p:Profile {{tenant_id: '{tenant_id}'}})-[r1:RECEIVED]->(t1:Touchpoint)
             MATCH (p)-[r2:RECEIVED]->(t2:Touchpoint)
             WHERE t2.timestamp > t1.timestamp
-              AND t2.timestamp < t1.timestamp + duration({{days: 7}})
             WITH t1.channel AS from_channel, t2.channel AS to_channel, count(*) AS transitions
-            RETURN from_channel, to_channel, transitions
+            WITH from_channel, to_channel, transitions
             ORDER BY transitions DESC
             LIMIT 100
+            RETURN {{from_channel: from_channel, to_channel: to_channel,
+                    transitions: transitions}} AS result
         """
         query = f"""
             SELECT * FROM cypher('{self.GRAPH_NAME}', $$
@@ -551,7 +611,7 @@ class KnowledgeGraphService:
         for label in NodeLabel:
             cypher = f"""
                 MATCH (n:{label.value} {{tenant_id: '{tenant_id}'}})
-                RETURN count(n) AS node_count
+                RETURN {{node_count: count(n)}} AS result
             """
             query = f"""
                 SELECT * FROM cypher('{self.GRAPH_NAME}', $$
@@ -569,7 +629,7 @@ class KnowledgeGraphService:
             cypher = f"""
                 MATCH ()-[r:{edge.value}]->()
                 WHERE r.tenant_id = '{tenant_id}'
-                RETURN count(r) AS edge_count
+                RETURN {{edge_count: count(r)}} AS result
             """
             query = f"""
                 SELECT * FROM cypher('{self.GRAPH_NAME}', $$
@@ -639,7 +699,7 @@ class KnowledgeGraphService:
         try:
             query = f"""
                 SELECT * FROM cypher('{self.GRAPH_NAME}', $$
-                    RETURN 1 AS health
+                    RETURN {{health: 1}} AS result
                 $$) AS (result agtype);
             """
             result = await self._execute_graph(query)

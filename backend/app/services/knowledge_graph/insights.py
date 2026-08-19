@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import Any, Optional
 
@@ -20,6 +20,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .service import KnowledgeGraphService
 
 logger = logging.getLogger(__name__)
+
+
+def _days_ago_iso(days: int) -> str:
+    """The ISO-8601 instant ``days`` before now, for use as a Cypher literal.
+
+    AGE implements neither ``datetime()`` nor ``duration()`` -- a query calling
+    them fails with ``function datetime does not exist``. Timestamps enter the
+    graph as ISO strings (``GraphNode.to_cypher_properties`` calls
+    ``isoformat()``), and ISO-8601 in a fixed offset sorts lexicographically,
+    so a string comparison against a cutoff computed here is exact.
+    """
+    return (datetime.now(UTC) - timedelta(days=days)).isoformat()
+
 
 
 class ProblemSeverity(str, Enum):
@@ -208,10 +221,10 @@ class KnowledgeGraphInsightsEngine:
             WITH previous, sum(recent_day) AS recent_total
             UNWIND previous AS previous_day
             WITH recent_total, sum(previous_day) AS previous_total
-            RETURN recent_total, previous_total,
-                   CASE WHEN previous_total > 0
-                        THEN (recent_total - previous_total) * 1.0 / previous_total
-                        ELSE 0 END AS change_pct
+            RETURN {{recent_total: recent_total, previous_total: previous_total,
+                    change_pct: CASE WHEN previous_total > 0
+                                     THEN (recent_total - previous_total) * 1.0 / previous_total
+                                     ELSE 0 END}} AS result
         """
 
         try:
@@ -261,33 +274,34 @@ class KnowledgeGraphInsightsEngine:
         # Check if campaigns are underperforming
         campaign_query = f"""
             MATCH (c:Campaign {{tenant_id: '{tenant_id}'}})-[drove:DROVE]->(r:Revenue)
-            WHERE r.occurred_at >= datetime() - duration({{days: {days}}})
+            WHERE r.occurred_at >= '{_days_ago_iso(days)}'
             WITH c, sum(r.amount_cents) AS revenue
             WITH c, revenue
             ORDER BY revenue DESC
             LIMIT 5
-            RETURN c.name AS campaign, c.platform AS platform,
-                   c.spend_cents AS spend, revenue,
-                   CASE WHEN c.spend_cents > 0 THEN revenue * 1.0 / c.spend_cents ELSE 0 END AS roas
+            RETURN {{campaign: c.name, platform: c.platform,
+                    spend: c.spend_cents, revenue: revenue,
+                    roas: CASE WHEN c.spend_cents > 0
+                               THEN revenue * 1.0 / c.spend_cents ELSE 0 END}} AS result
         """
         campaigns = await self.kg.execute_cypher(campaign_query)
 
         # Check for blocked automations
         blocked_query = f"""
             MATCH (tg:TrustGate {{tenant_id: '{tenant_id}', decision: 'block'}})-[blk:BLOCKED]->(a:Automation)
-            WHERE tg.evaluated_at >= datetime() - duration({{days: {days}}})
-            RETURN count(a) AS blocked_count,
-                   collect(DISTINCT a.action_type)[0..5] AS action_types,
-                   avg(tg.signal_health_score) AS avg_health
+            WHERE tg.evaluated_at >= '{_days_ago_iso(days)}'
+            RETURN {{blocked_count: count(a),
+                    action_types: collect(DISTINCT a.action_type)[0..5],
+                    avg_health: avg(tg.signal_health_score)}} AS result
         """
         blocked = await self.kg.execute_cypher(blocked_query)
 
         # Check signal health
         signal_query = f"""
             MATCH (s:Signal {{tenant_id: '{tenant_id}'}})
-            WHERE s.measured_at >= datetime() - duration({{days: {days}}})
-            RETURN s.source AS source, avg(s.score) AS avg_score,
-                   collect(DISTINCT s.status) AS statuses
+            WHERE s.measured_at >= '{_days_ago_iso(days)}'
+            RETURN {{source: s.source, avg_score: avg(s.score),
+                    statuses: collect(DISTINCT s.status)}} AS result
         """
         signals = await self.kg.execute_cypher(signal_query)
 
@@ -427,13 +441,14 @@ class KnowledgeGraphInsightsEngine:
 
         cypher = f"""
             MATCH (tg:TrustGate {{tenant_id: '{tenant_id}'}})
-            WHERE tg.evaluated_at >= datetime() - duration({{days: {days}}})
+            WHERE tg.evaluated_at >= '{_days_ago_iso(days)}'
             WITH
                 count(CASE WHEN tg.decision = 'block' THEN 1 END) AS blocked,
                 count(CASE WHEN tg.decision = 'pass' THEN 1 END) AS passed,
                 count(tg) AS total
-            RETURN blocked, passed, total,
-                   CASE WHEN total > 0 THEN blocked * 1.0 / total ELSE 0 END AS block_rate
+            RETURN {{blocked: blocked, passed: passed, total: total,
+                    block_rate: CASE WHEN total > 0
+                                     THEN blocked * 1.0 / total ELSE 0 END}} AS result
         """
 
         try:
@@ -448,11 +463,15 @@ class KnowledgeGraphInsightsEngine:
                 # Get details on what's being blocked
                 detail_query = f"""
                     MATCH (tg:TrustGate {{tenant_id: '{tenant_id}', decision: 'block'}})-[blk:BLOCKED]->(a:Automation)
-                    WHERE tg.evaluated_at >= datetime() - duration({{days: {days}}})
-                    RETURN a.action_type AS action_type, a.platform AS platform,
-                           count(*) AS count, avg(tg.signal_health_score) AS avg_health
-                    ORDER BY count DESC
+                    WHERE tg.evaluated_at >= '{_days_ago_iso(days)}'
+                    WITH a.action_type AS action_type, a.platform AS platform,
+                         count(*) AS action_count,
+                         avg(tg.signal_health_score) AS avg_health
+                    WITH action_type, platform, action_count, avg_health
+                    ORDER BY action_count DESC
                     LIMIT 5
+                    RETURN {{action_type: action_type, platform: platform,
+                            count: action_count, avg_health: avg_health}} AS result
                 """
                 details = await self.kg.execute_cypher(detail_query)
 
@@ -518,13 +537,14 @@ class KnowledgeGraphInsightsEngine:
 
         cypher = f"""
             MATCH (s:Signal {{tenant_id: '{tenant_id}'}})
-            WHERE s.measured_at >= datetime() - duration({{days: {days}}})
+            WHERE s.measured_at >= '{_days_ago_iso(days)}'
             WITH s.source AS source, s.platform AS platform,
                  avg(s.score) AS avg_score,
                  min(s.score) AS min_score,
                  collect(DISTINCT s.status) AS statuses
             WHERE avg_score < {self.SIGNAL_HEALTH_THRESHOLD}
-            RETURN source, platform, avg_score, min_score, statuses
+            RETURN {{source: source, platform: platform, avg_score: avg_score,
+                    min_score: min_score, statuses: statuses}} AS result
         """
 
         try:
@@ -610,14 +630,16 @@ class KnowledgeGraphInsightsEngine:
         cypher = f"""
             MATCH (seg:Segment {{tenant_id: '{tenant_id}'}})<-[member:BELONGS_TO]-(p:Profile)
                   -[perf:PERFORMED]->(e:Event)-[gen:GENERATED]->(r:Revenue)
-            WHERE r.occurred_at >= datetime() - duration({{days: {days}}})
+            WHERE r.occurred_at >= '{_days_ago_iso(days)}'
             WITH seg, count(DISTINCT p) AS converting_profiles,
                  sum(r.amount_cents) AS revenue, seg.profile_count AS total_profiles
             WHERE total_profiles > 10
-            RETURN seg.name AS segment, seg.external_id AS segment_id,
-                   total_profiles, converting_profiles, revenue,
-                   converting_profiles * 1.0 / total_profiles AS conversion_rate
+            WITH seg, total_profiles, converting_profiles, revenue
             ORDER BY revenue DESC
+            RETURN {{segment: seg.name, segment_id: seg.external_id,
+                    total_profiles: total_profiles,
+                    converting_profiles: converting_profiles, revenue: revenue,
+                    conversion_rate: converting_profiles * 1.0 / total_profiles}} AS result
         """
 
         try:
@@ -694,13 +716,15 @@ class KnowledgeGraphInsightsEngine:
 
         cypher = f"""
             MATCH (tg:TrustGate {{tenant_id: '{tenant_id}'}})-[blk:BLOCKED]->(a:Automation)
-            WHERE tg.evaluated_at >= datetime() - duration({{days: {days}}})
+            WHERE tg.evaluated_at >= '{_days_ago_iso(days)}'
             WITH a.action_type AS action_type, count(*) AS blocked_count,
                  avg(tg.signal_health_score) AS avg_health_at_block
             WHERE blocked_count >= 5
-            RETURN action_type, blocked_count, avg_health_at_block
+            WITH action_type, blocked_count, avg_health_at_block
             ORDER BY blocked_count DESC
             LIMIT 3
+            RETURN {{action_type: action_type, blocked_count: blocked_count,
+                    avg_health_at_block: avg_health_at_block}} AS result
         """
 
         try:
@@ -753,13 +777,14 @@ class KnowledgeGraphInsightsEngine:
         # filter here; the node carries its own rollup window (window_days).
         cypher = f"""
             MATCH (ch:Channel {{tenant_id: '{tenant_id}'}})
-            RETURN ch.name AS channel, ch.channel_type AS type,
-                   ch.total_revenue_cents AS revenue,
-                   ch.total_conversions AS conversions,
-                   CASE WHEN ch.total_conversions > 0
-                        THEN ch.total_revenue_cents / ch.total_conversions
-                        ELSE 0 END AS avg_order
-            ORDER BY revenue DESC
+            WITH ch
+            ORDER BY ch.total_revenue_cents DESC
+            RETURN {{channel: ch.name, type: ch.channel_type,
+                    revenue: ch.total_revenue_cents,
+                    conversions: ch.total_conversions,
+                    avg_order: CASE WHEN ch.total_conversions > 0
+                                    THEN ch.total_revenue_cents / ch.total_conversions
+                                    ELSE 0 END}} AS result
         """
 
         try:

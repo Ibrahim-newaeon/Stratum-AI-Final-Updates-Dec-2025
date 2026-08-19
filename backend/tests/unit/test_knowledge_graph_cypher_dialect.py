@@ -46,10 +46,11 @@ SERVICE_DIR = (
     Path(__file__).resolve().parents[2] / "app" / "services" / "knowledge_graph"
 )
 
-# A string is treated as Cypher if it contains a clause that only Cypher has.
+# A string is treated as Cypher if it opens with a clause only Cypher has.
 # Scanning every string would catch prose in docstrings describing the very
-# patterns this module forbids.
-CYPHER_MARKERS = ("MATCH ", "MERGE ", "RETURN ", "CREATE (")
+# patterns this module forbids -- "Returns: ... RETURN fields." is a docstring,
+# not a query, so RETURN alone does not qualify.
+CYPHER_MARKERS = ("MATCH ", "MERGE ", "CREATE (")
 
 
 def _cypher_literals() -> list[tuple[Path, int, str]]:
@@ -64,8 +65,11 @@ def _cypher_literals() -> list[tuple[Path, int, str]]:
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if isinstance(node, ast.JoinedStr):
+                # The placeholder deliberately carries no braces: "{}" would
+                # make every interpolated RETURN look like a map literal to the
+                # check below, which is exactly the bug it exists to catch.
                 text = "".join(
-                    part.value if isinstance(part, ast.Constant) else "{}"
+                    part.value if isinstance(part, ast.Constant) else "PLACEHOLDER"
                     for part in node.values
                 )
             elif isinstance(node, ast.Constant) and isinstance(node.value, str):
@@ -91,8 +95,13 @@ def test_cypher_literals_are_actually_found():
 
 
 def test_no_query_aliases_an_aggregate_as_count():
-    """``AS count`` is a syntax error in AGE. Any other alias works."""
-    offenders = _offenders(lambda text: "AS count\n" in text or "AS count " in text)
+    """``AS count`` is a syntax error in AGE. Any other alias works.
+
+    Matched by word boundary rather than by the following character: the first
+    version of this test looked for a trailing space or newline and walked
+    straight past ``count(*) AS count,`` in the middle of a RETURN list.
+    """
+    offenders = _offenders(lambda text: re.search(r"\bAS\s+count\b", text) is not None)
     assert offenders == [], (
         f"AGE rejects 'AS count' -- rename the alias at: {offenders}"
     )
@@ -112,6 +121,73 @@ def test_no_query_uses_reduce():
     offenders = _offenders(lambda text: "reduce(" in text)
     assert offenders == [], (
         f"AGE does not implement reduce() -- aggregate another way, at: {offenders}"
+    )
+
+
+def test_no_query_calls_datetime_or_duration():
+    """AGE implements neither: ``function datetime does not exist``.
+
+    Timestamps go into the graph as ISO-8601 strings (``to_cypher_properties``
+    calls ``isoformat()``), so a cutoff computed in Python and compared as a
+    string is both correct and cheaper than a temporal function would be.
+    """
+    offenders = _offenders(
+        lambda text: "datetime()" in text or "duration(" in text
+    )
+    assert offenders == [], (
+        "AGE has no datetime()/duration() -- interpolate an ISO cutoff "
+        f"computed in Python, at: {offenders}"
+    )
+
+
+def _top_level_items(clause: str) -> list[str]:
+    """Split a RETURN body on commas that are not inside brackets."""
+    depth, current, items = 0, "", []
+    for char in clause:
+        if char in "({[":
+            depth += 1
+        elif char in ")}]":
+            depth -= 1
+        if char == "," and depth == 0:
+            items.append(current)
+            current = ""
+        else:
+            current += char
+    if current.strip():
+        items.append(current)
+    return [item.strip() for item in items]
+
+
+def _returns_one_map(text: str) -> bool:
+    match = re.search(
+        r"\bRETURN\b(.*?)(?:\bORDER BY\b|\bLIMIT\b|\bSKIP\b|$)", text, re.S | re.I
+    )
+    if not match:
+        return True  # a write with no RETURN yields no rows to shape
+    items = _top_level_items(" ".join(match.group(1).split()))
+    if len(items) != 1:
+        return False
+    only = items[0]
+    # A map literal, or a bare alias naming a vertex or edge -- agtype renders
+    # both as a mapping, which is what every caller reads. An expression or a
+    # scalar aggregate is neither.
+    return only.startswith("{") or re.fullmatch(r"\w+", only) is not None
+
+
+def test_every_query_returns_exactly_one_map():
+    """Every call site wraps Cypher as ``AS (result agtype)`` -- one column.
+
+    AGE requires the column definition list to match the RETURN arity, so a
+    query returning several columns raises ``return row and column definition
+    list do not match``. Returning a single scalar parses, but then hands the
+    caller an int where it expects a mapping and raises ``'int' object has no
+    attribute 'get'``. One map satisfies both: it matches the single declared
+    column and it arrives as the dict every caller already reads.
+    """
+    offenders = _offenders(lambda text: not _returns_one_map(text))
+    assert offenders == [], (
+        "each query must RETURN exactly one map, as in "
+        f"'RETURN {{a: x, b: y}} AS result', at: {offenders}"
     )
 
 
@@ -161,6 +237,61 @@ class TestBuilderNamesEveryRelationship:
         aliases = re.findall(r"-\[(\w+):", query)
         assert len(aliases) == 2
         assert len(set(aliases)) == 2, f"duplicate relationship alias in: {query}"
+
+    def test_build_returns_a_single_map_for_several_fields(self):
+        """``AS (result agtype)`` declares one column; RETURN must match it."""
+        from app.services.knowledge_graph.models import NodeLabel
+
+        builder = self._builder()
+        builder.match_node("p", NodeLabel.PROFILE)
+        query, _ = builder.return_fields(
+            ["p.external_id AS profile_id", "p.lifecycle_stage AS lifecycle"]
+        ).build()
+
+        assert "RETURN {profile_id: profile_id, lifecycle: lifecycle} AS result" in query
+
+    def test_build_keeps_an_ordering_alias_in_scope(self):
+        """Sorting by an alias only the RETURN created would lose it.
+
+        ``segment_revenue_performance`` orders by ``total_revenue_cents``, an
+        alias its return fields define, so the projection has to survive into a
+        clause ORDER BY can see.
+        """
+        from app.services.knowledge_graph.models import NodeLabel
+
+        builder = self._builder()
+        builder.match_node("r", NodeLabel.REVENUE)
+        query, _ = (
+            builder.return_fields(["sum(r.amount_cents) AS total_revenue_cents"])
+            .order_by("total_revenue_cents", desc=True)
+            .build()
+        )
+
+        ordering = query.index("ORDER BY total_revenue_cents")
+        projection = query.index("AS total_revenue_cents")
+        assert projection < ordering, f"alias not in scope when sorted: {query}"
+
+    def test_where_is_emitted_before_optional_match(self):
+        """A WHERE after OPTIONAL MATCH filters the optional pattern only.
+
+        ``match_node`` puts the tenant filter in the WHERE clause, so emitting
+        it after an OPTIONAL MATCH stops it constraining the required match at
+        all -- another tenant's rows come back with the optional half unbound.
+        Verified against live AGE: the generated customer_journey query
+        returned a second tenant's profile under the same external_id.
+        """
+        from app.services.knowledge_graph.models import EdgeLabel, NodeLabel
+
+        builder = self._builder()
+        builder.match_node("p", NodeLabel.PROFILE, {"external_id": "1"})
+        builder.match_edge("p", EdgeLabel.PERFORMED, "e", NodeLabel.EVENT)
+        builder.optional_match_edge("e", EdgeLabel.GENERATED, "r", NodeLabel.REVENUE)
+        query, _ = builder.return_fields(["p.external_id AS profile_id"]).build()
+
+        assert "WHERE" in query and "OPTIONAL MATCH" in query
+        assert query.index("WHERE") < query.index("OPTIONAL MATCH"), (
+            f"tenant filter does not constrain the required match: {query}"
+        )
 
     def test_return_count_does_not_default_to_the_reserved_alias(self):
         """``return_count`` defaulted to ``AS count``, which AGE rejects."""
