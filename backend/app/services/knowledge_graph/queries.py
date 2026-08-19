@@ -7,6 +7,7 @@ and revenue-focused analytics patterns.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import Enum
@@ -92,11 +93,17 @@ class CypherQueryBuilder:
         edge_alias: Optional[str] = None,
         direction: str = "->",  # "->" or "<-" or "--"
     ) -> CypherQueryBuilder:
-        """Add a MATCH clause for an edge."""
+        """Add a MATCH clause for an edge.
+
+        The relationship is always named, even when the caller does not care
+        about it. ``[:LABEL]`` puts a colon after a non-word character, which
+        SQLAlchemy's ``text()`` reads as a bind parameter -- the query then
+        fails with ``A value is required for bind parameter 'LABEL'`` without
+        ever reaching Postgres. The generated name is positional so two
+        relationships in one query cannot collide.
+        """
         edge_part = (
-            f"[{edge_alias or ''}:{edge_label.value}]"
-            if edge_alias
-            else f"[:{edge_label.value}]"
+            f"[{edge_alias or f'rel{len(self._match_clauses)}'}:{edge_label.value}]"
         )
         end_part = f"({end_alias}:{end_label.value})" if end_label else f"({end_alias})"
 
@@ -119,8 +126,10 @@ class CypherQueryBuilder:
     ) -> CypherQueryBuilder:
         """Add an OPTIONAL MATCH clause for an edge."""
         end_part = f"({end_alias}:{end_label.value})" if end_label else f"({end_alias})"
+        # Named for the same reason as match_edge above; a distinct prefix
+        # keeps it clear of the aliases the required matches generate.
         self._optional_matches.append(
-            f"({start_alias})-[:{edge_label.value}]->{end_part}"
+            f"({start_alias})-[opt{len(self._optional_matches)}:{edge_label.value}]->{end_part}"
         )
         return self
 
@@ -170,7 +179,11 @@ class CypherQueryBuilder:
         self._return_fields = fields
         return self
 
-    def return_count(self, alias: str, as_name: str = "count") -> CypherQueryBuilder:
+    # "count" is not available as an alias: AGE rejects `RETURN count(n) AS
+    # count` with a syntax error at the alias.
+    def return_count(
+        self, alias: str, as_name: str = "item_count"
+    ) -> CypherQueryBuilder:
         """Return count of nodes."""
         self._return_fields.append(f"count({alias}) AS {as_name}")
         return self
@@ -226,12 +239,40 @@ class CypherQueryBuilder:
         # Build WITH clauses
         with_parts = [f"WITH {w}" for w in self._with_clauses]
 
-        # Build RETURN clause
-        return_part = (
-            "RETURN " + ", ".join(self._return_fields)
-            if self._return_fields
-            else "RETURN *"
-        )
+        # Build RETURN clause. Every call site wraps the result as
+        # `AS (result agtype)` -- one column -- so a query returning several
+        # columns is rejected outright: "return row and column definition list
+        # do not match". The fields are projected through a WITH that keeps
+        # their aliases, then returned as one map built from those aliases.
+        #
+        # The projection is also what keeps ORDER BY working. Callers sort by
+        # aliases their own return fields define (segment_revenue_performance
+        # orders by total_revenue_cents), and those aliases would not exist if
+        # the map were the only thing that named them. The second WITH is
+        # required on top: AGE cannot sort by an alias an aggregating WITH just
+        # produced ("could not find rte"), so the names are projected forward
+        # once more before ORDER BY sees them.
+        project_part = ""
+        forward_part = ""
+        if self._return_fields:
+            projections, keys = [], []
+            for field_expr in self._return_fields:
+                alias_match = re.search(r"\s+AS\s+(\w+)\s*$", field_expr, re.I)
+                if alias_match:
+                    alias = alias_match.group(1)
+                    expression = field_expr[: alias_match.start()].strip()
+                else:
+                    expression = field_expr.strip()
+                    alias = re.sub(r"\W", "_", expression.split(".")[-1]) or "value"
+                projections.append(f"{expression} AS {alias}")
+                keys.append(alias)
+            project_part = "WITH " + ", ".join(projections)
+            forward_part = "WITH " + ", ".join(keys)
+            return_part = (
+                "RETURN {" + ", ".join(f"{key}: {key}" for key in keys) + "} AS result"
+            )
+        else:
+            return_part = "RETURN *"
 
         # Build ORDER BY
         order_part = f"ORDER BY {self._order_by}" if self._order_by else ""
@@ -240,16 +281,25 @@ class CypherQueryBuilder:
         skip_part = f"SKIP {self._skip}" if self._skip else ""
         limit_part = f"LIMIT {self._limit}" if self._limit else ""
 
-        # Combine all parts
+        # Combine all parts. Ordering and paging attach to the forwarded
+        # projection, ahead of the RETURN, because the map is a single value
+        # and carries none of the names they reference.
         cypher_parts = [
             match_part,
-            *optional_parts,
+            # WHERE precedes OPTIONAL MATCH deliberately. Cypher attaches a
+            # WHERE to the clause before it, so emitting it after an OPTIONAL
+            # MATCH leaves the required match unfiltered -- and match_node puts
+            # the tenant predicate in this WHERE. Against live AGE that
+            # returned a second tenant's profile under the same external_id.
             where_part,
+            *optional_parts,
             *with_parts,
-            return_part,
+            project_part,
+            forward_part,
             order_part,
             skip_part,
             limit_part,
+            return_part,
         ]
         cypher = " ".join(part for part in cypher_parts if part)
 
@@ -387,14 +437,15 @@ class RevenueAnalyticsQueries:
         """
         cypher = f"""
             MATCH (ch:Channel {{tenant_id: '{tenant_id}'}})
-            RETURN ch.name AS channel,
-                   ch.channel_type AS channel_type,
-                   ch.total_conversions AS transactions,
-                   ch.total_revenue_cents AS revenue_cents,
-                   ch.spend_cents AS spend_cents,
-                   ch.roas AS roas,
-                   ch.window_days AS window_days
-            ORDER BY revenue_cents DESC
+            WITH ch
+            ORDER BY ch.total_revenue_cents DESC
+            RETURN {{channel: ch.name,
+                    channel_type: ch.channel_type,
+                    transactions: ch.total_conversions,
+                    revenue_cents: ch.total_revenue_cents,
+                    spend_cents: ch.spend_cents,
+                    roas: ch.roas,
+                    window_days: ch.window_days}} AS result
         """
         return (
             f"""
@@ -499,18 +550,18 @@ class RevenueAnalyticsQueries:
         """Get multi-touch attribution paths to conversion."""
         # This is a more complex traversal query
         cypher = f"""
-            MATCH (p:Profile {{tenant_id: '{tenant_id}'}})-[:PERFORMED]->(e:Event)-[:GENERATED]->(r:Revenue)
-            MATCH path = (p)-[:RECEIVED*1..10]->(t:Touchpoint)
+            MATCH (p:Profile {{tenant_id: '{tenant_id}'}})-[perf:PERFORMED]->(e:Event)-[gen:GENERATED]->(r:Revenue)
+            MATCH path = (p)-[rec:RECEIVED*1..10]->(t:Touchpoint)
             WHERE t.timestamp < r.occurred_at
-            WITH p, r, collect(t) AS touchpoints
-            WHERE size(touchpoints) >= {min_touchpoints}
-            RETURN
-                p.external_id AS profile_id,
-                r.amount_cents AS revenue_cents,
-                [t IN touchpoints | t.channel] AS attribution_path,
-                size(touchpoints) AS path_length
+            WITH p, r, collect(t.channel) AS attribution_path
+            WHERE size(attribution_path) >= {min_touchpoints}
+            WITH p, r, attribution_path
             ORDER BY r.amount_cents DESC
             LIMIT {limit}
+            RETURN {{profile_id: p.external_id,
+                    revenue_cents: r.amount_cents,
+                    attribution_path: attribution_path,
+                    path_length: size(attribution_path)}} AS result
         """
         sql = f"""
             SELECT * FROM cypher('stratum_knowledge_graph', $$
