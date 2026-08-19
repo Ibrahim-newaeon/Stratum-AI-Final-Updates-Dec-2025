@@ -16,23 +16,14 @@ import {
   ChevronRight,
   Target,
   Eye,
-  Shield,
   BarChart3,
 } from 'lucide-react';
 import {
   useCompetitorIntel,
-  type CompetitorProfile,
   type PlatformCompetition,
   type MarketOpportunity,
   type CompetitorInsight,
 } from '@/api/dashboard';
-
-const threatConfig: Record<string, { color: string; bg: string; label: string }> = {
-  low: { color: 'text-emerald-600', bg: 'bg-emerald-50', label: 'Low' },
-  medium: { color: 'text-amber-600', bg: 'bg-amber-50', label: 'Medium' },
-  high: { color: 'text-orange-600', bg: 'bg-orange-50', label: 'High' },
-  critical: { color: 'text-red-600', bg: 'bg-red-50', label: 'Critical' },
-};
 
 const compLevelConfig: Record<string, { color: string; bg: string }> = {
   low: { color: 'text-emerald-600', bg: 'bg-emerald-50' },
@@ -82,36 +73,6 @@ function PressureGauge({ pressure }: { pressure: number }) {
   );
 }
 
-function CompetitorRow({ comp }: { comp: CompetitorProfile }) {
-  const tcfg = threatConfig[comp.threat_level] || threatConfig.medium;
-  const strengthColor = comp.relative_strength === 'stronger' ? 'text-red-600' : comp.relative_strength === 'weaker' ? 'text-emerald-600' : 'text-amber-600';
-
-  return (
-    <div className="flex items-center gap-3 p-3 rounded-xl border hover:bg-muted/30 transition-colors">
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${tcfg.bg}`}>
-        <Shield className={`w-4 h-4 ${tcfg.color}`} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-sm text-foreground">{comp.name}</span>
-          <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${tcfg.bg} ${tcfg.color}`}>
-            {tcfg.label} threat
-          </span>
-        </div>
-        <div className="flex gap-3 text-xs text-muted-foreground mt-0.5">
-          <span className={strengthColor}>{comp.relative_strength}</span>
-          <span>{fmt(comp.estimated_spend)}</span>
-          <span>{comp.estimated_sov.toFixed(1)}% SOV</span>
-        </div>
-      </div>
-      <div className="flex items-center gap-1.5 shrink-0">
-        <TrendIcon trend={comp.trend} />
-        <span className="text-xs text-muted-foreground capitalize">{comp.trend}</span>
-      </div>
-    </div>
-  );
-}
-
 function PlatformRow({ pc }: { pc: PlatformCompetition }) {
   const [open, setOpen] = useState(false);
   const clcfg = compLevelConfig[pc.competition_level] || compLevelConfig.medium;
@@ -132,7 +93,7 @@ function PlatformRow({ pc }: { pc: PlatformCompetition }) {
           <div className="flex gap-3 text-xs text-muted-foreground mt-0.5">
             <span>{fmt(pc.your_spend)} spend</span>
             <span>{pc.your_roas.toFixed(1)}x ROAS</span>
-            <span>Position: {pc.your_position}</span>
+            <span>CTR: {pc.your_ctr.toFixed(2)}%</span>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -157,7 +118,7 @@ function PlatformRow({ pc }: { pc: PlatformCompetition }) {
             </div>
             <div className="text-center p-2 bg-muted/30 rounded-lg">
               <div className="text-[10px] font-bold uppercase text-muted-foreground/50">Avg CPM</div>
-              <div className="text-sm font-bold text-foreground">${pc.estimated_market_cpm.toFixed(2)}</div>
+              <div className="text-sm font-bold text-foreground">${pc.your_cpm.toFixed(2)}</div>
             </div>
           </div>
         </div>
@@ -210,11 +171,11 @@ function InsightRow({ insight }: { insight: CompetitorInsight }) {
   );
 }
 
-type TabKey = 'competitors' | 'platforms' | 'opportunities' | 'insights';
+type TabKey = 'platforms' | 'opportunities' | 'insights';
 
 export function CompetitorIntelCard() {
   const { data, isLoading, error } = useCompetitorIntel();
-  const [tab, setTab] = useState<TabKey>('competitors');
+  const [tab, setTab] = useState<TabKey>('platforms');
 
   if (isLoading) {
     return (
@@ -227,8 +188,10 @@ export function CompetitorIntelCard() {
 
   if (error || !data) return null;
 
+  // No "Competitors" tab: this endpoint sees only our own campaigns. It used
+  // to open on five invented companies — same five for every tenant, each with
+  // a spend that was a multiple of the viewer's own.
   const tabs: { key: TabKey; label: string; count?: number }[] = [
-    { key: 'competitors', label: 'Competitors', count: data.competitors.length },
     { key: 'platforms', label: 'Platforms', count: data.platform_competition.length },
     { key: 'opportunities', label: 'Opportunities', count: data.opportunities_count },
     { key: 'insights', label: 'Insights', count: data.insights.length },
@@ -244,21 +207,17 @@ export function CompetitorIntelCard() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-foreground">Competitor Intelligence</h3>
-                <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-muted text-muted-foreground capitalize">
-                  {data.market_position.replace('-', ' ')}
-                </span>
+                <h3 className="font-semibold text-foreground">Competitive Pressure</h3>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">{data.summary}</p>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-          <div className="bg-muted/30 rounded-xl p-3">
-            <div className="text-[10px] font-bold uppercase text-muted-foreground/50">Your SOV</div>
-            <div className="text-lg font-bold text-foreground">{data.your_estimated_sov.toFixed(1)}%</div>
-          </div>
+        {/* "Your SOV" and "Market Spend" tiles used to sit here. Both were our
+            own spend restated through a hard-coded multiplier — SOV never moved
+            off 12.5% for a meta-only tenant, at any spend. */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
           <div className="bg-muted/30 rounded-xl p-3">
             <div className="text-[10px] font-bold uppercase text-muted-foreground/50">Pressure</div>
             <PressureGauge pressure={data.competitive_pressure} />
@@ -268,8 +227,8 @@ export function CompetitorIntelCard() {
             <div className="text-lg font-bold text-foreground">{fmt(data.total_your_spend)}</div>
           </div>
           <div className="bg-muted/30 rounded-xl p-3">
-            <div className="text-[10px] font-bold uppercase text-muted-foreground/50">Market Spend</div>
-            <div className="text-lg font-bold text-muted-foreground">{fmt(data.estimated_market_spend)}</div>
+            <div className="text-[10px] font-bold uppercase text-muted-foreground/50">Platforms</div>
+            <div className="text-lg font-bold text-foreground">{data.platforms_tracked}</div>
           </div>
         </div>
       </div>
@@ -290,7 +249,6 @@ export function CompetitorIntelCard() {
       </div>
 
       <div className="p-4 space-y-2 max-h-[30rem] overflow-y-auto">
-        {tab === 'competitors' && data.competitors.map((c, i) => <CompetitorRow key={c.competitor_id || i} comp={c} />)}
         {tab === 'platforms' && data.platform_competition.map((p, i) => <PlatformRow key={p.platform || i} pc={p} />)}
         {tab === 'opportunities' && data.opportunities.map((o, i) => <OpportunityRow key={`${o.title}-${i}`} opp={o} />)}
         {tab === 'insights' && data.insights.map((ins, i) => <InsightRow key={`${ins.title}-${i}`} insight={ins} />)}

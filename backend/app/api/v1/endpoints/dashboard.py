@@ -3656,7 +3656,6 @@ async def get_competitor_intel(
             success=True,
             data=CompetitorIntelResponse(
                 summary="Competitive intelligence data temporarily unavailable.",
-                market_position="unknown",
             ),
             message="Competitor intelligence (limited data)",
         )
@@ -3667,7 +3666,7 @@ async def get_competitor_intel(
         "competitor_intel_generated",
         tenant_id=tenant_id,
         platforms=response.platforms_tracked,
-        market_position=response.market_position,
+        competitive_pressure=response.competitive_pressure,
     )
 
     return APIResponse(
