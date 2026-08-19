@@ -27,7 +27,7 @@ from __future__ import annotations
 import json
 import logging
 from collections.abc import AsyncIterator, Sequence
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any, Optional
 from uuid import UUID
 
@@ -41,6 +41,7 @@ from .models import (
     BelongsToEdge,
     BlockedEdge,
     CampaignNode,
+    ChannelNode,
     EdgeLabel,
     EventNode,
     GateDecision,
@@ -50,10 +51,12 @@ from .models import (
     PerformedEdge,
     Platform,
     ProfileNode,
+    ReceivedEdge,
     RevenueNode,
     SegmentNode,
     SignalNode,
     SignalStatus,
+    TouchpointNode,
     TriggeredEdge,
     TrustGateNode,
 )
@@ -723,6 +726,179 @@ class KnowledgeGraphSyncService:
         return synced
 
     # =========================================================================
+    # ATTRIBUTION SYNC
+    # =========================================================================
+
+    async def sync_channels(self, tenant_id: int, window_days: int = 90) -> int:
+        """Roll daily attributed revenue up into one Channel node per channel.
+
+        ``daily_attributed_revenue`` is a period aggregate: keyed (tenant,
+        date, attribution_model, dimension), with no conversion id. The graph's
+        Revenue nodes are per event, so nothing joins a daily total to an
+        individual revenue event — ``Revenue-[:ATTRIBUTED_TO]->Channel`` is not
+        derivable however hard the loader tries. The totals therefore live on
+        the Channel node, and the read paths were changed to read them there.
+
+        The window is stamped on the node. A rollup that does not say what
+        period it covers gets read as whatever period the caller had in mind,
+        which is the same class of wrong number this exercise is about.
+
+        Args:
+            tenant_id: Tenant ID
+            window_days: How far back to aggregate
+
+        Returns:
+            Number of Channel nodes written
+        """
+        from app.models.attribution import DailyAttributedRevenue
+
+        window_end = datetime.now(tz=UTC)
+        window_start = window_end - timedelta(days=window_days)
+
+        result = await self.session.execute(
+            select(DailyAttributedRevenue).where(
+                DailyAttributedRevenue.tenant_id == tenant_id,
+                DailyAttributedRevenue.date >= window_start.date(),
+            )
+        )
+        rows = list(result.scalars().all())
+
+        # Aggregated in Python rather than SQL: these rows are already daily
+        # summaries so the volume is small, and it keeps the grouping key next
+        # to the node it produces.
+        rollup: dict[str, dict[str, Any]] = {}
+        for row in rows:
+            key = str(row.dimension_id)
+            bucket = rollup.setdefault(
+                key,
+                {
+                    "name": row.dimension_name or key,
+                    "revenue_cents": 0,
+                    "conversions": 0,
+                    "spend_cents": 0,
+                },
+            )
+            bucket["revenue_cents"] += int(row.attributed_revenue_cents or 0)
+            bucket["conversions"] += int(row.attributed_deals or 0)
+            bucket["spend_cents"] += int(row.spend_cents or 0)
+
+        synced = 0
+        for key, bucket in rollup.items():
+            spend = bucket["spend_cents"]
+            node = ChannelNode(
+                tenant_id=tenant_id,
+                external_id=key,
+                name=bucket["name"],
+                # dimension_type is 'platform' on these rows, i.e. paid media.
+                channel_type="paid",
+                platform=_as_platform(key),
+                total_revenue_cents=bucket["revenue_cents"],
+                total_conversions=bucket["conversions"],
+                spend_cents=spend,
+                roas=(bucket["revenue_cents"] / spend) if spend > 0 else None,
+                window_days=window_days,
+                window_start=window_start,
+                window_end=window_end,
+            )
+            await self.kg.merge_node(node)
+            synced += 1
+
+        await self.session.commit()
+        logger.info(f"Synced {synced} channels for tenant {tenant_id}")
+        return synced
+
+    async def sync_touchpoints(
+        self,
+        tenant_id: int,
+        since: Optional[datetime] = None,
+        batch_size: int = SYNC_BATCH_SIZE,
+    ) -> int:
+        """Load CRM touchpoints and link them to the profiles that received them.
+
+        ``crm.touchpoints`` is genuinely per-touchpoint — contact, timestamp,
+        source, campaign, UTMs — and carries its own ``email_hash``. CDP hashes
+        email identifiers with ``sha256(value.lower().strip())`` unsalted (see
+        ``hash_identifier`` in api/v1/endpoints/cdp.py), the same convention
+        ``crm_contacts.email_hash`` documents, so the RECEIVED edge joins on a
+        real key rather than a time window.
+
+        A touchpoint whose hash matches no profile is still loaded. Dropping it
+        would understate touchpoint volume; hanging it on a guessed profile
+        would be worse.
+
+        Args:
+            tenant_id: Tenant ID
+            since: Only sync touchpoints after this time
+            batch_size: Rows per round trip
+
+        Returns:
+            Number of touchpoints synced
+        """
+        from app.models.cdp import CDPProfileIdentifier
+        from app.models.crm import Touchpoint
+
+        query = select(Touchpoint).where(Touchpoint.tenant_id == tenant_id)
+        if since:
+            query = query.where(Touchpoint.event_ts > since)
+
+        synced = 0
+        async for batch in self._iter_batches(query, Touchpoint.id, batch_size):
+            # One resolution query per batch rather than per row.
+            hashes = {tp.email_hash for tp in batch if tp.email_hash}
+            profile_by_hash: dict[str, Any] = {}
+            if hashes:
+                resolved = await self.session.execute(
+                    select(
+                        CDPProfileIdentifier.identifier_hash,
+                        CDPProfileIdentifier.profile_id,
+                    ).where(
+                        CDPProfileIdentifier.tenant_id == tenant_id,
+                        CDPProfileIdentifier.identifier_type == "email",
+                        CDPProfileIdentifier.identifier_hash.in_(hashes),
+                    )
+                )
+                profile_by_hash = {row[0]: row[1] for row in resolved}
+
+            for tp in batch:
+                node = TouchpointNode(
+                    tenant_id=tenant_id,
+                    external_id=str(tp.id),
+                    touchpoint_type=tp.event_type or "unknown",
+                    channel=tp.source or "unknown",
+                    campaign_id=tp.campaign_id,
+                    timestamp=tp.event_ts,
+                    is_converting=(tp.event_type or "").lower()
+                    in ("conversion", "purchase"),
+                    properties={
+                        "utm_source": tp.utm_source,
+                        "utm_medium": tp.utm_medium,
+                        "utm_campaign": tp.utm_campaign,
+                    },
+                )
+                await self.kg.merge_node(node)
+
+                profile_id = profile_by_hash.get(tp.email_hash)
+                if profile_id:
+                    edge = ReceivedEdge(
+                        start_node_id="",
+                        end_node_id="",
+                        tenant_id=tenant_id,
+                    )
+                    await self.kg.create_edge(
+                        edge,
+                        start_label=NodeLabel.PROFILE,
+                        start_external_id=str(profile_id),
+                        end_label=NodeLabel.TOUCHPOINT,
+                        end_external_id=str(tp.id),
+                    )
+
+                synced += 1
+
+            logger.info(f"Synced {synced} touchpoints for tenant {tenant_id}")
+
+        return synced
+
+    # =========================================================================
     # FULL & INCREMENTAL SYNC
     # =========================================================================
 
@@ -755,6 +931,12 @@ class KnowledgeGraphSyncService:
                 tenant_id, batch_size=batch_size
             ),
             "automations": await self.sync_automation_actions(
+                tenant_id, batch_size=batch_size
+            ),
+            "channels": await self.sync_channels(tenant_id),
+            # After profiles: the RECEIVED edge matches on both endpoints, and
+            # an edge whose start vertex is absent is created as nothing.
+            "touchpoints": await self.sync_touchpoints(
                 tenant_id, batch_size=batch_size
             ),
         }
@@ -802,6 +984,11 @@ class KnowledgeGraphSyncService:
                 tenant_id, since=since, batch_size=batch_size
             ),
             "automations": await self.sync_automation_actions(
+                tenant_id, since=since, batch_size=batch_size
+            ),
+            # Channels are a rollup, not a row stream — always recomputed.
+            "channels": await self.sync_channels(tenant_id),
+            "touchpoints": await self.sync_touchpoints(
                 tenant_id, since=since, batch_size=batch_size
             ),
         }

@@ -65,6 +65,8 @@ ENTITY_ORDER = (
     "signals",
     "trust_gates",
     "automations",
+    "channels",
+    "touchpoints",
 )
 
 
@@ -133,8 +135,10 @@ async def resolve_tenant_ids(
 async def count_sources(session: AsyncSession, tenant_id: int) -> dict[str, int]:
     """Count the rows a real run would read, without writing anything."""
     from app.base_models import Campaign
+    from app.models.attribution import DailyAttributedRevenue
     from app.models.autopilot import EnforcementAuditLog
     from app.models.cdp import CDPEvent, CDPProfile, CDPSegment
+    from app.models.crm import Touchpoint
     from app.models.trust_layer import FactActionsQueue, FactSignalHealthDaily
 
     # Heterogeneous mapped classes: the shared surface is tenant_id, which
@@ -147,6 +151,8 @@ async def count_sources(session: AsyncSession, tenant_id: int) -> dict[str, int]
         "signals": FactSignalHealthDaily,
         "trust_gates": EnforcementAuditLog,
         "automations": FactActionsQueue,
+        "channels": DailyAttributedRevenue,
+        "touchpoints": Touchpoint,
     }
 
     counts: dict[str, int] = {}

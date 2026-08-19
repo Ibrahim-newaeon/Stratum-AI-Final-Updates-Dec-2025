@@ -424,6 +424,20 @@ class ChannelNode(GraphNode):
     total_revenue_cents: int = Field(default=0)
     conversion_rate: Optional[float] = None
 
+    # Rollup carried on the node itself. daily_attributed_revenue is a period
+    # aggregate keyed (tenant, date, dimension) and Revenue nodes are per
+    # event, so there is no key joining the two — the channel totals cannot be
+    # reached by traversing ATTRIBUTED_TO and live here instead.
+    total_conversions: int = Field(default=0)
+    spend_cents: int = Field(default=0)
+    roas: Optional[float] = None
+
+    # The window the rollup covers. A total that does not say what period it
+    # spans is read as whatever period the caller had in mind.
+    window_days: Optional[int] = None
+    window_start: Optional[datetime] = None
+    window_end: Optional[datetime] = None
+
 
 # =============================================================================
 # EDGE PROPERTY MODELS
@@ -479,6 +493,18 @@ class ProducedEdge(GraphEdge):
 
     label: EdgeLabel = EdgeLabel.PRODUCED
     attribution_weight: float = Field(default=1.0, ge=0, le=1)
+
+
+class ReceivedEdge(GraphEdge):
+    """Profile received a marketing Touchpoint.
+
+    Joined on email hash: CDP stores sha256(email.lower().strip()) unsalted via
+    hash_identifier, and crm.touchpoints carries the same convention. A real
+    key, not a time-window match.
+    """
+
+    label: EdgeLabel = EdgeLabel.RECEIVED
+    position: Optional[int] = Field(default=None, description="Order in journey")
 
 
 class AttributedToEdge(GraphEdge):
