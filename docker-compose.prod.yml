@@ -118,6 +118,14 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      # A cold start takes ~90s here, not the 40s inherited from the base file.
+      # ml_service/models is a named path that starts empty on a fresh
+      # container, so the API trains the ROAS predictor from sample data before
+      # serving -- four uvicorn workers each doing it. The first production
+      # deploy died on exactly this: worker and scheduler wait for
+      # service_healthy, compose gave up at 40s, and both were left in Created
+      # while the API was still coming up perfectly normally.
+      start_period: 180s
 
   # ===========================================================================
   # Celery Worker - Production

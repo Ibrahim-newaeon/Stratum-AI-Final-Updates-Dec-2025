@@ -64,8 +64,13 @@ echo "==> building"
 docker compose $COMPOSE_FILES build
 
 echo "==> starting"
+# A non-zero exit here is not decided yet. Services that wait on
+# `service_healthy` make compose give up while the API is still starting
+# normally -- which is how the first production deploy reported failure and
+# left worker and scheduler in Created. The health loop below is the
+# authority; anything still down is started again after it passes.
 # shellcheck disable=SC2086
-docker compose $COMPOSE_FILES up -d
+docker compose $COMPOSE_FILES up -d || echo "==> up -d returned non-zero; deferring to the health check"
 
 # ---------------------------------------------------------------------------
 # Verify. A deploy that returns 0 without checking is a deploy that reports
@@ -75,6 +80,22 @@ echo "==> waiting for $API_CONTAINER to answer $HEALTH_URL"
 for attempt in $(seq 1 40); do
   if docker exec "$API_CONTAINER" sh -lc "curl -fsS $HEALTH_URL" >/dev/null 2>&1; then
     echo "==> healthy after ${attempt} attempt(s)"
+
+    # Anything that gave up waiting on the API is started now that it is up.
+    # Idempotent: services already running are left alone.
+    echo "==> starting anything that was still waiting"
+    # shellcheck disable=SC2086
+    docker compose $COMPOSE_FILES up -d
+
+    # shellcheck disable=SC2086
+    not_running=$(docker compose $COMPOSE_FILES ps --status=created --status=exited --quiet | wc -l)
+    if [ "$not_running" -ne 0 ]; then
+      echo "!! $not_running service(s) are still not running" >&2
+      # shellcheck disable=SC2086
+      docker compose $COMPOSE_FILES ps >&2
+      exit 1
+    fi
+
     echo "==> alembic: $(docker exec "$API_CONTAINER" sh -lc 'cd /app && alembic current 2>/dev/null | tail -1')"
     echo "==> deployed $TARGET at $(git rev-parse --short HEAD)"
     exit 0
