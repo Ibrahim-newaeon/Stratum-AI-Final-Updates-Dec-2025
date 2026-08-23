@@ -574,6 +574,21 @@ api_router.include_router(
 
 # Drip Campaigns — Automated email sequences
 # Note: drip_campaigns.router has prefix="/drip-campaigns"
+# Open-pixel, click and unsubscribe routes.
+#
+# Registered BEFORE the gated router, and the order is load-bearing: routes match
+# in registration order, and `/drip-campaigns/unsubscribe` has the same shape as
+# `/drip-campaigns/{sequence_id}`. Included second, every unsubscribe click would
+# bind to the sequence handler instead — a 503 while the feature flag is off, and
+# a 404 while it is on. Registered first, the literal path wins.
+#
+# Separate from the gated router because these links live in emails that have
+# already been delivered; turning the feature off later must not turn a
+# recipient's opt-out into an error.
+api_router.include_router(
+    drip_campaigns.public_router,
+    tags=["Drip Campaigns"],
+)
 api_router.include_router(
     drip_campaigns.router,
     tags=["Drip Campaigns"],

@@ -49,6 +49,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.auth.deps import get_current_user
+from app.core.config import settings
 from app.db.session import get_async_session
 from app.models.cdp import (
     CDPCanonicalIdentity,
@@ -122,6 +123,7 @@ from app.services.cdp.computed_traits_service import (
 from app.services.cdp.funnel_service import FunnelService
 from app.services.cdp.identity_resolution import IdentityResolutionService
 from app.services.cdp.segment_service import SegmentService
+from app.services.drip.triggers import extract_email as _drip_extract_email
 
 logger = structlog.get_logger()
 
@@ -647,6 +649,8 @@ async def ingest_events(
     accepted = 0
     rejected = 0
     duplicates = 0
+    # Events that were accepted, handed to the drip trigger task after commit.
+    _drip_candidates: list[dict] = []
 
     # Validate source authentication
     source = await validate_source_key(db, tenant_id, source_key)
@@ -774,6 +778,14 @@ async def ingest_events(
                 await db.flush()
 
                 accepted += 1
+                _drip_candidates.append(
+                    {
+                        "event_name": event.event_name,
+                        "email": _drip_extract_email(event.identifiers),
+                        "profile_id": str(profile.id),
+                        "properties": event.properties or {},
+                    }
+                )
                 results.append(
                     EventIngestResult(
                         event_id=db_event.id,
@@ -803,6 +815,22 @@ async def ingest_events(
         del event_chunk
 
     await db.commit()
+
+    # Hand accepted events to the drip trigger engine.
+    #
+    # After the commit, out of band, and inside a try/except that swallows
+    # everything: enrollment is not part of the ingestion contract. A drip
+    # misconfiguration, an unregistered task or a broker outage must never make
+    # event collection return an error or lose an event that is already stored.
+    if _drip_candidates and settings.feature_drip_campaigns:
+        try:
+            from app.workers.drip_tasks import enroll_from_cdp_events
+
+            enroll_from_cdp_events.delay(tenant_id, _drip_candidates)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "drip_trigger_dispatch_failed", tenant_id=tenant_id, error=str(exc)
+            )
 
     logger.info(
         "cdp_event_ingestion_completed",

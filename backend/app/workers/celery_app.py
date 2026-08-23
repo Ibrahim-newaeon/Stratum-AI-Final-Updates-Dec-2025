@@ -42,6 +42,12 @@ celery_app = Celery(
         # registers send_newsletter_campaign, so the send endpoint's .delay()
         # dispatched to an unregistered task and silently did nothing.
         "app.workers.newsletter_tasks",
+        # Drip execution engine — the sweep, the per-enrollment advance, and the
+        # stale-claim release. Registered unconditionally: the beat entry below
+        # is what the feature flag gates, and `advance_drip_enrollment` must
+        # stay dispatchable so an operator can drain in-flight enrollments after
+        # turning the flag off.
+        "app.workers.drip_tasks",
     ],
 )
 
@@ -273,6 +279,40 @@ if settings.feature_knowledge_graph:
 # settings.meta_access_token the scan still runs, but records
 # data_source="website_scrape" and leaves the ad count None rather than 0.
 # Set FEATURE_COMPETITOR_INTEL=false to disable.
+# Drip execution sweep — claims enrollments whose next_due_at has arrived and
+# dispatches one advance task per row.
+#
+# Five minutes, not one, for the same reason as the newsletter sweep: the tick
+# queries for due work and then sends live email, and a wait step measured in
+# hours gains nothing from per-minute granularity. Steps with no wait chain
+# themselves immediately rather than waiting for the next tick, so a
+# trigger -> condition -> email run still sends within seconds of enrollment.
+#
+# Off by default with the rest of drip: the flag gates the schedule, not the
+# task registration, so an operator can still drain in-flight enrollments by
+# hand after switching the feature off.
+if settings.feature_drip_campaigns:
+    celery_app.conf.beat_schedule["process-due-drip-steps"] = {
+        "task": "app.workers.drip_tasks.process_due_drip_steps",
+        "schedule": crontab(minute="*/5"),
+        "options": {"queue": "default"},
+    }
+    # The two triggers with no inbound event to react to. The CDP-event
+    # triggers are dispatched from the ingestion path instead, so they need no
+    # schedule; these are swept because the thing that happened is that nothing
+    # happened. Daily, well outside working hours: both mail real people, and
+    # neither is time-critical to the hour.
+    celery_app.conf.beat_schedule["drip-inactivity-scan"] = {
+        "task": "app.workers.drip_tasks.enroll_inactive_profiles",
+        "schedule": crontab(minute=0, hour=7),
+        "options": {"queue": "default"},
+    }
+    celery_app.conf.beat_schedule["drip-roas-drop-scan"] = {
+        "task": "app.workers.drip_tasks.enroll_on_roas_drop",
+        "schedule": crontab(minute=30, hour=7),
+        "options": {"queue": "default"},
+    }
+
 if settings.feature_competitor_intel:
     celery_app.conf.beat_schedule["refresh-competitor-data"] = {
         "task": "app.workers.tasks.refresh_all_competitors",

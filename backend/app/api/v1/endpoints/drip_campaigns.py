@@ -15,15 +15,33 @@ from enum import Enum
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi.responses import RedirectResponse, Response
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.db.session import get_async_session
-from app.models.drip import DripExecutionRecord, DripSequence
+from app.models.drip import (
+    ENROLLMENT_CANCELLED,
+    ENROLLMENT_IN_FLIGHT,
+    DripEnrollment,
+    DripExecutionRecord,
+    DripSequence,
+    DripSequenceVersion,
+)
 from app.schemas.response import APIResponse
+from app.services.drip.enrollment import (
+    CANCEL_SEQUENCE_ARCHIVED,
+    CANCEL_UNSUBSCRIBED,
+    EnrollmentBlocked,
+    EnrollmentRequest,
+    cancel_sequence_enrollments_async,
+    enroll_async,
+)
+from app.services.drip.interpreter import index_graph, validate_graph
+from app.services.drip.render import verify_unsubscribe_token
 
 logger = get_logger(__name__)
 
@@ -49,6 +67,15 @@ router = APIRouter(
     tags=["Drip Campaigns"],
     dependencies=[Depends(require_drip_enabled)],
 )
+
+#: Open-pixel, click and unsubscribe routes.
+#:
+#: Deliberately outside the feature gate above, and deliberately unauthenticated.
+#: These URLs live inside emails that have already been delivered — an inbox is
+#: forever, and turning the feature off later must not turn a recipient's
+#: unsubscribe link into a 503. Refusing an opt-out is the one failure mode this
+#: whole surface cannot have.
+public_router = APIRouter(prefix="/drip-campaigns", tags=["Drip Campaigns"])
 
 
 # =============================================================================
@@ -342,19 +369,35 @@ async def update_drip_sequence(
             status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found"
         )
 
+    was_active = sequence.status == DripStatus.ACTIVE.value
+
     sequence.name = request.name
     sequence.description = request.description or ""
     sequence.trigger_type = request.trigger_type.value
     sequence.trigger_config = request.trigger_config
-    sequence.status = request.status.value
     sequence.nodes = [n.model_dump() for n in request.nodes]
     sequence.edges = [e.model_dump() for e in request.edges]
+
+    # An edit changes the draft, never the published version. Recipients in
+    # flight keep walking the graph they entered on; the new one takes effect
+    # for new entrants at the next activate. That is why `status` is not taken
+    # from the request while a sequence is live — a PUT must not be able to
+    # deactivate a running sequence as a side effect of saving the canvas.
+    if not was_active:
+        sequence.status = request.status.value
 
     await db.commit()
     await db.refresh(sequence)
 
+    message = "Sequence updated"
+    if was_active:
+        message = (
+            "Draft updated. Recipients already in the sequence continue on the "
+            "published version; activate again to publish these changes."
+        )
+
     return APIResponse(
-        success=True, data=_serialize_sequence(sequence), message="Sequence updated"
+        success=True, data=_serialize_sequence(sequence), message=message
     )
 
 
@@ -373,13 +416,65 @@ async def activate_sequence(
             status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found"
         )
 
+    # Validate before publishing. This used to flip `status` on any graph at
+    # all — including an empty one — which produced a sequence that reported
+    # itself active and could never send anything.
+    errors = validate_graph(sequence.nodes or [], sequence.edges or [])
+    if errors:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={
+                "message": "Sequence cannot be activated.",
+                "errors": errors,
+            },
+        )
+
+    index = index_graph(sequence.nodes or [], sequence.edges or [])
+
+    # Freeze the draft. Recipients already walking an earlier version keep
+    # walking it; only new entrants get this one.
+    next_version = (
+        await db.execute(
+            select(func.coalesce(func.max(DripSequenceVersion.version), 0)).where(
+                DripSequenceVersion.sequence_id == sequence_id
+            )
+        )
+    ).scalar_one()
+
+    version = DripSequenceVersion(
+        tenant_id=tenant_id,
+        sequence_id=sequence_id,
+        version=int(next_version) + 1,
+        nodes=sequence.nodes or [],
+        edges=sequence.edges or [],
+        trigger_type=sequence.trigger_type,
+        trigger_config=sequence.trigger_config or {},
+        entry_node_id=index.entry_node_id,
+        published_by_user_id=getattr(req.state, "user_id", None),
+    )
+    db.add(version)
+    await db.flush()
+
+    sequence.active_version_id = version.id
     sequence.status = DripStatus.ACTIVE.value
     await db.commit()
 
+    logger.info(
+        "drip_sequence_activated",
+        tenant_id=tenant_id,
+        sequence_id=sequence_id,
+        version=version.version,
+    )
+
     return APIResponse(
         success=True,
-        data={"id": sequence_id, "status": "active"},
-        message="Sequence activated",
+        data={
+            "id": sequence_id,
+            "status": "active",
+            "version": version.version,
+            "version_id": version.id,
+        },
+        message=f"Sequence activated as version {version.version}",
     )
 
 
@@ -424,12 +519,27 @@ async def delete_sequence(
         )
 
     sequence.status = DripStatus.ARCHIVED.value
+
+    # Archiving must stop the mail. Without this, every recipient already in
+    # flight keeps receiving the sequence from a worker that has no reason to
+    # look at the parent's status until their next step comes due.
+    cancelled = await cancel_sequence_enrollments_async(
+        db, tenant_id, sequence_id, CANCEL_SEQUENCE_ARCHIVED
+    )
     await db.commit()
 
     return APIResponse(
         success=True,
-        data={"id": sequence_id, "deleted": True},
-        message="Sequence archived",
+        data={
+            "id": sequence_id,
+            "deleted": True,
+            "cancelled_enrollments": cancelled,
+        },
+        message=(
+            f"Sequence archived; {cancelled} in-flight recipients cancelled."
+            if cancelled
+            else "Sequence archived"
+        ),
     )
 
 
@@ -440,7 +550,12 @@ async def manual_trigger(
     req: Request,
     db: AsyncSession = Depends(get_async_session),
 ):
-    """Manually trigger a sequence for a specific recipient (testing)."""
+    """Enroll one recipient into a sequence by hand.
+
+    This used to write a ``DripExecutionRecord`` marked *simulated* and return
+    success, which read as a working trigger and sent nothing. It now creates a
+    real enrollment; the sweep picks it up on the next tick.
+    """
     tenant_id = _require_tenant(req)
 
     sequence = await _get_sequence(db, tenant_id, sequence_id)
@@ -449,29 +564,56 @@ async def manual_trigger(
             status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found"
         )
 
-    # Record a simulated trigger send.
-    log_entry = DripExecutionRecord(
+    try:
+        enrollment = await enroll_async(
+            db,
+            EnrollmentRequest(
+                tenant_id=tenant_id,
+                sequence_id=sequence_id,
+                recipient_email=recipient_email,
+                entry_trigger=TriggerType.MANUAL.value,
+                entry_context={
+                    "source": "manual_trigger",
+                    "user_id": getattr(req.state, "user_id", None),
+                },
+            ),
+        )
+    except EnrollmentBlocked as blocked:
+        # 409, not 400: the request is well-formed and the caller may well be
+        # allowed to make it — the recipient's own state is what refuses.
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"reason": blocked.reason, "message": blocked.detail},
+        ) from blocked
+
+    if enrollment is None:
+        return APIResponse(
+            success=True,
+            data={
+                "sequence_id": sequence_id,
+                "status": "already_enrolled",
+                "enrollment_id": None,
+            },
+            message="Recipient is already moving through this sequence.",
+        )
+
+    await db.commit()
+
+    logger.info(
+        "drip_manual_enrollment",
         tenant_id=tenant_id,
         sequence_id=sequence_id,
-        recipient_email=recipient_email,
-        step_number=0,
-        node_type="trigger",
-        status="sent",
-        sent_at=datetime.now(UTC),
-        extra={"trigger_type": "manual"},
+        enrollment_id=enrollment.id,
     )
-    db.add(log_entry)
-    sequence.entry_count = (sequence.entry_count or 0) + 1
-    await db.commit()
 
     return APIResponse(
         success=True,
         data={
             "sequence_id": sequence_id,
-            "recipient": recipient_email,
-            "status": "triggered",
+            "enrollment_id": enrollment.id,
+            "status": "enrolled",
         },
-        message=f"Sequence triggered for {recipient_email}",
+        message="Recipient enrolled; the first step runs on the next sweep.",
     )
 
 
@@ -636,3 +778,171 @@ async def get_prebuilt_templates(
     ]
 
     return APIResponse(success=True, data=templates, message="Templates retrieved")
+
+
+# =============================================================================
+# Public tracking and unsubscribe
+# =============================================================================
+#
+# Registered on ``public_router``, which carries neither the feature gate nor
+# authentication. These URLs are baked into emails that have already been
+# delivered; a recipient clicking unsubscribe six months from now must be
+# honoured whatever the flag says today.
+
+#: 1x1 transparent GIF, returned by the open pixel whatever happens. An open
+#: pixel must never render as a broken image or leak whether the id was real.
+_PIXEL = bytes.fromhex(
+    "47494638396101000100800000000000ffffff21f90401000000002c00000000"
+    "010001000002024401003b"
+)
+
+
+async def _record_engagement(
+    db: AsyncSession, execution_id: str, field: str
+) -> Optional[DripExecutionRecord]:
+    """Stamp ``opened_at`` or ``clicked_at`` once, and return the record."""
+    record = (
+        await db.execute(
+            select(DripExecutionRecord).where(DripExecutionRecord.id == execution_id)
+        )
+    ).scalar_one_or_none()
+
+    if record is None:
+        return None
+
+    # First touch wins: re-opens are common (many clients prefetch), and
+    # overwriting would make "opened_at" mean "last opened", which the
+    # email_opened condition would then read differently on every step.
+    if getattr(record, field) is None:
+        setattr(record, field, datetime.now(UTC))
+        if field == "clicked_at" and record.opened_at is None:
+            # A click implies an open the pixel may never have recorded.
+            record.opened_at = datetime.now(UTC)
+        if record.status == "sent":
+            record.status = "opened" if field == "opened_at" else "clicked"
+        await db.commit()
+
+    return record
+
+
+@public_router.get("/track/open/{execution_id}", include_in_schema=False)
+async def track_open(
+    execution_id: str,
+    db: AsyncSession = Depends(get_async_session),
+) -> Response:
+    """Open-tracking pixel."""
+    await _record_engagement(db, execution_id, "opened_at")
+    return Response(
+        content=_PIXEL,
+        media_type="image/gif",
+        headers={"Cache-Control": "no-store, no-cache, must-revalidate, private"},
+    )
+
+
+@public_router.get("/track/click/{execution_id}", include_in_schema=False)
+async def track_click(
+    execution_id: str,
+    url: str = Query(..., description="Destination the recipient clicked"),
+    db: AsyncSession = Depends(get_async_session),
+) -> Response:
+    """Click tracking, then redirect to the original destination."""
+    # Only ever redirect to http(s). Without this the tracker would happily
+    # bounce a recipient to javascript: or data:, turning every drip email into
+    # an open redirect signed by our own domain.
+    if not url.lower().startswith(("http://", "https://")):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported link target"
+        )
+
+    await _record_engagement(db, execution_id, "clicked_at")
+    return RedirectResponse(url=url, status_code=status.HTTP_302_FOUND)
+
+
+@public_router.api_route(
+    "/unsubscribe", methods=["GET", "POST"], include_in_schema=False
+)
+async def drip_unsubscribe(
+    token: str = Query(..., description="Signed unsubscribe token"),
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse[dict]:
+    """Honour an unsubscribe from a drip email.
+
+    POST as well as GET so RFC 8058 one-click unsubscribe works from the
+    ``List-Unsubscribe-Post`` header the send path sets.
+
+    The token is HMAC-signed and carries the recipient *hash*, so it cannot be
+    forged, cannot be walked to unsubscribe a stranger, and never puts an email
+    address in a URL.
+    """
+    verified = verify_unsubscribe_token(token)
+    if verified is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This unsubscribe link is not valid.",
+        )
+    tenant_id, recipient_hash = verified
+
+    now = datetime.now(UTC)
+    result = await db.execute(
+        select(DripEnrollment).where(
+            DripEnrollment.tenant_id == tenant_id,
+            DripEnrollment.recipient_hash == recipient_hash,
+            DripEnrollment.status.in_(ENROLLMENT_IN_FLIGHT),
+        )
+    )
+    enrollments = result.scalars().all()
+
+    for enrollment in enrollments:
+        enrollment.status = ENROLLMENT_CANCELLED
+        enrollment.cancel_reason = CANCEL_UNSUBSCRIBED
+        enrollment.cancelled_at = now
+        enrollment.next_due_at = None
+
+    # Record the refusal against the CDP profile too, when there is one, so the
+    # opt-out is visible to the rest of the product and not only to drip.
+    profile_id = next(
+        (e.profile_id for e in enrollments if e.profile_id is not None), None
+    )
+    if profile_id is not None:
+        from app.models.cdp import CDPConsent
+
+        consent = (
+            await db.execute(
+                select(CDPConsent).where(
+                    CDPConsent.tenant_id == tenant_id,
+                    CDPConsent.profile_id == profile_id,
+                    CDPConsent.consent_type == "email",
+                )
+            )
+        ).scalar_one_or_none()
+        if consent is None:
+            db.add(
+                CDPConsent(
+                    tenant_id=tenant_id,
+                    profile_id=profile_id,
+                    consent_type="email",
+                    granted=False,
+                    revoked_at=now,
+                    source="drip_unsubscribe",
+                )
+            )
+        else:
+            consent.granted = False
+            consent.revoked_at = now
+
+    await db.commit()
+
+    logger.info(
+        "drip_unsubscribed",
+        tenant_id=tenant_id,
+        cancelled_enrollments=len(enrollments),
+    )
+
+    # Always the same answer, whether or not anything was live. Reporting "you
+    # were not subscribed" would turn this into a membership oracle for anyone
+    # holding a token.
+    return APIResponse(
+        success=True,
+        data={"unsubscribed": True, "cancelled_enrollments": len(enrollments)},
+        message="You have been unsubscribed and will receive no further emails.",
+    )

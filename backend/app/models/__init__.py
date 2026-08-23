@@ -100,7 +100,12 @@ from app.models.crm import (
 )
 
 # Drip campaign models
-from app.models.drip import DripExecutionRecord, DripSequence
+from app.models.drip import (
+    DripEnrollment,
+    DripExecutionRecord,
+    DripSequence,
+    DripSequenceVersion,
+)
 
 # EMQ fix-playbook progress
 from app.models.emq_playbook import EmqPlaybookItemState
@@ -236,8 +241,10 @@ __all__ = [
     "DeliveryChannelConfig",
     "DeliveryStatus",
     "DraftStatus",
+    "DripEnrollment",
     "DripExecutionRecord",
     "DripSequence",
+    "DripSequenceVersion",
     "EmqPlaybookItemState",
     "EnforcementAuditLog",
     "ExecutionStatus",
