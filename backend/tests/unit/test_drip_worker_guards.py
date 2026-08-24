@@ -72,19 +72,23 @@ def make_version(nodes=None, edges=None):
     return SimpleNamespace(
         id="dripv_1",
         entry_node_id="t1",
-        nodes=nodes
-        if nodes is not None
-        else [
-            {"id": "t1", "type": "trigger", "data": {}},
-            {"id": "w1", "type": "wait", "data": {"delay_hours": 6}},
-            {"id": "x1", "type": "end", "data": {}},
-        ],
-        edges=edges
-        if edges is not None
-        else [
-            {"id": "e1", "source": "t1", "target": "w1"},
-            {"id": "e2", "source": "w1", "target": "x1"},
-        ],
+        nodes=(
+            nodes
+            if nodes is not None
+            else [
+                {"id": "t1", "type": "trigger", "data": {}},
+                {"id": "w1", "type": "wait", "data": {"delay_hours": 6}},
+                {"id": "x1", "type": "end", "data": {}},
+            ]
+        ),
+        edges=(
+            edges
+            if edges is not None
+            else [
+                {"id": "e1", "source": "t1", "target": "w1"},
+                {"id": "e2", "source": "w1", "target": "x1"},
+            ]
+        ),
     )
 
 

@@ -18,9 +18,8 @@ Create Date: 2026-08-24 00:00:00.000000
 """
 
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import JSONB, UUID
-
 from alembic import op
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 
 # revision identifiers
 revision = "066_add_drip_enrollment"
