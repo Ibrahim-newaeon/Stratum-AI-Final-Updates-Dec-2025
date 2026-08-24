@@ -6,9 +6,11 @@ Centralized configuration management using Pydantic Settings.
 All environment variables are validated and typed.
 """
 
+import os
 import re
 import secrets
 import warnings
+from difflib import get_close_matches
 from functools import lru_cache
 from typing import List, Literal, Optional
 
@@ -633,6 +635,149 @@ class Settings(BaseSettings):
                     raise ValueError(
                         f"FRONTEND_URL ('{frontend}') must not reference localhost or 127.0.0.1 in {self.app_env}"
                     )
+
+        return self
+
+    @model_validator(mode="after")
+    def validate_integration_config(self) -> "Settings":
+        """Catch integrations that look configured but cannot work.
+
+        Five separate outages/dead features in this codebase shared one
+        shape: a plausible-looking env var that nothing read, and no
+        complaint from anything. `Settings` is declared ``extra="ignore"``,
+        so a misspelled key is dropped at load and the code that reads the
+        field raises AttributeError — or silently falls back — much later.
+
+        Known instances this catches:
+          * ``TIKTOK_APP_SECRET`` — the field is ``tiktok_secret``
+          * ``GOOGLE_CLIENT_ID`` — the field is ``google_ads_client_id``
+          * ``SLACK_WEBHOOK_URL`` — the field is ``alert_webhook_url``
+          * ``COPILOT_LLM_ENABLED=true`` with no ``ANTHROPIC_API_KEY``
+          * ``COPILOT_LLM_MODEL`` truncated to ``claude-haiku-4-5-20251``
+
+        Severity is deliberately split. A half-configured integration is
+        raised in production and staging, matching how this file already
+        treats missing secrets. An unrecognised env var only warns — it
+        cannot be proven wrong (deployments carry vars for other services)
+        and a config linter must never be the reason production won't boot.
+        """
+        problems: list[str] = []
+
+        # --- Half-configured integrations -----------------------------------
+        # If any trigger field is set, every field in the group is required.
+        groups: dict[str, tuple[list[str], list[str]]] = {
+            "Meta": (["meta_app_id", "meta_app_secret"], []),
+            "Google Ads": (
+                [
+                    "google_ads_client_id",
+                    "google_ads_client_secret",
+                    "google_ads_developer_token",
+                ],
+                [],
+            ),
+            "TikTok": (["tiktok_app_id", "tiktok_secret"], []),
+            "Snapchat": (["snapchat_client_id", "snapchat_client_secret"], []),
+            "HubSpot": (["hubspot_client_id", "hubspot_client_secret"], []),
+            "Pipedrive": (["pipedrive_client_id", "pipedrive_client_secret"], []),
+            "Stripe": (["stripe_secret_key", "stripe_webhook_secret"], []),
+            "WhatsApp": (
+                [
+                    "whatsapp_access_token",
+                    "whatsapp_business_account_id",
+                    "whatsapp_app_secret",
+                    "whatsapp_verify_token",
+                ],
+                ["whatsapp_phone_number_id"],
+            ),
+        }
+
+        for name, (required, triggers) in groups.items():
+            trigger_fields = triggers or required
+            if not any(getattr(self, f, None) for f in trigger_fields):
+                continue  # integration not in use at all — fine
+            missing = [
+                f.upper() for f in (triggers + required) if not getattr(self, f, None)
+            ]
+            if missing:
+                problems.append(
+                    f"{name} is partially configured — missing {', '.join(missing)}. "
+                    f"It will fail at first use, not at startup."
+                )
+
+        # --- Feature flags switched on without their dependency --------------
+        if self.copilot_llm_enabled and not self.anthropic_api_key:
+            problems.append(
+                "COPILOT_LLM_ENABLED is true but ANTHROPIC_API_KEY is unset — "
+                "every Copilot call will fail and silently fall back to templates."
+            )
+        if self.copilot_rag_enabled and not self.openai_api_key:
+            problems.append(
+                "COPILOT_RAG_ENABLED is true but OPENAI_API_KEY is unset — "
+                "retrieval will fail and citations will be empty."
+            )
+
+        # A truncated model id still starts with 'claude-', so pattern-matching
+        # the prefix proves nothing. Anthropic ids end in an 8-digit date; a
+        # shorter trailing digit run means the value was cut off in transit.
+        if self.copilot_llm_enabled and self.copilot_llm_model:
+            trailing = re.search(r"-(\d{1,7})$", self.copilot_llm_model)
+            if trailing:
+                problems.append(
+                    f"COPILOT_LLM_MODEL='{self.copilot_llm_model}' looks truncated "
+                    f"(expected an 8-digit date suffix). Anthropic will reject every "
+                    f"call and the Copilot will fall back to templates."
+                )
+
+        if problems:
+            detail = "\n  - ".join(problems)
+            if self.app_env in ("production", "staging"):
+                raise ValueError(
+                    f"Integration configuration is incoherent in {self.app_env}:"
+                    f"\n  - {detail}"
+                )
+            warnings.warn(
+                f"INTEGRATION CONFIG WARNING ({self.app_env}):\n  - {detail}",
+                stacklevel=2,
+            )
+
+        # --- Env vars that nothing will ever read ----------------------------
+        # Scoped to prefixes this app owns. Infra vars (POSTGRES_, GRAFANA_,
+        # R2_, REDIS_PASSWORD…) are consumed by docker-compose and other
+        # services, so they are legitimately absent from this model.
+        # `GOOGLE_` rather than `GOOGLE_ADS_` on purpose: the real bug was
+        # GOOGLE_CLIENT_ID, which the narrower prefix would not have matched.
+        # `SLACK_` is deliberately absent — alertmanager.yml substitutes
+        # SLACK_WEBHOOK_URL itself, so it is another service's var, not ours.
+        owned_prefixes = (
+            "META_",
+            "GOOGLE_",
+            "TIKTOK_",
+            "SNAPCHAT_",
+            "WHATSAPP_",
+            "HUBSPOT_",
+            "PIPEDRIVE_",
+            "STRIPE_",
+            "ANTHROPIC_",
+            "OPENAI_",
+            "COPILOT_",
+            "ALERT_",
+        )
+        known = set(type(self).model_fields)
+        orphans: list[str] = []
+        for key in os.environ:
+            if not key.startswith(owned_prefixes) or key.lower() in known:
+                continue
+            suggestion = get_close_matches(key.lower(), known, n=1, cutoff=0.6)
+            hint = f" — did you mean {suggestion[0].upper()}?" if suggestion else ""
+            orphans.append(f"{key} is ignored{hint}")
+
+        if orphans:
+            warnings.warn(
+                f"UNREAD ENV VARS ({self.app_env}) — set but bound to no setting, "
+                f'because Settings is extra="ignore":\n  - '
+                + "\n  - ".join(sorted(orphans)),
+                stacklevel=2,
+            )
 
         return self
 
