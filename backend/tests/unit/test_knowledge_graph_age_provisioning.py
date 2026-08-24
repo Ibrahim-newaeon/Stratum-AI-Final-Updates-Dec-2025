@@ -181,6 +181,13 @@ def test_migrations_have_exactly_one_head():
     """A second head makes `alembic upgrade head` ambiguous, and it fails.
 
     Cheap to assert here; otherwise it surfaces during a deploy.
+
+    Asserts the count, not the identity. This used to pin the head to the AGE
+    revision, which made every later migration fail a knowledge-graph test for
+    doing nothing wrong — and taught whoever hit it to edit the expected value,
+    which is exactly the reflex that lets a genuine second head through. That
+    the AGE migration sits on the chain is still covered, by
+    ``test_age_migration_extends_the_existing_chain``.
     """
     revisions = _revision_map()
     referenced: set[str] = set()
@@ -193,7 +200,8 @@ def test_migrations_have_exactly_one_head():
 
     heads = sorted(set(revisions) - referenced)
 
-    assert heads == [AGE_REVISION], f"expected a single head, found {heads}"
+    assert len(heads) == 1, f"expected a single head, found {heads}"
+    assert AGE_REVISION in revisions
 
 
 # =============================================================================

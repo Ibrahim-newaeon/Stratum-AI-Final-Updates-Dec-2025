@@ -262,6 +262,21 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # require_api_key_scope so tenant context is always established downstream.
         if path.startswith("/api/v1/programmatic/"):
             return True
+        # Drip open-pixel, click and unsubscribe. These URLs are inside emails
+        # already sitting in recipients' inboxes: the request is a mail client
+        # fetching an image or a person clicking a link, so there is no JWT and
+        # never will be. Left un-exempt, every unsubscribe click 401s — refusing
+        # an opt-out is the one failure this surface cannot have.
+        #
+        # Tenant context comes from the request itself, not from the caller:
+        # the unsubscribe token is HMAC-signed and carries the tenant, and the
+        # tracking routes address an execution record by its own id. Enumerated
+        # exactly rather than by prefix, so the rest of /drip-campaigns/ (the
+        # tenant-scoped product surface) stays authenticated.
+        if path in ("/api/v1/drip-campaigns/unsubscribe",):
+            return True
+        if re.fullmatch(r"/api/v1/drip-campaigns/track/(open|click)/[^/]+", path):
+            return True
         # CMS public endpoints — content is global, not tenant-scoped
         if path.startswith("/api/v1/cms/") and "/admin/" not in path:
             return True
