@@ -24,6 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.deps import CurrentUserDep, get_current_user, require_superadmin
 from app.base_models import LandingPageSubscriber, SubscriberStatus
+from app.core.unsubscribe_tokens import parse_unsubscribe_token
 from app.db.session import get_async_session
 from app.models.newsletter import (
     CampaignStatus,
@@ -179,21 +180,17 @@ class AnalyticsResponse(BaseModel):
 # ---------------------------------------------------------------------------
 # Helper: Generate unsubscribe token
 # ---------------------------------------------------------------------------
-def _generate_unsubscribe_token(campaign_id: int, subscriber_id: int) -> str:
-    """Create a signed token for unsubscribe URLs."""
-    payload = f"{campaign_id}:{subscriber_id}"
-    token = base64.urlsafe_b64encode(payload.encode()).decode()
-    return token
-
-
 def _decode_unsubscribe_token(token: str) -> tuple[int, int]:
-    """Decode an unsubscribe token to (campaign_id, subscriber_id)."""
-    try:
-        payload = base64.urlsafe_b64decode(token.encode()).decode()
-        parts = payload.split(":")
-        return int(parts[0]), int(parts[1])
-    except (ValueError, TypeError, IndexError):
+    """Decode an unsubscribe token to (campaign_id, subscriber_id).
+
+    Verification lives in ``app.core.unsubscribe_tokens`` so the send path and
+    this endpoint cannot drift apart — they previously each carried their own
+    copy of the encoding, and neither signed anything.
+    """
+    parsed = parse_unsubscribe_token(token)
+    if parsed is None:
         raise HTTPException(status_code=400, detail="Invalid unsubscribe token")
+    return parsed
 
 
 # ---------------------------------------------------------------------------
@@ -959,12 +956,20 @@ async def track_click(
     )
 
 
-@router.get("/unsubscribe", tags=["Newsletter Tracking"])
+@router.api_route("/unsubscribe", methods=["GET", "POST"], tags=["Newsletter Tracking"])
 async def public_unsubscribe(
     token: str = Query(...),
     db: AsyncSession = Depends(get_async_session),
 ) -> Response:
-    """One-click unsubscribe (CAN-SPAM compliance). Returns HTML confirmation."""
+    """One-click unsubscribe (CAN-SPAM compliance). Returns HTML confirmation.
+
+    POST as well as GET. ``send_newsletter_email`` sets
+    ``List-Unsubscribe-Post: List-Unsubscribe=One-Click``, which tells Gmail and
+    Yahoo to **POST** here — and this route only accepted GET, so every
+    one-click unsubscribe from a major mailbox provider was answered with a 405.
+    Both providers require a working one-click unsubscribe from bulk senders, so
+    that was a deliverability problem as much as a compliance one.
+    """
     campaign_id, subscriber_id = _decode_unsubscribe_token(token)
 
     result = await db.execute(

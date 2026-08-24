@@ -450,6 +450,16 @@ class Settings(BaseSettings):
     # a dashboard becomes a zero, and "competitor ad spend: $0" is worse than
     # not offering the number. Wire a provider and add the fields back in the
     # same change. Set FEATURE_COMPETITOR_INTEL=false to turn the surface off.
+    # Newsletter unsubscribe links used to carry an unsigned
+    # base64("campaign_id:subscriber_id") token, so anyone holding one could
+    # walk the subscriber ids and unsubscribe the whole list. Tokens are signed
+    # now, but links in already-delivered mail cannot be reissued — an inbox is
+    # forever, and a broken unsubscribe link is worse than the forgery risk.
+    #
+    # Every legacy token accepted is logged as
+    # `newsletter_legacy_unsubscribe_token_used`. Once that stops appearing,
+    # set this to false and the old format is rejected.
+    newsletter_accept_legacy_unsubscribe_tokens: bool = Field(default=True)
     feature_competitor_intel: bool = Field(default=True)
     feature_what_if_simulator: bool = Field(default=True)
     # Automation Rules shipped once ff6823ca reconciled the beat evaluator with

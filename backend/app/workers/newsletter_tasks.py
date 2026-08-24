@@ -8,7 +8,6 @@ Celery tasks for sending newsletter campaigns.
 - process_scheduled_campaigns: Beat-scheduled task to dispatch due campaigns
 """
 
-import base64
 import re
 import time
 from datetime import UTC, datetime
@@ -126,6 +125,7 @@ def send_newsletter_campaign(
     """
     from app.base_models import LandingPageSubscriber
     from app.core.config import settings
+    from app.core.unsubscribe_tokens import make_unsubscribe_token
     from app.db.session import SyncSessionLocal
     from app.models.newsletter import (
         CampaignStatus,
@@ -200,10 +200,14 @@ def send_newsletter_campaign(
                     break
                 time.sleep(BATCH_DELAY_SECONDS)
 
-            # Generate unsubscribe token & URL
-            token = base64.urlsafe_b64encode(
-                f"{campaign_id}:{subscriber.id}".encode()
-            ).decode()
+            # Generate unsubscribe token & URL.
+            #
+            # Signed. This used to inline its own base64 of
+            # "campaign_id:subscriber_id" — a second copy of the endpoint's
+            # equally unsigned helper — so any recipient could decrement the id
+            # and unsubscribe someone else. Both copies now go through
+            # app.core.unsubscribe_tokens, so they cannot drift again.
+            token = make_unsubscribe_token(campaign_id, subscriber.id)
             unsubscribe_url = (
                 f"{api_base_url}/api/v1/newsletter/unsubscribe?token={token}"
             )
