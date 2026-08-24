@@ -1066,100 +1066,192 @@ async def get_message(
 
 
 # =============================================================================
-# Webhook Endpoint
+# Webhook Endpoints
 # =============================================================================
-@router.post("/webhooks/status")
-@router.post("/webhooks/verify")
+#
+# Meta configures ONE url per WhatsApp app and uses it two ways: a GET carrying
+# the `hub.*` handshake when you first subscribe, and a POST for every event
+# afterwards. Splitting on the verb keeps one honest path instead of a
+# `/webhooks/verify` that quietly carries message traffic.
+#
+# The POST side does three things in order — authenticate the payload, decide
+# which handler owns it, run that handler — and always answers 200 for a
+# well-formed request. Meta retries anything else and disables a subscription
+# that keeps failing, so an unrecognised event type must not raise.
+
+
+async def _handle_status_updates(db: AsyncSession, value: dict) -> int:
+    """Apply delivery-status transitions to the messages they belong to.
+
+    Naturally idempotent: a replayed webhook writes the same status and the
+    same timestamp, so Meta's retries cost a write but never corrupt state.
+    """
+    updated = 0
+
+    for status_update in value.get("statuses", []):
+        wamid = status_update.get("id")
+        new_status = status_update.get("status")
+        timestamp = status_update.get("timestamp")
+
+        if not (wamid and new_status and timestamp):
+            logger.warning("whatsapp_status_incomplete", wamid=wamid)
+            continue
+
+        result = await db.execute(
+            select(WhatsAppMessage).where(WhatsAppMessage.wamid == wamid)
+        )
+        message = result.scalar_one_or_none()
+
+        if not message:
+            # Status for a message we never sent, or sent before this tenant
+            # existed. Not an error — log it and move on.
+            logger.info("whatsapp_status_unknown_message", wamid=wamid)
+            continue
+
+        message.status = new_status
+        ts = datetime.fromtimestamp(int(timestamp), tz=timezone.utc)
+
+        if new_status == "sent":
+            message.sent_at = ts
+        elif new_status == "delivered":
+            message.delivered_at = ts
+        elif new_status == "read":
+            message.read_at = ts
+
+        history = message.status_history or []
+        history.append({"status": new_status, "timestamp": ts.isoformat()})
+        message.status_history = history
+
+        await db.commit()
+        updated += 1
+        logger.info("whatsapp_status_updated", wamid=wamid, status=new_status)
+
+    return updated
+
+
+async def _handle_inbound_messages(db: AsyncSession, value: dict) -> int:
+    """Record that a customer message arrived.
+
+    Storing inbound messages is not implemented. Rather than drop them
+    silently, log each one with its wamid so the gap is visible in the logs
+    instead of looking like working machinery.
+    """
+    messages = value.get("messages", [])
+
+    for message in messages:
+        logger.warning(
+            "whatsapp_inbound_message_unhandled",
+            wamid=message.get("id"),
+            from_number=message.get("from"),
+            message_type=message.get("type"),
+        )
+
+    return len(messages)
+
+
+async def _dispatch_webhook_change(db: AsyncSession, change: dict) -> None:
+    """Route one `changes[]` entry to whichever handler owns it."""
+    field = change.get("field")
+    value = change.get("value", {})
+
+    if field == "messages":
+        # Meta packs two different things under this one field.
+        await _handle_status_updates(db, value)
+        await _handle_inbound_messages(db, value)
+    else:
+        # Template approvals, quality-rating changes, account updates. Not
+        # handled yet, and a 200 is still the correct answer.
+        logger.info("whatsapp_webhook_field_unhandled", field=field)
+
+
+@router.post("/webhook")
 async def whatsapp_webhook(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
     x_hub_signature_256: Optional[str] = Header(None, alias="X-Hub-Signature-256"),
 ):
-    """Webhook endpoint for WhatsApp status updates from Meta.
+    """Receive WhatsApp events from Meta.
 
-    Accepts POST on both `/webhooks/status` and `/webhooks/verify`. Meta uses
-    a single configured URL for both the GET verification handshake and POST
-    event delivery; since our verification URL is `.../webhooks/verify`, this
-    route also accepts POST events at that path so Meta can deliver messages
-    and status updates without a 405.
+    Authenticates the payload by HMAC signature, then dispatches by field.
     """
-    # Get raw body for signature verification
     raw_body = await request.body()
 
-    # Verify webhook signature from Meta (MANDATORY)
+    # Signature is mandatory. verify_webhook_signature fails closed when no
+    # app secret is configured, so an unconfigured deployment rejects rather
+    # than trusting whatever arrives.
     if not x_hub_signature_256:
-        logger.warning("webhook_missing_signature", path=request.url.path)
+        logger.warning("whatsapp_webhook_missing_signature", path=request.url.path)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing webhook signature header",
         )
     if not verify_webhook_signature(raw_body, x_hub_signature_256):
-        logger.warning("webhook_invalid_signature", path=request.url.path)
+        logger.warning("whatsapp_webhook_invalid_signature", path=request.url.path)
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid webhook signature"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid webhook signature",
         )
 
     body = await request.json()
 
-    # Process status updates
-    if "entry" in body:
-        for entry in body["entry"]:
-            for change in entry.get("changes", []):
-                if change.get("field") == "messages":
-                    statuses = change.get("value", {}).get("statuses", [])
-                    for status_update in statuses:
-                        wamid = status_update.get("id")
-                        new_status = status_update.get("status")
-                        timestamp = status_update.get("timestamp")
-
-                        # Update message status
-                        result = await db.execute(
-                            select(WhatsAppMessage).where(
-                                WhatsAppMessage.wamid == wamid
-                            )
-                        )
-                        message = result.scalar_one_or_none()
-
-                        if message:
-                            message.status = new_status
-                            ts = datetime.fromtimestamp(int(timestamp), tz=timezone.utc)
-
-                            if new_status == "sent":
-                                message.sent_at = ts
-                            elif new_status == "delivered":
-                                message.delivered_at = ts
-                            elif new_status == "read":
-                                message.read_at = ts
-
-                            # Update status history
-                            history = message.status_history or []
-                            history.append(
-                                {"status": new_status, "timestamp": ts.isoformat()}
-                            )
-                            message.status_history = history
-
-                            await db.commit()
-                            logger.info(
-                                f"Updated message {wamid} status to {new_status}"
-                            )
+    for entry in body.get("entry", []):
+        for change in entry.get("changes", []):
+            await _dispatch_webhook_change(db, change)
 
     return {"status": "received"}
 
 
-@router.get("/webhooks/verify")
+@router.get("/webhook")
 async def verify_webhook(
     mode: str = Query(alias="hub.mode"),
     token: str = Query(alias="hub.verify_token"),
     challenge: str = Query(alias="hub.challenge"),
 ):
-    """Verify webhook subscription from Meta."""
-    from app.core.config import settings
+    """Answer Meta's subscription handshake.
 
-    if mode == "subscribe" and token == settings.whatsapp_verify_token:
-        logger.info("WhatsApp webhook verified")
+    Compared with hmac.compare_digest rather than `==`: the token is a shared
+    secret, and an equality check on a secret leaks its prefix through timing.
+    """
+    expected = settings.whatsapp_verify_token or ""
+
+    if mode == "subscribe" and hmac.compare_digest(token, expected):
+        logger.info("whatsapp_webhook_verified")
         return int(challenge)
 
+    logger.warning("whatsapp_webhook_verification_failed", mode=mode)
     raise HTTPException(status_code=403, detail="Verification failed")
+
+
+# -----------------------------------------------------------------------------
+# Deprecated webhook paths
+# -----------------------------------------------------------------------------
+# The previous structure exposed POST on both `/webhooks/status` and
+# `/webhooks/verify`, plus GET on `/webhooks/verify`. Meta's configured URL
+# cannot change at the same instant this deploys, so these keep answering
+# until the app config points at `/webhook`. Remove them one release later.
+
+
+@router.post("/webhooks/status", deprecated=True)
+@router.post("/webhooks/verify", deprecated=True)
+async def whatsapp_webhook_legacy(
+    request: Request,
+    db: AsyncSession = Depends(get_async_session),
+    x_hub_signature_256: Optional[str] = Header(None, alias="X-Hub-Signature-256"),
+):
+    """Deprecated alias for POST /webhook."""
+    logger.info("whatsapp_webhook_legacy_path", path=request.url.path)
+    return await whatsapp_webhook(request, db, x_hub_signature_256)
+
+
+@router.get("/webhooks/verify", deprecated=True)
+async def verify_webhook_legacy(
+    mode: str = Query(alias="hub.mode"),
+    token: str = Query(alias="hub.verify_token"),
+    challenge: str = Query(alias="hub.challenge"),
+):
+    """Deprecated alias for GET /webhook."""
+    logger.info("whatsapp_webhook_legacy_verify_path")
+    return await verify_webhook(mode, token, challenge)
 
 
 # =============================================================================
