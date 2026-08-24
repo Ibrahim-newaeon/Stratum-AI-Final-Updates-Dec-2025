@@ -2,7 +2,7 @@
 # Stratum AI - CRM Services Package
 # =============================================================================
 """
-CRM integration services for HubSpot, Salesforce, etc.
+CRM integration services for HubSpot and Pipedrive.
 """
 
 from app.services.crm.hubspot_client import HubSpotClient

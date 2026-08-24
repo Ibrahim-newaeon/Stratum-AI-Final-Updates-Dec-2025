@@ -44,9 +44,7 @@ class CRMProvider(str, enum.Enum):
     """Supported CRM providers."""
 
     HUBSPOT = "hubspot"
-    SALESFORCE = "salesforce"
     PIPEDRIVE = "pipedrive"
-    ZOHO = "zoho"
 
 
 class CRMConnectionStatus(str, enum.Enum):

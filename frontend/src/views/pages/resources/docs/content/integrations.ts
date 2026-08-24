@@ -163,14 +163,14 @@ export const integrationsArticles: DocArticle[] = [
     category: 'Integrations',
     title: 'CRM Systems',
     description:
-      'Sync HubSpot and Zoho contacts and companies into the CDP, and wire Slack and WhatsApp for notifications.',
+      'Sync HubSpot and Pipedrive contacts and companies into the CDP, and wire Slack and WhatsApp for notifications.',
     readTime: '5 min',
     blocks: [
       {
         type: 'paragraph',
-        text: 'Beyond ad platforms, Stratum integrates with CRM and messaging systems. HubSpot and Zoho sync contacts and companies into the Customer Data Platform for enrichment and segmentation, while Slack and WhatsApp Business carry notifications out to your team and customers.',
+        text: 'Beyond ad platforms, Stratum integrates with CRM and messaging systems. HubSpot and Pipedrive sync contacts and companies into the Customer Data Platform for enrichment and segmentation, while Slack and WhatsApp Business carry notifications out to your team and customers.',
       },
-      { type: 'heading', text: 'HubSpot and Zoho' },
+      { type: 'heading', text: 'HubSpot and Pipedrive' },
       {
         type: 'paragraph',
         text: 'Connecting a CRM lets Stratum mirror your contact and company records into the CDP, where they merge with behavioral events to build unified profiles. Those profiles power computed traits, lifecycle stages, and the segments you later activate as ad-platform audiences.',
@@ -188,7 +188,7 @@ export const integrationsArticles: DocArticle[] = [
         type: 'list',
         ordered: true,
         items: [
-          'Open Integrations and choose HubSpot or Zoho.',
+          'Open Integrations and choose HubSpot or Pipedrive.',
           'Complete the provider’s OAuth consent flow — Stratum stores only an encrypted refresh token.',
           'Pick the objects to sync; the initial backfill begins immediately.',
         ],

@@ -11,7 +11,7 @@ import { apiClient, ApiResponse, PaginatedResponse } from './client'
 // Types
 // =============================================================================
 
-export type CRMProvider = 'hubspot' | 'salesforce' | 'zoho'
+export type CRMProvider = 'hubspot' | 'pipedrive'
 export type CRMConnectionStatus = 'connected' | 'disconnected' | 'error' | 'syncing'
 export type DealStage = 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost'
 export type WritebackStatus = 'pending' | 'synced' | 'failed' | 'skipped'
