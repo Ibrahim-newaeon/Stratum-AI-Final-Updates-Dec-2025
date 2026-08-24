@@ -6,7 +6,6 @@ Background tasks for CRM data synchronization.
 
 Supports:
 - HubSpot CRM
-- Zoho CRM
 
 Tasks:
 - Scheduled sync of contacts and deals
@@ -23,7 +22,6 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 from sqlalchemy import and_, select
 
-from app.core.config import settings
 from app.db.session import async_session_maker
 from app.models.crm import (
     CRMConnection,
@@ -170,113 +168,6 @@ async def writeback_hubspot_attribution(
 
 
 # =============================================================================
-# Zoho CRM Sync Tasks
-# =============================================================================
-
-
-@shared_task(bind=True, max_retries=3)
-@async_task
-async def sync_zoho_data(
-    self,
-    tenant_id: int,
-    full_sync: bool = False,
-    region: str = "com",
-) -> dict[str, Any]:
-    """
-    Sync contacts, leads, and deals from Zoho CRM.
-
-    Args:
-        tenant_id: Tenant ID to sync
-        full_sync: If True, sync all records. Otherwise, incremental sync.
-        region: Zoho region (com, eu, in, com.au, jp, com.cn)
-
-    Returns:
-        Sync results with counts
-    """
-    from app.services.crm.zoho_sync import ZohoSyncService
-
-    logger.info(f"Starting Zoho CRM sync for tenant {tenant_id}")
-
-    async with async_session_maker() as db:
-        sync_service = ZohoSyncService(db, tenant_id, region)
-
-        try:
-            results = await sync_service.sync_all(full_sync=full_sync)
-
-            logger.info(
-                f"Zoho sync completed for tenant {tenant_id}: "
-                f"{results.get('contacts_synced', 0)} contacts, "
-                f"{results.get('deals_synced', 0)} deals"
-            )
-
-            return results
-
-        except Exception as e:
-            logger.error(f"Zoho sync failed for tenant {tenant_id}: {e}")
-            raise self.retry(exc=e, countdown=60 * 5)
-
-
-@shared_task(bind=True, max_retries=3)
-@async_task
-async def writeback_zoho_attribution(
-    self,
-    tenant_id: int,
-    sync_contacts: bool = True,
-    sync_deals: bool = True,
-    full_sync: bool = False,
-    region: str = "com",
-) -> dict[str, Any]:
-    """
-    Write attribution data back to Zoho CRM.
-
-    Args:
-        tenant_id: Tenant ID
-        sync_contacts: Whether to sync contacts
-        sync_deals: Whether to sync deals
-        full_sync: If True, sync all records
-        region: Zoho region
-
-    Returns:
-        Writeback results
-    """
-    from app.services.crm.zoho_writeback import ZohoWritebackService
-
-    logger.info(f"Starting Zoho writeback for tenant {tenant_id}")
-
-    async with async_session_maker() as db:
-        writeback_service = ZohoWritebackService(db, tenant_id, region)
-
-        # Get modified_since for incremental sync
-        modified_since = None
-        if not full_sync:
-            result = await db.execute(
-                select(CRMConnection).where(
-                    and_(
-                        CRMConnection.tenant_id == tenant_id,
-                        CRMConnection.provider == CRMProvider.ZOHO,
-                    )
-                )
-            )
-            connection = result.scalar_one_or_none()
-            if connection and connection.last_sync_at:
-                modified_since = connection.last_sync_at
-
-        try:
-            results = await writeback_service.full_sync(
-                sync_contacts=sync_contacts,
-                sync_deals=sync_deals,
-                modified_since=modified_since,
-            )
-
-            logger.info(f"Zoho writeback completed for tenant {tenant_id}")
-            return results
-
-        except Exception as e:
-            logger.error(f"Zoho writeback failed for tenant {tenant_id}: {e}")
-            raise self.retry(exc=e, countdown=60 * 5)
-
-
-# =============================================================================
 # Scheduled Sync Tasks
 # =============================================================================
 
@@ -294,7 +185,6 @@ async def sync_all_crm_connections() -> dict[str, Any]:
     results = {
         "started_at": datetime.now(UTC).isoformat(),
         "hubspot": {"synced": 0, "failed": 0},
-        "zoho": {"synced": 0, "failed": 0},
     }
 
     async with async_session_maker() as db:
@@ -313,15 +203,6 @@ async def sync_all_crm_connections() -> dict[str, Any]:
                     sync_hubspot_data.delay(connection.tenant_id, full_sync=False)
                     results["hubspot"]["synced"] += 1
 
-                elif connection.provider == CRMProvider.ZOHO:
-                    # Dispatch Zoho sync task
-                    sync_zoho_data.delay(
-                        connection.tenant_id,
-                        full_sync=False,
-                        region=settings.zoho_region,
-                    )
-                    results["zoho"]["synced"] += 1
-
             except (ConnectionError, TimeoutError, OSError) as e:
                 logger.error(
                     f"Failed to dispatch sync for {connection.provider.value} "
@@ -329,8 +210,6 @@ async def sync_all_crm_connections() -> dict[str, Any]:
                 )
                 if connection.provider == CRMProvider.HUBSPOT:
                     results["hubspot"]["failed"] += 1
-                elif connection.provider == CRMProvider.ZOHO:
-                    results["zoho"]["failed"] += 1
 
     results["completed_at"] = datetime.now(UTC).isoformat()
     logger.info(f"CRM sync dispatch complete: {results}")
@@ -389,13 +268,6 @@ async def run_scheduled_writebacks() -> dict[str, Any]:
                         config.tenant_id,
                         sync_contacts=config.sync_contacts,
                         sync_deals=config.sync_deals,
-                    )
-                elif connection.provider == CRMProvider.ZOHO:
-                    writeback_zoho_attribution.delay(
-                        config.tenant_id,
-                        sync_contacts=config.sync_contacts,
-                        sync_deals=config.sync_deals,
-                        region=settings.zoho_region,
                     )
 
                 # Update next sync time

@@ -27,7 +27,6 @@ const fallbackIntegrations: Record<
     { name: 'Segment', description: 'Customer data platform', logo: 'SG' },
   ],
   'CRM & Sales': [
-    { name: 'Salesforce', description: 'CRM platform', logo: 'SF' },
     { name: 'HubSpot', description: 'Marketing & sales', logo: 'HS' },
     { name: 'Pipedrive', description: 'Sales CRM', logo: 'PD' },
   ],

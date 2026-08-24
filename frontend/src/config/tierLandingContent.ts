@@ -376,11 +376,6 @@ const professionalContent: TierContent = {
         { name: 'Pipedrive CRM', description: 'Two-way sync with Pipedrive', included: true },
         { name: 'Slack Notifications', description: 'Advanced alert workflows', included: true },
         { name: 'Webhook Events', description: 'Send events to custom endpoints', included: true },
-        {
-          name: 'Salesforce CRM',
-          description: 'Enterprise Salesforce integration',
-          included: false,
-        },
       ],
     },
     {
@@ -642,11 +637,6 @@ const enterpriseContent: TierContent = {
         {
           name: 'Custom Report Builder',
           description: 'White-label custom reports',
-          included: true,
-        },
-        {
-          name: 'Salesforce Integration',
-          description: 'Two-way Salesforce CRM sync',
           included: true,
         },
         { name: 'Custom Onboarding', description: 'Tailored implementation plan', included: true },

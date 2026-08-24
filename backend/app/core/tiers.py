@@ -93,8 +93,6 @@ class Feature(str, enum.Enum):
     WHAT_IF_SIMULATOR = "what_if_simulator"
 
     # CRM Advanced
-    SALESFORCE_INTEGRATION = "salesforce_integration"
-    ZOHO_INTEGRATION = "zoho_integration"
     CRM_WRITEBACK = "crm_writeback"
 
     # Compliance
@@ -201,8 +199,6 @@ TIER_FEATURES: dict[SubscriptionTier, set[Feature]] = {
         Feature.CUSTOM_AUTOPILOT_RULES,
         Feature.CUSTOM_REPORT_BUILDER,
         Feature.WHAT_IF_SIMULATOR,
-        Feature.SALESFORCE_INTEGRATION,
-        Feature.ZOHO_INTEGRATION,
         Feature.CRM_WRITEBACK,
         Feature.CONSENT_MANAGEMENT,
         Feature.GDPR_TOOLS,

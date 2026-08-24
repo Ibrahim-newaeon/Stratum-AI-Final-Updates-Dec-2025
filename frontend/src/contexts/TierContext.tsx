@@ -92,8 +92,6 @@ export const Features = {
   CUSTOM_AUTOPILOT_RULES: 'custom_autopilot_rules',
   CUSTOM_REPORT_BUILDER: 'custom_report_builder',
   WHAT_IF_SIMULATOR: 'what_if_simulator',
-  SALESFORCE_INTEGRATION: 'salesforce_integration',
-  ZOHO_INTEGRATION: 'zoho_integration',
   CRM_WRITEBACK: 'crm_writeback',
   CONSENT_MANAGEMENT: 'consent_management',
   GDPR_TOOLS: 'gdpr_tools',
