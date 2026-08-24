@@ -56,6 +56,8 @@ from app.services.crm.oauth_state import (
     consume_crm_oauth_state,
     create_crm_oauth_state,
 )
+from app.services.crm.pipedrive_client import PipedriveClient
+from app.services.crm.pipedrive_sync import PipedriveSyncService
 
 router = APIRouter(prefix="/integrations", tags=["integrations"])
 
@@ -110,6 +112,31 @@ class HubSpotStatusResponse(BaseModel):
     last_sync_at: Optional[str] = None
     last_sync_status: Optional[str] = None
     scopes: List[str] = []
+
+
+class PipedriveConnectRequest(BaseModel):
+    """Request to initiate Pipedrive OAuth."""
+
+    redirect_uri: str = Field(..., description="OAuth callback URL")
+
+
+class PipedriveConnectResponse(BaseModel):
+    """Response with OAuth authorization URL."""
+
+    authorization_url: str
+    state: str
+
+
+class PipedriveStatusResponse(BaseModel):
+    """Pipedrive connection status."""
+
+    connected: bool
+    status: str
+    provider: str = "pipedrive"
+    account_id: Optional[str] = None
+    account_name: Optional[str] = None
+    last_sync_at: Optional[str] = None
+    last_sync_status: Optional[str] = None
 
 
 class SyncRequest(BaseModel):
@@ -445,6 +472,170 @@ async def hubspot_webhook(
             processed += 1
 
     return {"status": "received", "processed": processed}
+
+
+# =============================================================================
+# Pipedrive OAuth Endpoints
+# =============================================================================
+
+
+@router.post(
+    "/pipedrive/connect",
+    response_model=APIResponse[PipedriveConnectResponse],
+    summary="Initiate Pipedrive OAuth",
+    dependencies=_superadmin_deps,
+)
+async def pipedrive_connect(
+    http_request: Request,
+    request: PipedriveConnectRequest,
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Start Pipedrive OAuth authorization flow.
+    Returns authorization URL to redirect user to Pipedrive.
+    """
+    _verify_tenant_access(http_request, tenant_id)
+    client = PipedriveClient(db, tenant_id)
+
+    # Same contract as HubSpot: the tenant is bound to the state token in
+    # Redis, never encoded into a value the caller controls.
+    state = await create_crm_oauth_state("pipedrive", tenant_id)
+
+    auth_url = client.get_authorization_url(
+        redirect_uri=request.redirect_uri,
+        state=state,
+    )
+
+    return APIResponse(
+        success=True,
+        data=PipedriveConnectResponse(
+            authorization_url=auth_url,
+            state=state,
+        ),
+    )
+
+
+@router.get(
+    "/pipedrive/callback",
+    response_model=APIResponse[PipedriveStatusResponse],
+    summary="Pipedrive OAuth callback",
+)
+async def pipedrive_callback(
+    code: str = Query(..., description="Authorization code"),
+    state: str = Query(..., description="State parameter"),
+    redirect_uri: str = Query(..., description="Redirect URI used in authorization"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Handle Pipedrive OAuth callback.
+    Exchanges authorization code for tokens and stores connection.
+    """
+    # Unauthenticated by necessity — Pipedrive redirects the user's browser
+    # here with no JWT, so `state` is the only thing establishing which tenant
+    # is being connected. consume_crm_oauth_state fails closed on an unknown
+    # token, a replayed token, or Redis being unavailable.
+    tenant_id = await consume_crm_oauth_state("pipedrive", state)
+    if tenant_id is None:
+        logger.warning("pipedrive_callback_invalid_state")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid or expired state parameter — restart the connection",
+        )
+
+    client = PipedriveClient(db, tenant_id)
+
+    try:
+        await client.exchange_code_for_tokens(code, redirect_uri)
+        status = await client.get_connection_status()
+
+        return APIResponse(
+            success=True,
+            data=PipedriveStatusResponse(**status),
+            message="Pipedrive connected successfully",
+        )
+
+    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+        logger.error("pipedrive_oauth_failed", error=str(e), tenant_id=tenant_id)
+        raise HTTPException(status_code=400, detail=f"OAuth failed: {str(e)}")
+
+
+@router.get(
+    "/pipedrive/status",
+    response_model=APIResponse[PipedriveStatusResponse],
+    summary="Get Pipedrive connection status",
+    dependencies=_superadmin_deps,
+)
+async def pipedrive_status(
+    request: Request,
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Get current Pipedrive connection status for tenant."""
+    _verify_tenant_access(request, tenant_id)
+    client = PipedriveClient(db, tenant_id)
+    status = await client.get_connection_status()
+
+    return APIResponse(
+        success=True,
+        data=PipedriveStatusResponse(**status),
+    )
+
+
+@router.delete(
+    "/pipedrive/disconnect",
+    response_model=APIResponse[Dict[str, Any]],
+    summary="Disconnect Pipedrive",
+    dependencies=_superadmin_deps,
+)
+async def pipedrive_disconnect(
+    request: Request,
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Disconnect Pipedrive integration for tenant."""
+    _verify_tenant_access(request, tenant_id)
+    client = PipedriveClient(db, tenant_id)
+    success = await client.disconnect()
+
+    if not success:
+        raise HTTPException(status_code=404, detail="No Pipedrive connection found")
+
+    return APIResponse(
+        success=True,
+        data={"disconnected": True},
+        message="Pipedrive disconnected successfully",
+    )
+
+
+@router.post(
+    "/pipedrive/sync",
+    response_model=APIResponse[SyncResponse],
+    summary="Trigger Pipedrive sync",
+    dependencies=_superadmin_deps,
+)
+async def pipedrive_sync(
+    http_request: Request,
+    request: SyncRequest,
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Trigger manual sync of Pipedrive persons and deals.
+    """
+    _verify_tenant_access(http_request, tenant_id)
+    sync_service = PipedriveSyncService(db, tenant_id)
+
+    results = await sync_service.sync_all(full_sync=request.full_sync)
+
+    return APIResponse(
+        success=results.get("status") != "error",
+        data=SyncResponse(**results),
+        message=(
+            f"Sync completed: {results.get('contacts_synced', 0)} persons, "
+            f"{results.get('deals_synced', 0)} deals"
+        ),
+    )
 
 
 # =============================================================================

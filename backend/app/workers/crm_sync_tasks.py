@@ -168,6 +168,105 @@ async def writeback_hubspot_attribution(
 
 
 # =============================================================================
+# Pipedrive Sync Tasks
+# =============================================================================
+
+
+@shared_task(bind=True, max_retries=3)
+@async_task
+async def sync_pipedrive_data(
+    self,
+    tenant_id: int,
+    full_sync: bool = False,
+) -> dict[str, Any]:
+    """
+    Sync persons and deals from Pipedrive CRM.
+
+    Args:
+        tenant_id: Tenant ID to sync
+        full_sync: If True, sync all records. Otherwise, incremental sync.
+
+    Returns:
+        Sync results with counts
+    """
+    from app.services.crm.pipedrive_sync import PipedriveSyncService
+
+    logger.info(f"Starting Pipedrive sync for tenant {tenant_id}")
+
+    async with async_session_maker() as db:
+        sync_service = PipedriveSyncService(db, tenant_id)
+
+        try:
+            results = await sync_service.sync_all(full_sync=full_sync)
+
+            logger.info(
+                f"Pipedrive sync completed for tenant {tenant_id}: "
+                f"{results.get('contacts_synced', 0)} persons, "
+                f"{results.get('deals_synced', 0)} deals"
+            )
+
+            return results
+
+        except Exception as e:
+            logger.error(f"Pipedrive sync failed for tenant {tenant_id}: {e}")
+            raise self.retry(exc=e, countdown=60 * 5)
+
+
+@shared_task(bind=True, max_retries=3)
+@async_task
+async def writeback_pipedrive_attribution(
+    self,
+    tenant_id: int,
+    sync_contacts: bool = True,
+    sync_deals: bool = True,
+    full_sync: bool = False,
+) -> dict[str, Any]:
+    """
+    Write attribution data back to Pipedrive CRM.
+
+    Args:
+        tenant_id: Tenant ID
+        sync_contacts: Whether to sync persons
+        sync_deals: Whether to sync deals
+        full_sync: If True, sync all records
+
+    Returns:
+        Writeback results
+    """
+    from app.services.crm.pipedrive_writeback import PipedriveWritebackService
+
+    logger.info(f"Starting Pipedrive writeback for tenant {tenant_id}")
+
+    async with async_session_maker() as db:
+        writeback_service = PipedriveWritebackService(db, tenant_id)
+
+        modified_since = None
+        if not full_sync:
+            result = await db.execute(
+                select(CRMWritebackConfig).where(
+                    CRMWritebackConfig.tenant_id == tenant_id
+                )
+            )
+            config = result.scalar_one_or_none()
+            if config and config.last_sync_at:
+                modified_since = config.last_sync_at
+
+        try:
+            results = await writeback_service.full_sync(
+                sync_contacts=sync_contacts,
+                sync_deals=sync_deals,
+                modified_since=modified_since,
+            )
+
+            logger.info(f"Pipedrive writeback completed for tenant {tenant_id}")
+            return results
+
+        except Exception as e:
+            logger.error(f"Pipedrive writeback failed for tenant {tenant_id}: {e}")
+            raise self.retry(exc=e, countdown=60 * 5)
+
+
+# =============================================================================
 # Scheduled Sync Tasks
 # =============================================================================
 
@@ -185,6 +284,7 @@ async def sync_all_crm_connections() -> dict[str, Any]:
     results = {
         "started_at": datetime.now(UTC).isoformat(),
         "hubspot": {"synced": 0, "failed": 0},
+        "pipedrive": {"synced": 0, "failed": 0},
     }
 
     async with async_session_maker() as db:
@@ -203,6 +303,11 @@ async def sync_all_crm_connections() -> dict[str, Any]:
                     sync_hubspot_data.delay(connection.tenant_id, full_sync=False)
                     results["hubspot"]["synced"] += 1
 
+                elif connection.provider == CRMProvider.PIPEDRIVE:
+                    # Dispatch Pipedrive sync task
+                    sync_pipedrive_data.delay(connection.tenant_id, full_sync=False)
+                    results["pipedrive"]["synced"] += 1
+
             except (ConnectionError, TimeoutError, OSError) as e:
                 logger.error(
                     f"Failed to dispatch sync for {connection.provider.value} "
@@ -210,6 +315,8 @@ async def sync_all_crm_connections() -> dict[str, Any]:
                 )
                 if connection.provider == CRMProvider.HUBSPOT:
                     results["hubspot"]["failed"] += 1
+                elif connection.provider == CRMProvider.PIPEDRIVE:
+                    results["pipedrive"]["failed"] += 1
 
     results["completed_at"] = datetime.now(UTC).isoformat()
     logger.info(f"CRM sync dispatch complete: {results}")
@@ -265,6 +372,12 @@ async def run_scheduled_writebacks() -> dict[str, Any]:
 
                 if connection.provider == CRMProvider.HUBSPOT:
                     writeback_hubspot_attribution.delay(
+                        config.tenant_id,
+                        sync_contacts=config.sync_contacts,
+                        sync_deals=config.sync_deals,
+                    )
+                elif connection.provider == CRMProvider.PIPEDRIVE:
+                    writeback_pipedrive_attribution.delay(
                         config.tenant_id,
                         sync_contacts=config.sync_contacts,
                         sync_deals=config.sync_deals,
