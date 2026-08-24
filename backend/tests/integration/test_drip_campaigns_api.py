@@ -28,6 +28,13 @@ def _enable_drip(monkeypatch):
 
 
 def _sequence(name="Welcome series", trigger_type="user_subscribed", **extra):
+    """A graph that is actually publishable.
+
+    This used to stop at the email node. `activate` accepted it, because
+    `activate` accepted anything — including an empty graph. It now validates
+    first, and an email node with nowhere to go is a dead end, so the fixture
+    grew the end node a real sequence would always have had.
+    """
     body = {
         "name": name,
         "description": "Onboard new subscribers",
@@ -36,8 +43,12 @@ def _sequence(name="Welcome series", trigger_type="user_subscribed", **extra):
         "nodes": [
             {"id": "n1", "type": "trigger", "position": {"x": 0, "y": 0}, "data": {}},
             {"id": "n2", "type": "email", "position": {"x": 0, "y": 1}, "data": {}},
+            {"id": "n3", "type": "end", "position": {"x": 0, "y": 2}, "data": {}},
         ],
-        "edges": [{"id": "e1", "source": "n1", "target": "n2"}],
+        "edges": [
+            {"id": "e1", "source": "n1", "target": "n2"},
+            {"id": "e2", "source": "n2", "target": "n3"},
+        ],
         "status": "draft",
     }
     body.update(extra)
@@ -64,7 +75,7 @@ class TestCreateSequence:
         data = await _create(authenticated_client, name="Cart recovery")
         assert data["name"] == "Cart recovery"
         assert data["status"] == "draft"
-        assert len(data["nodes"]) == 2
+        assert len(data["nodes"]) == 3
 
     @pytest.mark.asyncio
     async def test_invalid_trigger_type_rejected(
@@ -132,10 +143,74 @@ class TestMutationsAndLifecycle:
         )
         assert activated.status_code == 200
         assert activated.json()["data"]["status"] == "active"
+        # Activating publishes an immutable version; recipients enter on it, so
+        # a later edit cannot move them onto a node that no longer exists.
+        assert activated.json()["data"]["version"] == 1
 
         paused = await authenticated_client.post(f"/api/v1/drip-campaigns/{sid}/pause")
         assert paused.status_code == 200
         assert paused.json()["data"]["status"] == "paused"
+
+    @pytest.mark.asyncio
+    async def test_reactivating_publishes_a_new_version(
+        self, authenticated_client: AsyncClient
+    ):
+        created = await _create(authenticated_client, name="Versioned Seq")
+        sid = created["id"]
+
+        first = await authenticated_client.post(
+            f"/api/v1/drip-campaigns/{sid}/activate"
+        )
+        second = await authenticated_client.post(
+            f"/api/v1/drip-campaigns/{sid}/activate"
+        )
+        assert first.json()["data"]["version"] == 1
+        assert second.json()["data"]["version"] == 2
+        assert first.json()["data"]["version_id"] != second.json()["data"]["version_id"]
+
+    @pytest.mark.asyncio
+    async def test_activate_rejects_an_unpublishable_graph(
+        self, authenticated_client: AsyncClient
+    ):
+        """The bug this validation exists for.
+
+        `activate` used to flip status on any graph at all, producing a
+        sequence that reported itself active and could never send anything.
+        """
+        created = await _create(
+            authenticated_client,
+            name="Broken Seq",
+            nodes=[
+                {"id": "n1", "type": "trigger", "position": {}, "data": {}},
+                {"id": "n2", "type": "email", "position": {}, "data": {}},
+            ],
+            edges=[{"id": "e1", "source": "n1", "target": "n2"}],
+        )
+        resp = await authenticated_client.post(
+            f"/api/v1/drip-campaigns/{created['id']}/activate"
+        )
+        assert resp.status_code == 422
+        errors = resp.json()["detail"]["errors"]
+        assert any("no outgoing step" in e for e in errors)
+
+        # And it really is still a draft, not quietly half-activated.
+        detail = await authenticated_client.get(
+            f"/api/v1/drip-campaigns/{created['id']}"
+        )
+        assert detail.json()["data"]["status"] == "draft"
+
+    @pytest.mark.asyncio
+    async def test_activate_rejects_an_empty_graph(
+        self, authenticated_client: AsyncClient
+    ):
+        created = await _create(
+            authenticated_client, name="Empty Seq", nodes=[], edges=[]
+        )
+        resp = await authenticated_client.post(
+            f"/api/v1/drip-campaigns/{created['id']}/activate"
+        )
+        assert resp.status_code == 422
+        assert resp.json()["detail"]["errors"] == ["Sequence has no nodes."]
 
     @pytest.mark.asyncio
     async def test_delete_archives(self, authenticated_client: AsyncClient):

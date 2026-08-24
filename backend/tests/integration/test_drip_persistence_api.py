@@ -3,10 +3,19 @@
 # =============================================================================
 """Integration tests for the DB-backed drip-campaign behavior.
 
-These exercise the persistence layer added when drip sequences moved off
-the per-process in-memory store onto PostgreSQL: the manual trigger →
-execution-log → analytics flow, and the status filter on the list
-endpoint. Complements ``test_drip_campaigns_api.py`` (CRUD + lifecycle).
+These exercise the persistence layer added when drip sequences moved off the
+per-process in-memory store onto PostgreSQL: the manual trigger → enrollment →
+analytics flow, and the status filter on the list endpoint. Complements
+``test_drip_campaigns_api.py`` (CRUD + lifecycle).
+
+**The trigger contract changed when the execution engine landed.** It used to
+write a ``DripExecutionRecord`` marked *simulated* and return success, so these
+tests asserted that a log row appeared the instant someone was triggered. That
+log row was the whole illusion: nothing had been sent, and nothing ever would
+be. A trigger now creates an *enrollment*, and a log row appears only once the
+worker actually sends something — so the assertions here moved from "a log
+exists" to "an enrollment exists and no mail has gone out yet", which is what is
+really true at that moment.
 """
 
 import pytest
@@ -24,6 +33,12 @@ def _enable_drip(monkeypatch):
 
 
 def _sequence(name="Persisted series", **extra):
+    """A publishable graph.
+
+    This used to be a lone trigger node with no edges. `activate` accepted it,
+    because `activate` accepted anything. It now validates, and a trigger that
+    goes nowhere is not a sequence.
+    """
     body = {
         "name": name,
         "description": "",
@@ -31,8 +46,18 @@ def _sequence(name="Persisted series", **extra):
         "trigger_config": {},
         "nodes": [
             {"id": "n1", "type": "trigger", "position": {"x": 0, "y": 0}, "data": {}},
+            {
+                "id": "n2",
+                "type": "email",
+                "position": {"x": 0, "y": 1},
+                "data": {"subject": "Hello", "html": "<p>Hi</p>"},
+            },
+            {"id": "n3", "type": "end", "position": {"x": 0, "y": 2}, "data": {}},
         ],
-        "edges": [],
+        "edges": [
+            {"id": "e1", "source": "n1", "target": "n2"},
+            {"id": "e2", "source": "n2", "target": "n3"},
+        ],
         "status": "draft",
     }
     body.update(extra)
@@ -45,33 +70,75 @@ async def _create(client: AsyncClient, **extra) -> dict:
     return resp.json()["data"]
 
 
+async def _create_active(client: AsyncClient, **extra) -> str:
+    """Create a sequence and publish it. Returns the sequence id.
+
+    Enrollment needs a published version — there is nowhere to put a recipient
+    otherwise — so every trigger test goes through here.
+    """
+    created = await _create(client, **extra)
+    resp = await client.post(f"/api/v1/drip-campaigns/{created['id']}/activate")
+    assert resp.status_code == 200, resp.text
+    return created["id"]
+
+
 class TestTriggerLogsAnalytics:
     @pytest.mark.asyncio
-    async def test_trigger_records_execution_and_logs(
+    async def test_trigger_creates_an_enrollment(
         self, authenticated_client: AsyncClient
     ):
-        seq = await _create(authenticated_client, name="Trigger Seq")
-        sid = seq["id"]
+        sid = await _create_active(authenticated_client, name="Trigger Seq")
 
         triggered = await authenticated_client.post(
             f"/api/v1/drip-campaigns/{sid}/trigger",
             params={"recipient_email": "buyer@example.com"},
         )
         assert triggered.status_code == 200
-        assert triggered.json()["data"]["status"] == "triggered"
+        data = triggered.json()["data"]
+        assert data["status"] == "enrolled"
+        assert data["enrollment_id"].startswith("enroll_")
 
-        # The execution log is persisted and returned.
+        # And no mail has gone out yet, because no worker has run. The old
+        # behaviour wrote a log row here and called it sent.
         logs = await authenticated_client.get(f"/api/v1/drip-campaigns/{sid}/logs")
         assert logs.status_code == 200
-        entries = logs.json()["data"]
-        assert len(entries) == 1
-        assert entries[0]["recipient_email"] == "buyer@example.com"
-        assert entries[0]["node_type"] == "trigger"
+        assert logs.json()["data"] == []
+
+    @pytest.mark.asyncio
+    async def test_trigger_before_activation_is_refused(
+        self, authenticated_client: AsyncClient
+    ):
+        """There is nowhere to put a recipient without a published version."""
+        seq = await _create(authenticated_client, name="Unpublished Seq")
+        resp = await authenticated_client.post(
+            f"/api/v1/drip-campaigns/{seq['id']}/trigger",
+            params={"recipient_email": "buyer@example.com"},
+        )
+        assert resp.status_code == 409
+        assert resp.json()["detail"]["reason"] == "not_active"
+
+    @pytest.mark.asyncio
+    async def test_triggering_the_same_recipient_twice_is_idempotent(
+        self, authenticated_client: AsyncClient
+    ):
+        """The partial unique index makes double enrollment impossible; the
+        endpoint reports it rather than erroring."""
+        sid = await _create_active(authenticated_client, name="Dedupe Seq")
+        params = {"recipient_email": "buyer@example.com"}
+
+        first = await authenticated_client.post(
+            f"/api/v1/drip-campaigns/{sid}/trigger", params=params
+        )
+        second = await authenticated_client.post(
+            f"/api/v1/drip-campaigns/{sid}/trigger", params=params
+        )
+        assert first.json()["data"]["status"] == "enrolled"
+        assert second.status_code == 200
+        assert second.json()["data"]["status"] == "already_enrolled"
 
     @pytest.mark.asyncio
     async def test_analytics_reflects_triggers(self, authenticated_client: AsyncClient):
-        seq = await _create(authenticated_client, name="Analytics Seq")
-        sid = seq["id"]
+        sid = await _create_active(authenticated_client, name="Analytics Seq")
         for email in ("a@example.com", "b@example.com"):
             await authenticated_client.post(
                 f"/api/v1/drip-campaigns/{sid}/trigger",
@@ -82,8 +149,11 @@ class TestTriggerLogsAnalytics:
         assert resp.status_code == 200
         data = resp.json()["data"]
         assert data["sequence_id"] == sid
+        # Two people entered...
         assert data["total_entries"] == 2
-        assert data["emails_sent"] == 2
+        # ...and nothing has been sent to either of them yet. This assertion
+        # used to read `== 2`, which was counting the simulated records.
+        assert data["emails_sent"] == 0
 
     @pytest.mark.asyncio
     async def test_logs_not_found_for_unknown_sequence(
@@ -108,10 +178,7 @@ class TestStatusFilter:
     @pytest.mark.asyncio
     async def test_list_status_filter(self, authenticated_client: AsyncClient):
         draft = await _create(authenticated_client, name="Stays Draft")
-        active_seq = await _create(authenticated_client, name="Goes Active")
-        await authenticated_client.post(
-            f"/api/v1/drip-campaigns/{active_seq['id']}/activate"
-        )
+        await _create_active(authenticated_client, name="Goes Active")
 
         resp = await authenticated_client.get(
             "/api/v1/drip-campaigns", params={"status_filter": "active"}
