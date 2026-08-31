@@ -5,7 +5,7 @@
 
 # FastAPI Framework
 fastapi==0.141.1
-uvicorn[standard]==0.52.3
+uvicorn[standard]==0.52.4
 python-multipart==0.0.32
 starlette==1.6.0
 
@@ -30,7 +30,7 @@ redis[asyncio]==8.1.0
 
 # Celery
 celery==5.6.3
-flower==2.0.1
+flower==2.1.0
 celery-redbeat==2.4.2
 tzlocal==5.4.4  # required by celery.utils.time; pin explicitly so fresh installs don't drop it
 msgpack>=1.2.1  # transitive via celery/kombu; <1.2.1 has GHSA-6v7p-g79w-8964 (OOB read on Unpacker reuse)
@@ -39,8 +39,8 @@ msgpack>=1.2.1  # transitive via celery/kombu; <1.2.1 has GHSA-6v7p-g79w-8964 (O
 PyJWT==2.13.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.0.1  # passlib 1.7.4 requires bcrypt <4.1
-cryptography==50.0.0
-pydantic[email]==2.13.4
+cryptography==50.0.1
+pydantic[email]==2.13.5
 pydantic-settings==2.15.0
 pyotp==2.10.0
 qrcode[pil]==8.2
@@ -53,21 +53,21 @@ joblib==1.5.3
 
 # Google Cloud (for Vertex AI)
 google-cloud-aiplatform==1.164.0
-google-auth==2.56.3
+google-auth==2.57.0
 
 # Web Scraping (Module D)
 beautifulsoup4==4.15.0
-lxml==6.1.1
+lxml==6.1.2
 
 # Validation & Serialization
-pydantic==2.13.4
+pydantic==2.13.5
 orjson==3.12.0
 email-validator==2.3.0
 
 # Logging & Monitoring
 structlog==26.1.0
-python-json-logger==4.1.0
-sentry-sdk[fastapi]==2.68.0
+python-json-logger==4.2.0
+sentry-sdk[fastapi]==2.68.1
 prometheus-client==0.26.0
 
 # Ad Platform SDKs
@@ -101,5 +101,5 @@ aioboto3>=15.5.0
 shap>=0.52.0
 
 # Utilities
-python-dotenv==1.2.2
+python-dotenv==1.2.3
 tenacity==9.1.4
