@@ -71,16 +71,16 @@ sentry-sdk[fastapi]==2.68.1
 prometheus-client==0.26.0
 
 # Ad Platform SDKs
-stripe>=15.5.0
+stripe>=15.5.1
 requests>=2.34.2
 facebook-business>=26.0.0
-google-ads>=31.3.0
+google-ads>=31.4.0
 
 # Analytics & ML (scipy needed by ml/ab_testing.py)
 scipy>=1.18.0
 
 # Monitoring & Visualization
-matplotlib>=3.11.0
+matplotlib>=3.11.1
 prometheus-fastapi-instrumentator>=8.1.0
 psutil>=7.2.2
 
