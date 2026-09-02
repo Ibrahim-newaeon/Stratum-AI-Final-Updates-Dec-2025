@@ -103,6 +103,22 @@ async def _release_event(event_id: str) -> None:
 # allowlisted IP either. See settings.paddle_webhook_enforce_ip_allowlist for
 # why enforcement is opt-in behind Cloudflare.
 
+
+def _as_text(value) -> Optional[str]:
+    """Normalise a Redis read to str.
+
+    `get_redis_pool` builds its client with `decode_responses=True`, so reads
+    come back as `str`. Calling `.decode()` on that raises AttributeError. This
+    previously sat inside an `except (..., AttributeError)`, so the staleness
+    guard swallowed the error and reported "not stale" for every event — dead
+    code that a unit test could not catch, because the FakeRedis returned bytes
+    and so reproduced the assumption rather than the real client.
+    """
+    if value is None:
+        return None
+    return value.decode() if isinstance(value, bytes) else str(value)
+
+
 _OCCURRED_KEY_PREFIX = "paddle:sub:occurred:"
 _OCCURRED_TTL_SECONDS = 30 * 24 * 60 * 60
 
@@ -126,22 +142,42 @@ async def _is_stale(subscription_id: str, occurred_at: Optional[str]) -> bool:
     key = f"{_OCCURRED_KEY_PREFIX}{subscription_id}"
     try:
         redis = await get_redis_pool()
-        previous = await redis.get(key)
-        if previous and previous.decode() >= occurred_at:
+        previous = _as_text(await redis.get(key))
+        if previous and previous >= occurred_at:
             return True
         await redis.set(key, occurred_at, ex=_OCCURRED_TTL_SECONDS)
-    except (ConnectionError, TimeoutError, OSError, AttributeError):
+    except (ConnectionError, TimeoutError, OSError):
+        # Deliberately NOT catching AttributeError here. It masked the decode
+        # bug above and turned a real guard into a no-op.
         return False
     return False
 
 
-_IPS_URL = "https://api.paddle.com/ips"
-_IPS_CACHE_KEY = "paddle:webhook:ips"
+# Sandbox and production deliver from DIFFERENT address ranges, and each
+# environment publishes its own list. Fetching the production list while
+# running against sandbox rejects every genuine delivery — confirmed in a
+# rehearsal, where Paddle's own simulation arrived from 3.208.120.145, which
+# appears in the sandbox list and not in the production one.
+_IPS_URLS = {
+    "production": "https://api.paddle.com/ips",
+    "sandbox": "https://sandbox-api.paddle.com/ips",
+}
 _IPS_CACHE_TTL = 60 * 60  # 1 hour
 
 
+def _ips_url() -> str:
+    return _IPS_URLS[settings.paddle_environment]
+
+
+def _ips_cache_key() -> str:
+    """Cache per environment, so switching does not serve the other's list."""
+    return f"paddle:webhook:ips:{settings.paddle_environment}"
+
+
 async def _fetch_paddle_ips() -> list[str]:
-    """Fetch Paddle's published webhook CIDRs, caching in Redis for an hour.
+    """Fetch Paddle's published webhook CIDRs for the ACTIVE environment.
+
+    Cached in Redis for an hour, keyed by environment.
 
     Returns an empty list if the list cannot be obtained. Callers must treat
     "no list" as "cannot evaluate" and never as "deny everything" — failing
@@ -150,10 +186,10 @@ async def _fetch_paddle_ips() -> list[str]:
     """
     try:
         redis = await get_redis_pool()
-        cached = await redis.get(_IPS_CACHE_KEY)
+        cached = _as_text(await redis.get(_ips_cache_key()))
         if cached:
-            return [c for c in cached.decode().split(",") if c]
-    except (ConnectionError, TimeoutError, OSError, AttributeError):
+            return [c for c in cached.split(",") if c]
+    except (ConnectionError, TimeoutError, OSError):
         redis = None  # Fall through to a direct fetch.
 
     # Paddle marks any delivery taking >5s as timed out and burns a retry
@@ -161,7 +197,7 @@ async def _fetch_paddle_ips() -> list[str]:
     # nothing (see the docstring); blowing the budget costs the event.
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(1.5, connect=1.0)) as client:
-            response = await client.get(_IPS_URL)
+            response = await client.get(_ips_url())
             response.raise_for_status()
             cidrs = response.json().get("data", {}).get("ipv4_cidrs", [])
     except (httpx.HTTPError, ValueError) as exc:
@@ -170,7 +206,7 @@ async def _fetch_paddle_ips() -> list[str]:
 
     if redis is not None and cidrs:
         try:
-            await redis.set(_IPS_CACHE_KEY, ",".join(cidrs), ex=_IPS_CACHE_TTL)
+            await redis.set(_ips_cache_key(), ",".join(cidrs), ex=_IPS_CACHE_TTL)
         except (ConnectionError, TimeoutError, OSError):
             pass
 

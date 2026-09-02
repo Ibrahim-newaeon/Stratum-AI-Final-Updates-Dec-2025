@@ -31,7 +31,13 @@ _SECRET = "pdl_ntfset_test_secret"
 
 
 class FakeRedis:
-    """Honours SET NX semantics, which is the whole point of the claim."""
+    """Honours SET NX semantics, which is the whole point of the claim.
+
+    Returns `str` from get(), matching the real pool built with
+    `decode_responses=True`. An earlier version returned bytes, which made the
+    staleness guard's tests pass against behaviour the real client never had —
+    the guard was a no-op in production and only an end-to-end run found it.
+    """
 
     def __init__(self):
         self.store = {}
@@ -39,7 +45,7 @@ class FakeRedis:
     async def set(self, key, value, nx=False, ex=None):
         if nx and key in self.store:
             return None  # redis-py returns None when NX loses
-        self.store[key] = value.encode() if isinstance(value, str) else value
+        self.store[key] = value
         return True
 
     async def get(self, key):
@@ -316,3 +322,40 @@ class TestUnknownEvents:
             with pytest.raises(Exception) as exc:
                 await paddle_webhook.paddle_webhook(_request(body))
         assert exc.value.status_code == 400
+
+
+class TestIpAllowlistIsEnvironmentAware:
+    """Sandbox and production deliver from different address ranges.
+
+    Found by rehearsal, not by reading docs: Paddle's own simulation arrived
+    from 3.208.120.145, which is published in the sandbox list and absent from
+    the production one. The handler originally fetched the production list
+    unconditionally, so enabling enforcement while pointed at sandbox would
+    have rejected every genuine, correctly-signed delivery.
+    """
+
+    async def test_each_environment_fetches_its_own_list(self):
+        with patch.object(settings, "paddle_environment", "sandbox"):
+            assert paddle_webhook._ips_url() == "https://sandbox-api.paddle.com/ips"
+        with patch.object(settings, "paddle_environment", "production"):
+            assert paddle_webhook._ips_url() == "https://api.paddle.com/ips"
+
+    async def test_the_cache_key_is_per_environment(self):
+        """Otherwise a switch serves the other environment's addresses."""
+        with patch.object(settings, "paddle_environment", "sandbox"):
+            sandbox_key = paddle_webhook._ips_cache_key()
+        with patch.object(settings, "paddle_environment", "production"):
+            production_key = paddle_webhook._ips_cache_key()
+        assert sandbox_key != production_key
+
+    async def test_an_unevaluable_list_does_not_reject_the_delivery(self):
+        """Losing the list must not take billing down for a Paddle outage.
+
+        The signature check is the real gate; the allowlist is defence in
+        depth, so "cannot evaluate" has to mean allow.
+        """
+        request = _request(json.dumps(_subscription_event()).encode())
+        with patch.object(
+            paddle_webhook, "_fetch_paddle_ips", AsyncMock(return_value=[])
+        ):
+            assert await paddle_webhook._check_source_ip(request) is True
