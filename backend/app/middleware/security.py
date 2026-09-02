@@ -84,12 +84,13 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             # Content Security Policy for production — HTTPS only, no http:// allowed
             csp_directives = [
                 "default-src 'self'",
-                "script-src 'self' https://cdn.jsdelivr.net https://www.googletagmanager.com",
+                "script-src 'self' https://cdn.jsdelivr.net https://www.googletagmanager.com "
+                "https://cdn.paddle.com https://sandbox-cdn.paddle.com",
                 "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
                 "font-src 'self' https://fonts.gstatic.com data:",
                 "img-src 'self' data: https: blob:",
-                "connect-src 'self' https://api.stripe.com https://*.sentry.io wss:",
-                "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
+                "connect-src 'self' https://api.stripe.com https://*.paddle.com https://*.paddle.io https://*.sentry.io wss:",
+                "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://*.paddle.com",
                 "object-src 'none'",
                 "base-uri 'self'",
                 "form-action 'self'",
@@ -102,12 +103,13 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             # Staging CSP — same as production but with report-only
             csp_directives = [
                 "default-src 'self'",
-                "script-src 'self' https://cdn.jsdelivr.net https://www.googletagmanager.com",
+                "script-src 'self' https://cdn.jsdelivr.net https://www.googletagmanager.com "
+                "https://cdn.paddle.com https://sandbox-cdn.paddle.com",
                 "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
                 "font-src 'self' https://fonts.gstatic.com data:",
                 "img-src 'self' data: https: blob:",
-                "connect-src 'self' https://api.stripe.com https://*.sentry.io wss:",
-                "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
+                "connect-src 'self' https://api.stripe.com https://*.paddle.com https://*.paddle.io https://*.sentry.io wss:",
+                "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://*.paddle.com",
                 "object-src 'none'",
                 "base-uri 'self'",
                 "form-action 'self'",

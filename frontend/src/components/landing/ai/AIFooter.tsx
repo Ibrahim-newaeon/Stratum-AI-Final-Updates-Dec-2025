@@ -46,6 +46,7 @@ const footerLinks = {
     links: [
       { name: 'Privacy', href: '/privacy' },
       { name: 'Terms', href: '/terms' },
+      { name: 'Refund Policy', href: '/refund-policy' },
       { name: 'Security', href: '/security' },
       { name: 'DPA', href: '/dpa' },
     ],

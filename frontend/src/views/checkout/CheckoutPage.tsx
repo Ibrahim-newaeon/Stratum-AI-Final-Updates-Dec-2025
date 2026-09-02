@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Check, Loader2, ArrowLeft, Zap, Shield, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCreateCheckout, usePaymentConfig } from '@/api/payments';
+import { openPaddleCheckout } from '@/lib/paddle';
 
 const TIER_DETAILS = {
   starter: {
@@ -59,20 +60,74 @@ export default function CheckoutPage() {
   const preselected = searchParams.get('plan') as keyof typeof TIER_DETAILS | null;
   const [selectedTier, setSelectedTier] = useState<keyof typeof TIER_DETAILS>(preselected || 'professional');
   const checkout = useCreateCheckout();
-  const { isLoading: configLoading } = usePaymentConfig();
+  const { data: config, isLoading: configLoading } = usePaymentConfig();
+  const [overlayError, setOverlayError] = useState(false);
+
+  const successUrl = `${window.location.origin}/checkout/success`;
+
+  /**
+   * Open a Paddle checkout for a transaction the server created.
+   *
+   * Paddle needs its own client token and environment, so this is a no-op —
+   * surfaced as an error rather than a silent nothing — until /payments/config
+   * reports them.
+   */
+  const openPaddle = useCallback(
+    async (transactionId: string) => {
+      if (!config?.client_token || !config.environment) {
+        setOverlayError(true);
+        return;
+      }
+      try {
+        setOverlayError(false);
+        await openPaddleCheckout(
+          { clientToken: config.client_token, environment: config.environment },
+          transactionId,
+          successUrl,
+        );
+      } catch {
+        // Paddle.js blocked or failed to load. Without this the button would
+        // stop spinning and nothing would appear, with no indication why.
+        setOverlayError(true);
+      }
+    },
+    [config?.client_token, config?.environment, successUrl],
+  );
+
+  /**
+   * Paddle appends `?_ptxn=<transaction_id>` to the checkout page URL. Anyone
+   * arriving that way — a shared link, a resumed checkout, a returning
+   * customer — should get the overlay rather than the plan picker.
+   */
+  const ptxn = searchParams.get('_ptxn');
+  useEffect(() => {
+    if (ptxn && config?.gateway === 'paddle') {
+      void openPaddle(ptxn);
+    }
+  }, [ptxn, config?.gateway, openPaddle]);
 
   const handleCheckout = async () => {
     try {
       const result = await checkout.mutateAsync({
         tier: selectedTier,
-        success_url: `${window.location.origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+        success_url: successUrl,
         cancel_url: `${window.location.origin}/checkout/cancel`,
         trial_days: 14,
       });
-      // Redirect to Stripe Checkout
+
+      if (config?.gateway === 'paddle') {
+        // `session_id` is the Paddle transaction id. Opening the overlay in
+        // place beats redirecting to checkout_url — that URL is this same
+        // page with `?_ptxn=`, so following it would be a full reload just to
+        // arrive back here and open the same overlay.
+        await openPaddle(result.session_id);
+        return;
+      }
+
+      // Stripe: checkout_url is a Stripe-hosted page, so redirect to it.
       window.location.href = result.checkout_url;
     } catch (error) {
-      // no-op
+      // Surfaced by checkout.isError below.
     }
   };
 
@@ -178,7 +233,7 @@ export default function CheckoutPage() {
             {checkout.isPending ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Redirecting to checkout...
+                {config?.gateway === 'paddle' ? 'Opening checkout...' : 'Redirecting to checkout...'}
               </>
             ) : (
               `Start 14-day free trial — ${TIER_DETAILS[selectedTier].name}`
@@ -186,8 +241,15 @@ export default function CheckoutPage() {
           </button>
 
           {checkout.isError && (
-            <p className="text-sm text-destructive">
+            <p className="text-sm text-destructive" role="alert">
               Something went wrong. Please try again.
+            </p>
+          )}
+
+          {overlayError && !checkout.isError && (
+            <p className="text-sm text-destructive" role="alert">
+              Couldn't open the payment window. Disable your ad blocker and try
+              again, or contact support if it persists.
             </p>
           )}
 

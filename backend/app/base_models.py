@@ -280,6 +280,16 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin):
     stripe_customer_id: Mapped[Optional[str]] = mapped_column(
         String(255), nullable=True
     )
+    # Paddle identifiers live alongside the Stripe ones rather than replacing
+    # them: the gateway is switchable at runtime (settings.payment_gateway) and
+    # any tenant that ever billed through Stripe still needs its customer ID for
+    # invoice history.
+    paddle_customer_id: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True, index=True
+    )
+    paddle_subscription_id: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )
     mrr_cents: Mapped[int] = mapped_column(
         Integer, default=0, server_default="0", nullable=False
     )

@@ -30,7 +30,8 @@ from app.core.config import settings
 from app.core.logging import get_logger
 from app.core.tiers import TIER_PRICING, SubscriptionTier
 from app.db.session import get_async_session
-from app.services import stripe_service
+from app.services.payment_gateway import get_gateway as _gateway
+from app.services.payment_gateway import get_tenant_customer_id as _customer_id
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/payments", tags=["payments"])
@@ -127,7 +128,14 @@ class PaymentMethodResponse(BaseModel):
 class BillingOverviewResponse(BaseModel):
     """Complete billing overview."""
 
+    # `stripe_configured` predates Paddle and is what the frontend currently
+    # reads to decide whether billing is available at all. It is kept, and now
+    # reports whether the *active* gateway is configured, so existing clients
+    # keep working through the switch. New clients should read `configured`
+    # and `gateway`; `stripe_configured` can be dropped once they do.
     stripe_configured: bool
+    gateway: str
+    configured: bool
     has_customer: bool
     customer_id: Optional[str]
     subscription: Optional[SubscriptionResponse]
@@ -207,9 +215,11 @@ async def get_billing_overview(
 
     Includes subscription status, payment methods, upcoming invoice, and available tiers.
     """
-    if not stripe_service.STRIPE_CONFIGURED:
+    if not _gateway().CONFIGURED:
         return BillingOverviewResponse(
             stripe_configured=False,
+            gateway=_gateway().GATEWAY_NAME,
+            configured=False,
             has_customer=False,
             customer_id=None,
             subscription=None,
@@ -221,7 +231,7 @@ async def get_billing_overview(
     tenant = await get_tenant_from_request(request, db)
 
     # Get customer info
-    customer_id = tenant.stripe_customer_id
+    customer_id = _customer_id(tenant)
     has_customer = bool(customer_id)
 
     subscription = None
@@ -230,7 +240,7 @@ async def get_billing_overview(
 
     if customer_id:
         # Get subscription
-        subscriptions = await stripe_service.get_customer_subscriptions(customer_id)
+        subscriptions = await _gateway().get_customer_subscriptions(customer_id)
         active_sub = next(
             (
                 s
@@ -255,7 +265,7 @@ async def get_billing_overview(
             )
 
         # Get upcoming invoice
-        inv = await stripe_service.get_upcoming_invoice(customer_id)
+        inv = await _gateway().get_upcoming_invoice(customer_id)
         if inv:
             upcoming_invoice = InvoiceResponse(
                 id=inv.id,
@@ -271,11 +281,13 @@ async def get_billing_overview(
             )
 
         # Get payment methods
-        methods = await stripe_service.get_customer_payment_methods(customer_id)
+        methods = await _gateway().get_customer_payment_methods(customer_id)
         payment_methods = [PaymentMethodResponse(**m) for m in methods]
 
     return BillingOverviewResponse(
         stripe_configured=True,
+        gateway=_gateway().GATEWAY_NAME,
+        configured=True,
         has_customer=has_customer,
         customer_id=customer_id,
         subscription=subscription or SubscriptionResponse(has_subscription=False),
@@ -299,7 +311,7 @@ async def create_checkout(
 
     Returns a checkout URL that the user should be redirected to.
     """
-    if not stripe_service.STRIPE_CONFIGURED:
+    if not _gateway().CONFIGURED:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Payment processing is not configured",
@@ -309,7 +321,7 @@ async def create_checkout(
     tier = validate_tier(body.tier)
 
     # Get or create Stripe customer
-    customer_id = tenant.stripe_customer_id
+    customer_id = _customer_id(tenant)
 
     if not customer_id:
         # Get user email for customer creation
@@ -330,7 +342,7 @@ async def create_checkout(
             from app.core.security import decrypt_pii
 
             email = decrypt_pii(admin_user.email, admin_user.tenant_id)
-            customer = await stripe_service.create_customer(
+            customer = await _gateway().create_customer(
                 email=email,
                 name=tenant.name,
                 tenant_id=tenant.id,
@@ -338,7 +350,7 @@ async def create_checkout(
             customer_id = customer.id
 
             # Save customer ID to tenant
-            await stripe_service.sync_tenant_stripe_customer(db, tenant.id, customer_id)
+            await _gateway().sync_tenant_customer(db, tenant.id, customer_id)
 
     trial_days = _trial_days_for_tenant(tenant)
 
@@ -363,7 +375,7 @@ async def create_checkout(
     )
 
     # Create checkout session
-    session = await stripe_service.create_checkout_session(
+    session = await _gateway().create_checkout_session(
         customer_id=customer_id,
         tier=tier,
         success_url=body.success_url,
@@ -392,7 +404,7 @@ async def create_portal_session(
     Allows customers to manage their subscription, update payment methods,
     view invoices, and cancel subscription.
     """
-    if not stripe_service.STRIPE_CONFIGURED:
+    if not _gateway().CONFIGURED:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Payment processing is not configured",
@@ -400,14 +412,14 @@ async def create_portal_session(
 
     tenant = await get_tenant_from_request(request, db)
 
-    if not tenant.stripe_customer_id:
+    if not _customer_id(tenant):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No billing account found. Please subscribe to a plan first.",
         )
 
-    portal_url = await stripe_service.create_portal_session(
-        customer_id=tenant.stripe_customer_id,
+    portal_url = await _gateway().create_portal_session(
+        customer_id=_customer_id(tenant),
         return_url=body.return_url,
     )
 
@@ -423,7 +435,7 @@ async def get_subscription(
     """
     Get current subscription status for the tenant.
     """
-    if not stripe_service.STRIPE_CONFIGURED:
+    if not _gateway().CONFIGURED:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Payment processing is not configured",
@@ -431,12 +443,10 @@ async def get_subscription(
 
     tenant = await get_tenant_from_request(request, db)
 
-    if not tenant.stripe_customer_id:
+    if not _customer_id(tenant):
         return SubscriptionResponse(has_subscription=False)
 
-    subscriptions = await stripe_service.get_customer_subscriptions(
-        tenant.stripe_customer_id
-    )
+    subscriptions = await _gateway().get_customer_subscriptions(_customer_id(tenant))
     active_sub = next(
         (
             s
@@ -473,7 +483,7 @@ async def upgrade_subscription(
 
     Prorates charges by default.
     """
-    if not stripe_service.STRIPE_CONFIGURED:
+    if not _gateway().CONFIGURED:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Payment processing is not configured",
@@ -482,16 +492,14 @@ async def upgrade_subscription(
     tenant = await get_tenant_from_request(request, db)
     new_tier = validate_tier(body.new_tier)
 
-    if not tenant.stripe_customer_id:
+    if not _customer_id(tenant):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No billing account found. Please subscribe to a plan first.",
         )
 
     # Get current subscription
-    subscriptions = await stripe_service.get_customer_subscriptions(
-        tenant.stripe_customer_id
-    )
+    subscriptions = await _gateway().get_customer_subscriptions(_customer_id(tenant))
     active_sub = next(
         (s for s in subscriptions if s.status.value in ["active", "trialing"]), None
     )
@@ -503,7 +511,7 @@ async def upgrade_subscription(
         )
 
     # Upgrade subscription
-    updated_sub = await stripe_service.update_subscription_tier(
+    updated_sub = await _gateway().update_subscription_tier(
         subscription_id=active_sub.id,
         new_tier=new_tier,
         prorate=body.prorate,
@@ -512,7 +520,7 @@ async def upgrade_subscription(
     # Sync to tenant record
     # sync_tenant_subscription only issues the UPDATE; the caller commits.
     # There is no webhook wrapper on this path to do it.
-    await stripe_service.sync_tenant_subscription(db, tenant.id, updated_sub)
+    await _gateway().sync_tenant_subscription(db, tenant.id, updated_sub)
     await db.commit()
 
     return SubscriptionResponse(
@@ -540,7 +548,7 @@ async def cancel_subscription(
     By default, cancels at the end of the billing period to allow continued
     access until the subscription expires.
     """
-    if not stripe_service.STRIPE_CONFIGURED:
+    if not _gateway().CONFIGURED:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Payment processing is not configured",
@@ -548,16 +556,14 @@ async def cancel_subscription(
 
     tenant = await get_tenant_from_request(request, db)
 
-    if not tenant.stripe_customer_id:
+    if not _customer_id(tenant):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No billing account found.",
         )
 
     # Get current subscription
-    subscriptions = await stripe_service.get_customer_subscriptions(
-        tenant.stripe_customer_id
-    )
+    subscriptions = await _gateway().get_customer_subscriptions(_customer_id(tenant))
     active_sub = next(
         (s for s in subscriptions if s.status.value in ["active", "trialing"]), None
     )
@@ -569,7 +575,7 @@ async def cancel_subscription(
         )
 
     # Cancel subscription
-    canceled_sub = await stripe_service.cancel_subscription(
+    canceled_sub = await _gateway().cancel_subscription(
         subscription_id=active_sub.id,
         at_period_end=at_period_end,
     )
@@ -577,7 +583,7 @@ async def cancel_subscription(
     # Sync to tenant record
     # sync_tenant_subscription only issues the UPDATE; the caller commits.
     # There is no webhook wrapper on this path to do it.
-    await stripe_service.sync_tenant_subscription(db, tenant.id, canceled_sub)
+    await _gateway().sync_tenant_subscription(db, tenant.id, canceled_sub)
     await db.commit()
 
     return SubscriptionResponse(
@@ -603,7 +609,7 @@ async def reactivate_subscription(
     """
     Reactivate a subscription that was scheduled for cancellation.
     """
-    if not stripe_service.STRIPE_CONFIGURED:
+    if not _gateway().CONFIGURED:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Payment processing is not configured",
@@ -611,16 +617,14 @@ async def reactivate_subscription(
 
     tenant = await get_tenant_from_request(request, db)
 
-    if not tenant.stripe_customer_id:
+    if not _customer_id(tenant):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No billing account found.",
         )
 
     # Get subscription scheduled for cancellation
-    subscriptions = await stripe_service.get_customer_subscriptions(
-        tenant.stripe_customer_id
-    )
+    subscriptions = await _gateway().get_customer_subscriptions(_customer_id(tenant))
     sub_to_reactivate = next(
         (
             s
@@ -637,12 +641,12 @@ async def reactivate_subscription(
         )
 
     # Reactivate subscription
-    reactivated_sub = await stripe_service.reactivate_subscription(sub_to_reactivate.id)
+    reactivated_sub = await _gateway().reactivate_subscription(sub_to_reactivate.id)
 
     # Sync to tenant record
     # sync_tenant_subscription only issues the UPDATE; the caller commits.
     # There is no webhook wrapper on this path to do it.
-    await stripe_service.sync_tenant_subscription(db, tenant.id, reactivated_sub)
+    await _gateway().sync_tenant_subscription(db, tenant.id, reactivated_sub)
     await db.commit()
 
     return SubscriptionResponse(
@@ -669,7 +673,7 @@ async def get_invoices(
     """
     Get invoice history for the tenant.
     """
-    if not stripe_service.STRIPE_CONFIGURED:
+    if not _gateway().CONFIGURED:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Payment processing is not configured",
@@ -677,11 +681,11 @@ async def get_invoices(
 
     tenant = await get_tenant_from_request(request, db)
 
-    if not tenant.stripe_customer_id:
+    if not _customer_id(tenant):
         return []
 
-    invoices = await stripe_service.get_customer_invoices(
-        customer_id=tenant.stripe_customer_id,
+    invoices = await _gateway().get_customer_invoices(
+        customer_id=_customer_id(tenant),
         limit=min(limit, 100),
     )
 
@@ -711,7 +715,7 @@ async def get_payment_methods(
     """
     Get payment methods for the tenant.
     """
-    if not stripe_service.STRIPE_CONFIGURED:
+    if not _gateway().CONFIGURED:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Payment processing is not configured",
@@ -719,12 +723,10 @@ async def get_payment_methods(
 
     tenant = await get_tenant_from_request(request, db)
 
-    if not tenant.stripe_customer_id:
+    if not _customer_id(tenant):
         return []
 
-    methods = await stripe_service.get_customer_payment_methods(
-        tenant.stripe_customer_id
-    )
+    methods = await _gateway().get_customer_payment_methods(_customer_id(tenant))
 
     return [PaymentMethodResponse(**m) for m in methods]
 
@@ -734,11 +736,28 @@ async def get_payment_config():
     """
     Get public payment configuration.
 
-    Returns Stripe publishable key and available tiers.
+    Returns the active gateway's public client token and available tiers.
+
+    `publishable_key` carries whichever public token the active gateway uses —
+    Stripe's publishable key or Paddle's client-side token — because that is the
+    field the frontend already reads. Both are safe to expose to the browser by
+    design. `client_token` is the unambiguous name for new clients.
     """
+    gateway = _gateway()
+    public_token = (
+        settings.paddle_client_token
+        if gateway.GATEWAY_NAME == "paddle"
+        else settings.stripe_publishable_key
+    )
     return {
-        "stripe_configured": stripe_service.STRIPE_CONFIGURED,
-        "publishable_key": settings.stripe_publishable_key,
+        "stripe_configured": gateway.CONFIGURED,
+        "gateway": gateway.GATEWAY_NAME,
+        "configured": gateway.CONFIGURED,
+        "environment": (
+            settings.paddle_environment if gateway.GATEWAY_NAME == "paddle" else None
+        ),
+        "publishable_key": public_token,
+        "client_token": public_token,
         "tiers": [
             {"tier": tier.value, **pricing} for tier, pricing in TIER_PRICING.items()
         ],

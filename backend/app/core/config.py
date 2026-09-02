@@ -384,6 +384,81 @@ class Settings(BaseSettings):
     )
 
     # -------------------------------------------------------------------------
+    # Paddle Payments Configuration
+    # -------------------------------------------------------------------------
+    # Which gateway /payments routes dispatch to. Stripe remains the default so
+    # that adding Paddle credentials alone never silently reroutes billing; the
+    # switch is an explicit, revertible config change.
+    payment_gateway: Literal["stripe", "paddle"] = Field(
+        default="stripe", description="Active payment gateway for /payments routes"
+    )
+    paddle_environment: Literal["production", "sandbox"] = Field(
+        default="production", description="Paddle API environment"
+    )
+    paddle_api_key: Optional[str] = Field(
+        default=None,
+        description="Paddle server-side API key (pdl_live_... / pdl_sdbx_...)",
+    )
+    paddle_client_token: Optional[str] = Field(
+        default=None,
+        description="Paddle client-side token (live_... / test_...); safe to expose to the browser",
+    )
+    paddle_webhook_secret: Optional[str] = Field(
+        default=None,
+        description="Paddle notification destination endpoint_secret_key, for webhook HMAC verification",
+    )
+    # Paddle attaches trials to the *price*, not the transaction, so each paid
+    # tier needs two prices: one with a trial and one without. Which is used is
+    # decided per tenant by _trial_days_for_tenant().
+    paddle_starter_price_id: Optional[str] = Field(
+        default=None, description="Paddle Price ID for Starter tier (no trial)"
+    )
+    paddle_starter_trial_price_id: Optional[str] = Field(
+        default=None, description="Paddle Price ID for Starter tier (14-day trial)"
+    )
+    paddle_professional_price_id: Optional[str] = Field(
+        default=None, description="Paddle Price ID for Professional tier (no trial)"
+    )
+    paddle_professional_trial_price_id: Optional[str] = Field(
+        default=None, description="Paddle Price ID for Professional tier (14-day trial)"
+    )
+    paddle_enterprise_price_id: Optional[str] = Field(
+        default=None,
+        description="Paddle Price ID for Enterprise tier; unset because Enterprise is contact-sales",
+    )
+    # Defence in depth on top of the HMAC signature check, which is the real
+    # gate. Defaults to OFF because production sits behind Cloudflare and an
+    # nginx edge: if the resolved peer is a Cloudflare address rather than
+    # Paddle's, enforcing would reject every genuine webhook and silently stop
+    # billing. The handler logs each mismatch either way, so turn this on only
+    # once "paddle_webhook_ip_not_allowlisted" has stopped appearing.
+    # The page that HOSTS the Paddle checkout overlay — not a post-payment
+    # redirect. Paddle appends "?_ptxn=<transaction_id>" to it and Paddle.js on
+    # that page opens the checkout. Unlike Stripe there is no Paddle-hosted
+    # page to redirect to, so this must be a route we serve that loads
+    # Paddle.js. Defaults to "{frontend_url}/checkout".
+    paddle_checkout_url: Optional[str] = Field(
+        default=None,
+        description="URL of the page hosting the Paddle.js checkout overlay",
+    )
+    paddle_webhook_enforce_ip_allowlist: bool = Field(
+        default=False,
+        description="Reject Paddle webhooks from IPs outside Paddle's published ranges",
+    )
+    # Paddle's documented maximum variance, and its own SDK default, is 5s.
+    # Exposed as config because it is the one setting that can reject 100% of
+    # webhooks: if this host's clock drifts past the window, every signature
+    # fails and billing silently stops. Widen it to recover while NTP is fixed.
+    # The handler logs the observed age on each rejection, so the right value
+    # is visible rather than guessed.
+    paddle_webhook_signature_tolerance_seconds: int = Field(
+        default=5,
+        ge=1,
+        le=3600,
+        description="Max accepted age of a Paddle webhook signature timestamp",
+    )
+
+    # -------------------------------------------------------------------------
     # Asset / object storage (INF-001)
     # -------------------------------------------------------------------------
     # Where uploaded creative assets are persisted. "local" writes to
@@ -680,6 +755,7 @@ class Settings(BaseSettings):
             "HubSpot": (["hubspot_client_id", "hubspot_client_secret"], []),
             "Pipedrive": (["pipedrive_client_id", "pipedrive_client_secret"], []),
             "Stripe": (["stripe_secret_key", "stripe_webhook_secret"], []),
+            "Paddle": (["paddle_api_key", "paddle_webhook_secret"], []),
             "WhatsApp": (
                 [
                     "whatsapp_access_token",
@@ -757,6 +833,7 @@ class Settings(BaseSettings):
             "HUBSPOT_",
             "PIPEDRIVE_",
             "STRIPE_",
+            "PADDLE_",
             "ANTHROPIC_",
             "OPENAI_",
             "COPILOT_",

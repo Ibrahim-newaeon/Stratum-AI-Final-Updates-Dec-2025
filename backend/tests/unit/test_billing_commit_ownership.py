@@ -27,7 +27,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from app.api.v1.endpoints import payments
+from app.core.config import settings
 from app.core.tiers import SubscriptionTier
+from app.services import stripe_service
 from app.services.stripe_service import (
     StripeSubscription,
     SubscriptionState,
@@ -80,10 +82,16 @@ class TestServiceLeavesTheTransactionOpen:
 
 
 def _patched_stripe(stack, sub):
-    """Patch every Stripe touchpoint the three endpoints reach."""
-    stack.enter_context(
-        patch.object(payments.stripe_service, "STRIPE_CONFIGURED", True)
-    )
+    """Patch every Stripe touchpoint the three endpoints reach.
+
+    payments.py no longer imports a gateway module directly; it resolves one per
+    request through ``payment_gateway.get_gateway()``. Patching the concrete
+    ``stripe_service`` module still works because that is what the resolver
+    returns while ``payment_gateway`` is "stripe" — pinned explicitly below so
+    the test does not depend on the ambient default.
+    """
+    stack.enter_context(patch.object(settings, "payment_gateway", "stripe"))
+    stack.enter_context(patch.object(stripe_service, "CONFIGURED", True))
     tenant = MagicMock()
     tenant.id = 1
     tenant.stripe_customer_id = "cus_test"
@@ -105,7 +113,7 @@ def _patched_stripe(stack, sub):
         if name == "sync_tenant_subscription":
             value = None
         stack.enter_context(
-            patch.object(payments.stripe_service, name, AsyncMock(return_value=value))
+            patch.object(stripe_service, name, AsyncMock(return_value=value))
         )
 
 
