@@ -145,6 +145,11 @@ export const pageSEO = {
     description:
       'Stratum AI Terms of Service. Review the terms governing your use of our revenue operating system.',
   },
+  refund: {
+    title: 'Refund & Cancellation Policy',
+    description:
+      'Stratum AI refund and cancellation policy. Trial terms, how to cancel, when refunds are issued, and proration on plan changes.',
+  },
   security: {
     title: 'Security',
     description:

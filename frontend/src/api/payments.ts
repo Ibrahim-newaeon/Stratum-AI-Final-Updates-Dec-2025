@@ -26,7 +26,12 @@ interface SubscriptionResponse {
 }
 
 interface BillingOverview {
+  /** @deprecated Reports whether the *active* gateway is configured, whatever
+   *  it is. Kept so existing callers keep working through the Stripe→Paddle
+   *  switch; read `configured` and `gateway` instead. */
   stripe_configured: boolean;
+  gateway: 'stripe' | 'paddle';
+  configured: boolean;
   has_customer: boolean;
   customer_id: string | null;
   subscription: {
@@ -77,8 +82,17 @@ interface TierInfo {
 }
 
 interface PaymentConfig {
+  /** @deprecated See BillingOverview.stripe_configured. */
   stripe_configured: boolean;
+  gateway: 'stripe' | 'paddle';
+  configured: boolean;
+  /** Only set when gateway === 'paddle'. */
+  environment: 'production' | 'sandbox' | null;
+  /** @deprecated Carries whichever public token the active gateway uses.
+   *  Prefer `client_token`. */
   publishable_key: string;
+  /** Stripe publishable key or Paddle client-side token. Safe in the browser. */
+  client_token: string;
   tiers: TierInfo[];
 }
 

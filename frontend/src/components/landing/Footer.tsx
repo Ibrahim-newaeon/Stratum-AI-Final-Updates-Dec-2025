@@ -9,7 +9,7 @@ export function Footer() {
   const productPages = cmsPages.filter((p) => p.slug.startsWith('product-') || p.slug === 'pricing' || p.slug === 'integrations');
   const resourcePages = cmsPages.filter((p) => p.slug.startsWith('resource-') || p.slug === 'docs' || p.slug === 'api');
   const companyPages = cmsPages.filter((p) => p.slug.startsWith('company-') || p.slug === 'blog' || p.slug === 'careers');
-  const legalPages = cmsPages.filter((p) => p.slug.startsWith('legal-') || ['privacy', 'terms', 'security', 'gdpr'].includes(p.slug));
+  const legalPages = cmsPages.filter((p) => p.slug.startsWith('legal-') || ['privacy', 'terms', 'security', 'gdpr', 'refund'].includes(p.slug));
 
   const columns = [
     {
@@ -52,6 +52,7 @@ export function Footer() {
         : [
             { name: 'Privacy', href: '/privacy' },
             { name: 'Terms', href: '/terms' },
+            { name: 'Refund Policy', href: '/refund-policy' },
             { name: 'Security', href: '/security' },
             { name: 'GDPR', href: '/gdpr' },
           ],

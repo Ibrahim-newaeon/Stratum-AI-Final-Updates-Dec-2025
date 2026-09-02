@@ -53,6 +53,7 @@ from app.api.v1.endpoints import (  # Previously unregistered endpoints; Gap end
     onboarding_agent,
     outbound_integrations,
     pacing,
+    paddle_webhook,
     payments,
     predictions,
     profit,
@@ -478,6 +479,16 @@ api_router.include_router(
 api_router.include_router(
     stripe_webhook.router,
     tags=["Stripe Webhooks"],
+)
+
+# Paddle Webhooks (Paddle Billing event processing)
+# Registered unconditionally alongside Stripe's: which gateway is *active* is
+# decided by settings.payment_gateway at the /payments routes, but both webhook
+# endpoints stay mounted so a gateway switch never strands in-flight events
+# from the other one.
+api_router.include_router(
+    paddle_webhook.router,
+    tags=["Paddle Webhooks"],
 )
 
 # Subscription Management

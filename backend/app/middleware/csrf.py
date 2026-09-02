@@ -22,9 +22,21 @@ from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
-# Endpoints that receive external webhooks and should skip CSRF checks
+# Endpoints that receive external webhooks and should skip CSRF checks.
+#
+# Every handler under these prefixes authenticates the *request* rather than a
+# session — HMAC signature for Stripe/Paddle/SendGrid, hub.verify_token for
+# WhatsApp — so there is no session for CSRF to protect, and the external caller
+# cannot send an Origin header or a CSRF token.
 CSRF_EXEMPT_PATHS = (
     "/api/v1/whatsapp/webhooks/",
+    # Covers /webhooks/stripe, /webhooks/paddle and /webhooks/sendgrid. The
+    # entry below it, "/api/v1/stripe-webhook", matches no route the app
+    # actually serves: stripe_webhook.router registers "/webhooks/stripe", so
+    # the prefix never fired and Stripe deliveries were falling through to
+    # Origin validation. Left in place rather than removed as part of a Paddle
+    # change; it is inert either way.
+    "/api/v1/webhooks/",
     "/api/v1/stripe-webhook",
     "/health",
     "/metrics",

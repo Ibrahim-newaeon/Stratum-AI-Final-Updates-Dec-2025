@@ -494,6 +494,24 @@ class TestWhatsAppWebhook:
 # =============================================================================
 
 
+def _gateway_mock():
+    """A stand-in for the module `payments._gateway()` resolves to.
+
+    payments.py no longer imports a gateway directly; it calls
+    `_gateway()` per request. The mock returns *itself* when called, so these
+    tests can keep configuring it as though it were the module.
+
+    GATEWAY_NAME and TENANT_CUSTOMER_FIELD must be real strings: the endpoints
+    branch on the former and pass the latter to getattr(), and a bare MagicMock
+    raises TypeError there.
+    """
+    gateway = MagicMock()
+    gateway.return_value = gateway
+    gateway.GATEWAY_NAME = "stripe"
+    gateway.TENANT_CUSTOMER_FIELD = "stripe_customer_id"
+    return gateway
+
+
 class TestPaymentsOverview:
     """Tests for /payments/overview and configuration endpoints."""
 
@@ -504,12 +522,12 @@ class TestPaymentsOverview:
         assert resp.status_code in (401, 403)
 
     @pytest.mark.asyncio
-    @patch("app.api.v1.endpoints.payments.stripe_service")
+    @patch("app.api.v1.endpoints.payments._gateway", new_callable=_gateway_mock)
     async def test_billing_overview_stripe_not_configured(
         self, mock_ss, api_client, admin_headers
     ):
         """GET /payments/overview when Stripe not configured returns defaults."""
-        mock_ss.STRIPE_CONFIGURED = False
+        mock_ss.CONFIGURED = False
 
         resp = await api_client.get("/api/v1/payments/overview", headers=admin_headers)
         assert resp.status_code == 200
@@ -518,12 +536,12 @@ class TestPaymentsOverview:
         assert body["has_customer"] is False
 
     @pytest.mark.asyncio
-    @patch("app.api.v1.endpoints.payments.stripe_service")
+    @patch("app.api.v1.endpoints.payments._gateway", new_callable=_gateway_mock)
     async def test_billing_overview_happy(
         self, mock_ss, api_client, mock_db, admin_headers
     ):
         """GET /payments/overview with configured Stripe returns billing info."""
-        mock_ss.STRIPE_CONFIGURED = True
+        mock_ss.CONFIGURED = True
         mock_ss.TIER_PRICING = {}
 
         tenant = _mock_tenant(stripe_customer_id="cus_abc")
@@ -555,12 +573,12 @@ class TestPaymentsCheckout:
     """Tests for checkout / portal session creation."""
 
     @pytest.mark.asyncio
-    @patch("app.api.v1.endpoints.payments.stripe_service")
+    @patch("app.api.v1.endpoints.payments._gateway", new_callable=_gateway_mock)
     async def test_checkout_stripe_not_configured(
         self, mock_ss, api_client, admin_headers
     ):
         """POST /payments/checkout when Stripe not configured → 503."""
-        mock_ss.STRIPE_CONFIGURED = False
+        mock_ss.CONFIGURED = False
 
         payload = {
             "tier": "starter",
@@ -573,10 +591,10 @@ class TestPaymentsCheckout:
         assert resp.status_code == 503
 
     @pytest.mark.asyncio
-    @patch("app.api.v1.endpoints.payments.stripe_service")
+    @patch("app.api.v1.endpoints.payments._gateway", new_callable=_gateway_mock)
     async def test_checkout_happy(self, mock_ss, api_client, mock_db, admin_headers):
         """POST /payments/checkout creates a checkout session."""
-        mock_ss.STRIPE_CONFIGURED = True
+        mock_ss.CONFIGURED = True
 
         tenant = _mock_tenant(stripe_customer_id="cus_abc")
         tenant_result = make_scalar_result(tenant)
@@ -613,12 +631,12 @@ class TestPaymentsCheckout:
         assert resp.status_code in (401, 403)
 
     @pytest.mark.asyncio
-    @patch("app.api.v1.endpoints.payments.stripe_service")
+    @patch("app.api.v1.endpoints.payments._gateway", new_callable=_gateway_mock)
     async def test_checkout_invalid_tier(
         self, mock_ss, api_client, mock_db, admin_headers
     ):
         """POST /payments/checkout with bad tier → 400."""
-        mock_ss.STRIPE_CONFIGURED = True
+        mock_ss.CONFIGURED = True
 
         tenant = _mock_tenant()
         tenant_result = make_scalar_result(tenant)
@@ -640,12 +658,12 @@ class TestPaymentsSubscription:
     """Tests for subscription management endpoints."""
 
     @pytest.mark.asyncio
-    @patch("app.api.v1.endpoints.payments.stripe_service")
+    @patch("app.api.v1.endpoints.payments._gateway", new_callable=_gateway_mock)
     async def test_get_subscription_no_customer(
         self, mock_ss, api_client, mock_db, admin_headers
     ):
         """GET /payments/subscription when tenant has no Stripe customer → no sub."""
-        mock_ss.STRIPE_CONFIGURED = True
+        mock_ss.CONFIGURED = True
         tenant = _mock_tenant(stripe_customer_id=None)
         tenant_result = make_scalar_result(tenant)
         mock_db.execute = AsyncMock(return_value=tenant_result)
@@ -657,12 +675,12 @@ class TestPaymentsSubscription:
         assert resp.json()["has_subscription"] is False
 
     @pytest.mark.asyncio
-    @patch("app.api.v1.endpoints.payments.stripe_service")
+    @patch("app.api.v1.endpoints.payments._gateway", new_callable=_gateway_mock)
     async def test_cancel_subscription_no_active(
         self, mock_ss, api_client, mock_db, admin_headers
     ):
         """POST /payments/subscription/cancel with no active sub → 400."""
-        mock_ss.STRIPE_CONFIGURED = True
+        mock_ss.CONFIGURED = True
         tenant = _mock_tenant(stripe_customer_id="cus_abc")
         tenant_result = make_scalar_result(tenant)
         mock_db.execute = AsyncMock(return_value=tenant_result)
@@ -675,12 +693,12 @@ class TestPaymentsSubscription:
         assert "No active subscription" in resp.json()["detail"]
 
     @pytest.mark.asyncio
-    @patch("app.api.v1.endpoints.payments.stripe_service")
+    @patch("app.api.v1.endpoints.payments._gateway", new_callable=_gateway_mock)
     async def test_get_invoices_no_customer(
         self, mock_ss, api_client, mock_db, admin_headers
     ):
         """GET /payments/invoices when tenant has no Stripe customer → empty list."""
-        mock_ss.STRIPE_CONFIGURED = True
+        mock_ss.CONFIGURED = True
         tenant = _mock_tenant(stripe_customer_id=None)
         tenant_result = make_scalar_result(tenant)
         mock_db.execute = AsyncMock(return_value=tenant_result)
@@ -697,7 +715,7 @@ class TestStripeWebhook:
     @patch("app.api.v1.endpoints.stripe_webhook.stripe_service")
     async def test_stripe_webhook_not_configured(self, mock_ss, api_client):
         """POST /webhooks/stripe when Stripe not configured → 503."""
-        mock_ss.STRIPE_CONFIGURED = False
+        mock_ss.CONFIGURED = False
 
         resp = await api_client.post(
             "/api/v1/webhooks/stripe",
@@ -710,7 +728,7 @@ class TestStripeWebhook:
     @patch("app.api.v1.endpoints.stripe_webhook.stripe_service")
     async def test_stripe_webhook_missing_signature(self, mock_ss, api_client):
         """POST /webhooks/stripe without signature → 400."""
-        mock_ss.STRIPE_CONFIGURED = True
+        mock_ss.CONFIGURED = True
 
         resp = await api_client.post(
             "/api/v1/webhooks/stripe",
@@ -727,7 +745,7 @@ class TestStripeWebhook:
         self, mock_session_maker, mock_construct, mock_ss, api_client
     ):
         """POST /webhooks/stripe with valid signature processes event."""
-        mock_ss.STRIPE_CONFIGURED = True
+        mock_ss.CONFIGURED = True
 
         # Mock the webhook secret via settings
         with patch("app.api.v1.endpoints.stripe_webhook.settings") as mock_settings:

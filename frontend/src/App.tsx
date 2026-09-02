@@ -242,6 +242,7 @@ const FAQPage = lazyWithRetry(() => import('./views/pages/company/FAQ'));
 // Public pages (Legal)
 const PrivacyPage = lazyWithRetry(() => import('./views/pages/legal/Privacy'));
 const TermsPage = lazyWithRetry(() => import('./views/pages/legal/Terms'));
+const RefundPage = lazyWithRetry(() => import('./views/pages/legal/Refund'));
 const SecurityPage = lazyWithRetry(() => import('./views/pages/legal/Security'));
 const DPAPage = lazyWithRetry(() => import('./views/pages/legal/DPA'));
 
@@ -681,6 +682,16 @@ function App() {
                           <ErrorBoundary message="Failed to load the page">
                             <LazyRoute>
                               <TermsPage />
+                            </LazyRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      <Route
+                        path="/refund-policy"
+                        element={
+                          <ErrorBoundary message="Failed to load the page">
+                            <LazyRoute>
+                              <RefundPage />
                             </LazyRoute>
                           </ErrorBoundary>
                         }

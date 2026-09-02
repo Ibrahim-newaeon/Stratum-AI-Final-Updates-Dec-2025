@@ -906,3 +906,16 @@ async def sync_tenant_stripe_customer(
         tenant_id=tenant_id,
         customer_id=customer_id,
     )
+
+
+# =============================================================================
+# Uniform gateway interface
+# =============================================================================
+#
+# See app.services.payment_gateway. Mirrors the aliases paddle_service exposes
+# so the two modules are interchangeable at the call sites in payments.py.
+
+GATEWAY_NAME = "stripe"
+CONFIGURED = STRIPE_CONFIGURED
+TENANT_CUSTOMER_FIELD = "stripe_customer_id"
+sync_tenant_customer = sync_tenant_stripe_customer
