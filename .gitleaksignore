@@ -12,3 +12,14 @@
 # fingerprints).
 5776823e8b9dc23c8e2e1a0e379c4fb225f44048:.github/workflows/ci.yml:generic-api-key:110
 5776823e8b9dc23c8e2e1a0e379c4fb225f44048:.github/workflows/ci.yml:generic-api-key:112
+
+# False positive in the Paddle webhook signature tests. The generic-api-key rule
+# fires on a keyword-argument name colliding with its keyword list, followed by a
+# long run of identifier characters. The flagged line holds no string literal at
+# all -- it is a multi-line call's argument row. The constant it references is a
+# fixed fake used to build HMAC signatures the tests then verify against
+# themselves; it authenticates nothing and matches no live destination.
+#
+# NB: do not quote the offending source line in this file. Doing so reproduces
+# the pattern here and the rule then fires on .gitleaksignore itself.
+2e744dcf3485e6e82d408acf45ab5c844b80e889:backend/tests/unit/test_paddle_service.py:generic-api-key:113
