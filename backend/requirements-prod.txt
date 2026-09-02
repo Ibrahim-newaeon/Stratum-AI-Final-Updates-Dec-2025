@@ -74,7 +74,7 @@ prometheus-client==0.26.0
 stripe>=15.5.1
 requests>=2.34.2
 facebook-business>=26.0.0
-google-ads>=31.3.0
+google-ads>=31.4.0
 
 # Analytics & ML (scipy needed by ml/ab_testing.py)
 scipy>=1.18.0
