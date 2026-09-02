@@ -91,6 +91,57 @@ genuine deliveries.
    `extra="ignore"`, so a misspelled variable is dropped silently rather than
    raising — see `stratum-check-prod-config-without-ssh`.
 
+## Sandbox rehearsal
+
+Do this before the live cutover. It exercises the one thing unit tests cannot:
+that Paddle can actually reach the webhook endpoint over the network.
+
+Sandbox and live are separate accounts with separate credentials. Price IDs are
+environment-scoped — a sandbox `pri_...` does not exist in production, and
+mixing them produces a checkout that will not load.
+
+### Test cards
+
+Sandbox only. These are rejected in live mode, which is why the live check
+below uses a real card that you then refund.
+
+| Card | Outcome |
+| --- | --- |
+| `4242 4242 4242 4242` | Succeeds, no 3DS |
+| `4000 0038 0000 0446` | Succeeds, with a 3DS challenge |
+| `4000 0000 0000 0002` | Declined |
+
+Any future expiry date and any 3-digit CVC.
+
+The declined card is the one worth spending time on: it is the only way to see
+`transaction.payment_failed` arrive and confirm the tenant's plan is *not*
+changed by it. Entitlement is meant to follow the `subscription.*` event, and
+PAST_DUE deliberately stays entitling so a customer is not cut off mid-dunning.
+
+### Steps
+
+1. Expose the local API. Paddle must reach it from the internet; a `localhost`
+   destination silently never delivers.
+   ```bash
+   cloudflared tunnel --url http://localhost:8000
+   ```
+2. Point the sandbox destination at the printed URL, suffixed
+   `/api/v1/webhooks/paddle`. Update the existing destination rather than
+   creating one — updating the URL keeps `endpoint_secret_key`, creating a new
+   destination issues a different secret.
+3. Run the API with the sandbox values (`PADDLE_ENVIRONMENT=sandbox`, sandbox
+   price IDs, that destination's secret, `PAYMENT_GATEWAY=paddle`).
+4. Check out at `/checkout` with `4242 4242 4242 4242`. The overlay must open
+   **in place**, with no page navigation.
+5. Confirm the plan was granted by the webhook, not the redirect:
+   ```bash
+   grep -E "paddle_webhook_received|tenant_subscription_synced" <api logs>
+   ```
+6. Repeat with `4000 0000 0000 0002` and confirm the plan does **not** change.
+
+Paddle also ships a webhook simulator (Developer tools > Simulations) which can
+drive the endpoint without a checkout, once the tunnel is up.
+
 ## Verify with one real transaction
 
 Do this yourself, on a real card, and refund it. A test card will not work in
