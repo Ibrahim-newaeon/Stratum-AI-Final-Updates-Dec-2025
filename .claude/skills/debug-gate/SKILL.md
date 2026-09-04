@@ -1,4 +1,5 @@
 ---
+name: debug-gate
 description: Debug a trust-gate HOLD or BLOCK — find the root cause and propose a fix
 argument-hint: <gate_id|tenant_id|incident>
 allowed-tools: Read, Grep, Glob, Bash(grep:*), Bash(rg:*), Bash(git log:*), Bash(git diff:*)

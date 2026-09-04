@@ -1,13 +1,9 @@
 {
-  "_comment": "Personal overrides — copy to settings.local.json (gitignored). Use this for your local model preference, extra permissions, or experimental hooks.",
-  "model": "claude-sonnet-4-6",
+  "_comment": "Copy to settings.local.json for personal overrides. This file is gitignored; never place credentials in the example.",
   "permissions": {
     "allow": [
       "Bash(psql:*)",
       "Bash(redis-cli:*)"
     ]
-  },
-  "env": {
-    "STRATUM_LOG_LEVEL": "DEBUG"
   }
 }

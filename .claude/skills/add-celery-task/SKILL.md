@@ -5,7 +5,7 @@ description: Use when adding a new Celery background task to Stratum AI. Encodes
 
 # Add Celery Task
 
-Tasks are the async backbone — collectors, syncs, billing events, autopilot execution. The bugs here are nasty: double-charges, lost events, exhausted connection pools. This skill makes them safe by construction.
+Tasks are the async backbone — collectors, syncs, billing events, autopilot execution. The bugs here are nasty: duplicate Paddle transactions, lost events, exhausted connection pools. This skill makes them safe by construction.
 
 ## Task anatomy
 
@@ -68,7 +68,7 @@ async def collect_meta_signals(self, tenant_id: int, account_id: int, idempotenc
    - `idempotency_key` parameter checked at task start
    - Check-and-skip (`if record.processed_at: return`)
    - Database unique constraint that makes retries safe
-     Tasks that mutate external systems (email, Stripe, ad platform) MUST have idempotency.
+     Tasks that mutate external systems (email, Paddle, ad platform) MUST have idempotency.
 4. **Retry policy** — wrap external calls in try/except; call `self.retry(exc=e, countdown=...)`. Never bare `except`.
 5. **Async session lifetime** — a session must NOT be held across `await client.<network>()`. Open → read → close → call → open → write → close.
 6. **Structured logging** — every task logs `task.start`, `task.success` or `task.error`, with `tenant_id`, `attempt`, and result counts. Use `structlog`, not `print` or stdlib logging.

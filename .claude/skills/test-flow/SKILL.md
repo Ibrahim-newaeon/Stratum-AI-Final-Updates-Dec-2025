@@ -1,4 +1,5 @@
 ---
+name: test-flow
 description: Run end-to-end automation flow tests matching a name or feature
 argument-hint: <test_name_pattern>
 allowed-tools: Bash(pytest:*), Bash(make:*), Read, Grep
