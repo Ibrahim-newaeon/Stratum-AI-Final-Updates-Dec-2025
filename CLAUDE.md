@@ -1,225 +1,208 @@
-# Stratum AI Platform
+# Stratum AI Project Guide
 
-## Overview
+This is the working guide for contributors and coding agents. Keep it focused on durable invariants, verified workflows, and repository-specific risks. Do not add volatile feature counts, test totals, migration totals, or generated audit results.
 
-Revenue Operating System with Trust-Gated Autopilot architecture.
-Automation executes ONLY when signal health passes safety thresholds.
+## Product and safety model
 
-## Core Concept
+Stratum AI is a multi-tenant revenue operating system with Trust-Gated Autopilot. Automated actions must fail closed unless signal health, authorization, policy, and audit requirements all pass.
 
+| Signal health | Gate | Allowed behavior |
+|---|---|---|
+| `>= 70` | PASS | Automation may execute after all other checks pass |
+| `40-69` | HOLD | Alert and hold; never auto-execute |
+| `< 40` | BLOCK | Require manual intervention |
+
+Core safety rules:
+
+- Never bypass the trust gate for a quick fix.
+- Treat missing or stale signal data as blocked, not healthy.
+- Preserve tenant scope, authorization, enforcement limits, idempotency, and audit logging for every mutation.
+- An automated action is not complete until its decision and outcome are auditable.
+
+`backend/app/autopilot/gate.py` currently uses the `70` and `40` constants directly, while onboarding and tenant settings also store threshold values. Do not assume every execution path honors tenant-configured thresholds. Before changing threshold behavior, trace every backend and frontend consumer and update code, tests, and documentation together. Do not introduce additional copies of the constants.
+
+The calculator in `backend/app/stratum/core/signal_health.py` uses EMQ 40%, freshness 25%, variance 20%, and anomaly 15%. When CDP data is included, the base weights are proportionally reduced and CDP contributes 10%. Preserve a total weight of `1.0` and test both modes.
+
+## Sources of truth
+
+When files disagree, use this order:
+
+1. Registered implementation paths and tests
+2. `.github/workflows/ci.yml` for required validation and toolchain versions
+3. Makefiles, Dockerfiles, `docker-compose*.yml`, and deployment configuration
+4. `.env.example` files and application settings for configuration names
+5. Focused documents under `backend/docs/`, `docs/`, and the deployment guide
+
+The repository contains dated audits, generated HTML reports, checkpoints, datasets, and experiments. They are evidence or historical context, not the source of current runtime behavior. A module existing on disk also does not prove it is registered or in launch scope; check its import, router, worker, registry, or feature-gate path.
+
+## Technology
+
+- Backend: Python 3.12, FastAPI, Pydantic, SQLAlchemy, Alembic, Celery, and structlog
+- Data: PostgreSQL 16 with pgvector and Apache AGE, plus Redis 7
+- Frontend: React 19, TypeScript, Vite, Tailwind CSS, TanStack Query, and Zustand
+- Frontend CI runtime: Node 24; keep it aligned with `frontend/Dockerfile`
+- Quality and security: pytest, Ruff, Black, isort, mypy, Bandit, pip-audit, Vitest, Playwright, Trivy, and gitleaks
+- Billing: runtime-selectable Stripe or Paddle behind the payment-gateway abstraction
+
+Do not change Python, Node, database, or extension versions based only on this summary. Update the relevant CI, Docker, lock, and deployment files together.
+
+## Repository map
+
+```text
+backend/
+  app/
+    api/v1/endpoints/   FastAPI routers
+    analytics/          analytics queries and signal logic
+    autopilot/          trust-gate enforcement
+    auth/               authentication and permissions
+    core/               settings, security, logging, and shared concerns
+    db/                 sessions and database infrastructure
+    middleware/         tenant, audit, rate-limit, and request controls
+    models/             SQLAlchemy model modules
+    schemas/            Pydantic request and response models
+    services/           integrations and business services
+    stratum/            core domain implementation
+    workers/            Celery application and tasks
+  migrations/           Alembic revisions
+  tests/unit/           unit and boundary tests
+  tests/integration/    database-backed integration tests
+  docs/                 product, architecture, feature, and operations docs
+frontend/
+  src/
+    api/                 API clients and query hooks
+    components/          shared, feature, and primitive components
+    contexts/            React context providers
+    hooks/               reusable hooks
+    stores/              Zustand state
+    views/               routed views
+    styles/              theme and global styling
+  e2e/                   Playwright tests
+infrastructure/          infrastructure configuration
+monitoring/              observability configuration
+nginx/                   reverse-proxy configuration
+scripts/                 repository and deployment helpers
+tests/load/              k6 load-test scenarios
 ```
-Signal Health Check → Trust Gate → Automation Decision
-       ↓                  ↓              ↓
-   [HEALTHY]         [PASS]         [EXECUTE]
-   [DEGRADED]        [HOLD]         [ALERT ONLY]
-   [UNHEALTHY]       [BLOCK]        [MANUAL REQUIRED]
-```
 
-## Project Structure
+## Local development
 
-```
-/
-├── backend/
-│   ├── app/
-│   │   ├── api/v1/endpoints/   # FastAPI routes (50+ endpoints)
-│   │   ├── analytics/logic/    # Signal health, EMQ, attribution, anomalies
-│   │   ├── autopilot/          # Trust gate enforcement engine
-│   │   ├── auth/               # JWT, MFA, permissions
-│   │   ├── core/               # Config, security, logging, websocket
-│   │   ├── db/                 # Database session management
-│   │   ├── middleware/         # Tenant, audit, rate limiting
-│   │   ├── models/             # SQLAlchemy models (19 files)
-│   │   ├── schemas/            # Pydantic schemas
-│   │   ├── services/           # External integrations & business logic
-│   │   │   ├── oauth/          # OAuth provider factory
-│   │   │   ├── pacing/         # Budget forecasting
-│   │   │   ├── profit/         # COGS & profit tracking
-│   │   │   ├── reporting/      # Report generation & scheduling
-│   │   │   └── crm/            # CRM integrations
-│   │   ├── stratum/            # Core domain models
-│   │   └── workers/            # Celery tasks
-│   ├── migrations/             # Alembic migrations (41 revisions)
-│   ├── tests/                  # pytest suite (21 test files)
-│   ├── Makefile                # Build automation
-│   └── requirements.txt        # Python dependencies
-├── frontend/
-│   ├── src/
-│   │   ├── api/                # API client wrappers
-│   │   ├── components/         # React components (50+ TSX files)
-│   │   ├── contexts/           # React context providers
-│   │   ├── hooks/              # Custom React hooks
-│   │   ├── stores/             # Zustand stores
-│   │   ├── views/              # Page views & routes
-│   │   └── styles/             # Tailwind CSS + custom styles
-│   ├── package.json
-│   └── vite.config.ts
-├── docker-compose.yml          # 8 services (db, redis, api, worker, scheduler, frontend, flower)
-├── backend/docs/               # 60+ documentation files (curated subset is shipped in the backend image for the Copilot RAG indexer)
-└── CLAUDE.md
-```
-
-## Key Features (14)
-
-| #   | Feature               | Key Files                                                        |
-| --- | --------------------- | ---------------------------------------------------------------- |
-| 1   | Trust Engine          | `analytics/logic/signal_health.py`, `stratum/core/trust_gate.py` |
-| 2   | CDP                   | `models/cdp.py`, `analytics/logic/emq_calculation.py`            |
-| 3   | Autopilot Enforcement | `autopilot/enforcer.py`, `autopilot/service.py`                  |
-| 4   | Campaign Builder      | `models/campaign_builder.py`                                     |
-| 5   | Audience Sync         | `services/cdp/audience_sync/`                                    |
-| 6   | Authentication        | `auth/`, `core/security.py`, `services/mfa_service.py`           |
-| 7   | Analytics             | `analytics/logic/` (8 modules)                                   |
-| 8   | Integrations          | `services/oauth/` (Meta, Google, TikTok, Snapchat)               |
-| 9   | CMS                   | `models/cms.py`, frontend CMS editor                             |
-| 10  | WhatsApp              | `services/whatsapp_service.py`                                   |
-| 11  | Payments              | Stripe webhooks & subscriptions                                  |
-| 12  | Multi-tenancy         | `middleware/tenant.py`, row-level security                       |
-| 13  | Reporting             | `services/reporting/` (PDF, Slack, email)                        |
-| 14  | SuperAdmin            | `endpoints/superadmin.py`                                        |
-
-## Key Commands
+Prepare an environment before starting Compose:
 
 ```bash
-# Backend
-make dev              # Start FastAPI with hot reload (port 8000)
-make test             # Run pytest
-make test-all         # Run all tests with verbose output
-make test-cov         # Tests with coverage report
-make lint             # Ruff + mypy
-make format           # Auto-format with ruff, black, isort
-make migrate          # Run Alembic migrations
-make migration msg="description"  # Create new migration
-make check            # Lint + type check + test
-
-# Docker
-docker compose up -d              # Full stack (8 services)
-docker compose --profile monitoring up -d  # Include Flower
-
-# Frontend
-cd frontend && npm run dev        # Vite dev server (port 5173)
-cd frontend && npm run build      # Production build
-cd frontend && npm run test       # Vitest
+cp .env.example .env
+# Set the required database, Redis, application, and encryption values.
+docker compose config
+docker compose up -d
 ```
 
-## Code Standards
+Never commit `.env` files or real credentials. The base Compose stack defines PostgreSQL, Redis, API, worker, scheduler, frontend, and Flower; Flower is enabled through the `monitoring` profile.
 
-- Type hints REQUIRED on all functions
-- Pydantic models for all API I/O
-- Async/await for all I/O operations
-- 90%+ test coverage for core/
-- Docstrings on public functions
-- Use `datetime.now(timezone.utc)` (NOT `datetime.utcnow()`)
-- Use `secrets` module for security tokens (NOT `random`)
-- Use `hmac.compare_digest()` for constant-time comparisons
-- Encrypt PII with Fernet before storage
-- Structured logging via structlog (JSON format)
+### Backend commands
 
-## Domain Terminology
-
-| Term             | Definition                                     |
-| ---------------- | ---------------------------------------------- |
-| Signal           | Input data point (metric, event, webhook)      |
-| Signal Health    | Composite score (0-100) of signal reliability  |
-| Trust Gate       | Decision checkpoint before automation          |
-| Autopilot        | Automated action when trust passes             |
-| EMQ              | Event Match Quality - signal fidelity score    |
-| CDP              | Customer Data Platform - profile & event store |
-| Enforcement Mode | Advisory / Soft-Block / Hard-Block             |
-| ROAS             | Return on Ad Spend                             |
-| Pacing           | Budget spend velocity tracking                 |
-| Tenant           | Isolated customer workspace (multi-tenant)     |
-
-## Trust Engine Rules
-
-```python
-# Thresholds are configurable per tenant (see TrustGateConfig)
-HEALTHY_THRESHOLD = 70      # Green - autopilot enabled
-DEGRADED_THRESHOLD = 40     # Yellow - alert + hold
-# Never auto-execute when signal_health < 70
-
-# Signal Health Components (weighted):
-# EMQ: 35%, API Health: 25%, Event Loss: 20%,
-# Platform Stability: 10%, Data Quality: 10%
-```
-
-## Do NOT
-
-- Skip trust gate checks for "quick fixes"
-- Hardcode thresholds (use config)
-- Execute automations without audit logging
-- Merge without passing CI
-- Use `random` for security tokens (use `secrets`)
-- Put PII in JWT claims (use encrypted DB fields)
-- Store plaintext credentials in frontend code
-- Commit `.env` files or API credentials
-
-## Testing
+The root Makefile delegates to `backend/Makefile`:
 
 ```bash
-make test                    # Quick test run
-make test-cov                # With coverage
-pytest tests/unit/           # Unit tests only
-pytest tests/integration/    # Integration tests only
+make dev
+make test
+make test-all
+make test-cov
+make lint
+make format
+make migrate
+make migration msg="description"
+make check
 ```
 
-Test files: `backend/tests/unit/` and `backend/tests/integration/`
-Coverage target: 90%+ for `core/`, `autopilot/`, `analytics/`
+`make check` is a convenient backend lint-and-unit-test check; it is not equivalent to the complete release gate.
 
-## Git Workflow
+### Frontend commands
 
-- Branch: `feature/STRAT-123-description`
-- Commit: `feat(signals): add anomaly detection [STRAT-123]`
-- Conventional commits: `feat|fix|refactor|test|docs(scope): message`
+From `frontend/`:
 
-## Design Context
+```bash
+npm ci --legacy-peer-deps
+npm run lint
+npx tsc --noEmit
+npm run test:coverage
+npm run build
+npm run test:e2e -- --project=chromium
+```
 
-### Users
+GitHub Actions aggregates backend quality, unit and integration tests, the configured coverage ratchet, backend dependency/security checks, frontend checks, E2E, Trivy, secret scanning, and deployment-config validation. Every required job feeds the release gate. Do not describe a reporting step as optional merely because its individual command uses `continue-on-error`; the aggregator can still make it blocking.
 
-Marketing agencies managing multiple client accounts across ad platforms. Extended sessions, professional setting, data-heavy workflows.
+Respect the current `fail_under` value in `backend/.coveragerc`. Never lower the coverage ratchet to make a change pass. Add focused tests and raise the ratchet only after measuring the complete CI-equivalent suite.
 
-### Brand Personality
+## Engineering conventions
 
-**Bold, intelligent, premium.** Sophisticated power through restraint. Bloomberg terminal meets luxury brand.
+### Backend
 
-### Aesthetic Direction
+- Put HTTP transport in `backend/app/api/v1/endpoints/`; keep reusable business and integration logic in services or domain modules.
+- Use Pydantic models for API input and output and preserve the repository's standard response envelopes.
+- Follow existing asynchronous I/O and SQLAlchemy session patterns. Do not block the event loop with synchronous network or database work.
+- Derive tenant scope from authenticated context and existing middleware or dependencies. Never accept a client-provided tenant identifier as authorization.
+- Preserve row-level security, role checks, rate limits, audit records, and transaction ownership.
+- Add type hints and focused docstrings to new or modified public Python code.
+- Use timezone-aware UTC datetimes; do not introduce `datetime.utcnow()`.
+- Use `secrets` for security tokens and `hmac.compare_digest()` for secret comparisons; never use `random` for security-sensitive values.
+- Encrypt PII and integration credentials before storage. Never place PII in JWT claims or logs.
+- Use structured logging and avoid logging tokens, secrets, raw credentials, or sensitive webhook bodies.
 
-- **Reference**: Apple / Porsche Design — premium materials, restrained palette, obsessive detail
-- **Anti-reference**: Enterprise gray (Salesforce/SAP); 2024-default violet/cyan glassmorphism (Linear, Vercel, every YC AI startup).
-- **Theme**: Dual mode — figma dark (default) + designed-coherent figma light. Both first-class.
-- **Palette**: Ink + ember — see `backend/docs/03-frontend/figma-theme.md` for full token table.
-  - Dark: ink `#0B0B0B` bg · surface `#141414` · line `#1F1F1F` · ember `#FF5A1F` accent · cyan `#06B6D4` info.
-  - Light: warm off-white `#FAFAF7` bg · `#FFFFFF` surface · `#E8E8E0` line · desaturated ember `#E84F1F` accent.
-- **Typography**: Geist (sans + display) + Geist Mono. No Satoshi, no Clash Display, no Inter.
-- **Surfaces**: Hairline borders (1px), subtle inner highlights, ember radial bleeds for emphasis. No glassmorphism.
+### Frontend
 
-### Design Principles
+- Use the shared API client, query hooks, contexts, and stores instead of adding ad hoc request or state layers.
+- Keep TypeScript types aligned with backend response schemas.
+- Do not hardcode production API or WebSocket hosts; use the existing environment and proxy configuration.
+- Update loading, empty, error, authorization, and responsive states with feature changes.
+- Keep English and Arabic copy, RTL behavior, routes, and navigation aligned.
+- ARIA semantics and keyboard interaction are required behavior, not follow-up polish.
 
-1. **Quiet authority** — Power through precision, not noise
-2. **Information density without clutter** — Strong hierarchy, not hidden data
-3. **Premium materiality** — Tinted neutrals, subtle depth, no flat gray
-4. **Decisive contrast** — Bold type hierarchy, 1.5x+ ratio between steps
-5. **Earn every pixel** — Every element serves the user's task
-6. **Action-first home** — The dashboard is a triage queue, not a dashboard. Sort by intervention required.
+## Database and migrations
 
-### Component contract
+- Append normal Alembic revisions; do not rewrite or renumber migrations that may have been applied.
+- The database requires both pgvector and Apache AGE. Use the repository's PostgreSQL image and CI setup when validating integration tests.
+- Generate and apply revisions through `make migration msg="description"` and `make migrate`.
+- Ensure new model modules are registered in the metadata/import path used by Alembic.
+- Test upgrades from the preceding revision as well as empty-database creation when schema risk is material.
+- Never run destructive resets, downgrades, or production data fixes without explicit authorization and a documented recovery path.
 
-The dashboard composes from typed primitives, not bespoke surfaces. Reuse before building:
+## Integrations and billing
 
-- `frontend/src/components/primitives/Card.tsx` — surface (default / elevated / glow variants)
-- `frontend/src/components/primitives/KPI.tsx` — composed Card + label + value + delta + status
-- `frontend/src/components/primitives/StatusPill.tsx` — figma signature pill
-- `frontend/src/components/primitives/Chart.tsx` — themed recharts wrapper (LineChart / AreaChart)
-- `frontend/src/components/primitives/DataTable.tsx` — headless table with sort / loading / empty
-- `frontend/src/components/primitives/ConfirmDrawer.tsx` — destructive-action gate
-- `frontend/src/components/primitives/nav/Sidebar.tsx` — collapsible-group nav
-- `frontend/src/components/primitives/nav/Topbar.tsx` — search + theme toggle + profile
-- `frontend/src/components/primitives/theme/ThemeProvider.tsx` — dark/light/system
+- This repository intentionally supports multiple advertising, messaging, analytics, and CRM integrations. Use the existing factory, adapter, registry, feature-gate, and credential patterns rather than branching on a platform throughout the codebase.
+- Do not infer that an integration is launch-ready merely because its client exists. Confirm router registration, worker registration, feature gates, tests, and the launch-scope decision document.
+- Shared payment endpoints must resolve the active provider through `backend/app/services/payment_gateway.py`; do not couple shared billing flows directly to Stripe or Paddle.
+- `PAYMENT_GATEWAY` selects `stripe` or `paddle` at runtime. Both webhook routes remain mounted so gateway switches do not strand in-flight events.
+- Preserve webhook signature verification, replay/idempotency protection, transaction boundaries, tenant synchronization, retry-safe failures, and provider-specific identifier handling.
+- Follow `backend/docs/05-operations/paddle-cutover.md` for switching gateways. Do not improvise a cutover from code inspection alone.
+- Keep OAuth state, API tokens, service credentials, signing secrets, and payment configuration out of frontend source and logs.
 
-Each ships with a vitest. ARIA + keyboard support are first-class, not afterthoughts.
+## Design contract
 
-## Imports
+Stratum's interface should feel bold, intelligent, premium, and restrained: high information density with clear hierarchy, quiet authority, and action-first workflows.
 
-@backend/docs/architecture/trust-engine.md
-@backend/docs/integrations/README.md
-@backend/docs/00-overview/glossary.md
-@backend/docs/03-frontend/figma-theme.md
+- Use the ink-and-ember theme and the Geist/Geist Mono typography defined in `backend/docs/03-frontend/figma-theme.md`.
+- Dark, light, and system themes are first-class. Do not treat light mode or RTL as a later adaptation.
+- Avoid generic enterprise gray, decorative glassmorphism, and unsupported one-off visual systems.
+- Reuse `frontend/src/components/primitives/` before creating bespoke cards, KPIs, status indicators, charts, tables, drawers, navigation, or theme controls.
+- Prefer intervention queues and clear next actions over passive dashboard decoration.
+- Every visual element must support comprehension, state, navigation, or action.
+
+## Git and delivery workflow
+
+- Use conventional commit subjects: `feat|fix|refactor|test|docs(scope): message`.
+- When work has a ticket, use the documented `feature/STRAT-123-description` branch and include the ticket in the commit or pull-request context.
+- Keep changes scoped and include tests for the changed behavior.
+- Pass the full release gate before merge.
+- Update focused documentation when behavior, configuration, security boundaries, deployment procedures, or operator workflows change.
+
+## Focused documentation
+
+- [Trust Engine](backend/docs/architecture/trust-engine.md)
+- [Integration guide](backend/docs/integrations/README.md)
+- [Glossary](backend/docs/00-overview/glossary.md)
+- [Frontend theme](backend/docs/03-frontend/figma-theme.md)
+- [Launch-scope decisions](backend/docs/06-deploy/launch-scope-decisions.md)
+- [Paddle cutover](backend/docs/05-operations/paddle-cutover.md)
+- [Server deployment](SERVER_DEPLOYMENT_GUIDE.md)
+- [Security policy](SECURITY.md)
+
+Read these as needed. Do not automatically duplicate their endpoint lists, configuration matrices, schedules, palettes, or runbooks in this file.
