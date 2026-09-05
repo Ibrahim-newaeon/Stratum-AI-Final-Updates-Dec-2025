@@ -5,7 +5,6 @@
       "Bash(rg:*)",
       "Bash(make check)",
       "Bash(make test)",
-      "Bash(pytest:*)",
       "Bash(ruff check:*)",
       "Bash(mypy:*)",
       "Bash(npm run lint)",
@@ -22,7 +21,8 @@
       "Bash(make migration:*)",
       "Bash(alembic upgrade:*)",
       "Bash(docker compose up:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(pytest:*)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -33,7 +33,11 @@
       "Bash(git push --force:*)",
       "Bash(git push -f:*)",
       "Bash(git reset --hard:*)",
-      "Bash(rm -rf:*)"
+      "Bash(rm -rf:*)",
+      "Read(**/.env.*.local)",
+      "Read(**/.env.staging)",
+      "Read(**/.dev.vars)",
+      "Read(**/.dev.vars.*)"
     ]
   },
   "hooks": {
@@ -41,8 +45,14 @@
       {
         "matcher": "Edit|Write|MultiEdit",
         "hooks": [
-          {"type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/format-on-write.sh"},
-          {"type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/rule-check.sh"}
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/format-on-write.sh\""
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/rule-check.sh\""
+          }
         ]
       }
     ],
@@ -50,7 +60,10 @@
       {
         "matcher": "Bash",
         "hooks": [
-          {"type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/block-dangerous-bash.sh"}
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/block-dangerous-bash.sh\""
+          }
         ]
       }
     ]
