@@ -1,4 +1,5 @@
 ---
+name: add-automation
 description: Scaffold a new trust-gated automation with schema, task, endpoint, and tests
 argument-hint: <automation_name>
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash(make:*), Bash(pytest:*)

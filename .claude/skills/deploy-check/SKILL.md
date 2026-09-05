@@ -1,4 +1,5 @@
 ---
+name: deploy-check
 description: Pre-deployment verification — lint, tests, migrations, threshold review
 allowed-tools: Bash(make:*), Bash(pytest:*), Bash(alembic:*), Bash(git diff:*), Bash(git log:*), Read, Grep
 ---

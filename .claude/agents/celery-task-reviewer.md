@@ -87,8 +87,8 @@ For each hit, check if there's an open `async with session.begin():` block in th
         record.result = result
   Fix: close the session, make the call, open a new session for the write.
 
-- [MAJOR] workers/charge.py:45 — no idempotency on Stripe charge task
-  Fix: pass idempotency_key=task.request.id into stripe.Charge.create(...).
+- [MAJOR] workers/billing.py:45 — no stable idempotency key on a Paddle transaction request
+  Fix: pass a stable persisted idempotency key through the existing payment-gateway abstraction before retrying the Paddle request.
 ```
 
 Be exact, cite `file:line`. If clean, three sentences and stop.

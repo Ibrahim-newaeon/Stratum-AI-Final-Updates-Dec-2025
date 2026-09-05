@@ -163,7 +163,7 @@ case "${file_path}" in
   *backend/app/autopilot/*.py | *backend/app/analytics/logic/signal_health.py | *backend/app/stratum/core/trust_gate.py)
     # Hardcoded threshold near words health/score/emq — WARN
     if match_in_file '\b(score|health|emq|trust)\b[^=]*[<>]=?[[:space:]]*(70|40)\b'; then
-      add_warn "possible hardcoded trust threshold (70/40) in ${file_path} — read from TrustGateConfig. Invoke trust-gate-reviewer"
+      add_warn "possible hardcoded trust threshold (70/40) in ${file_path} — trace the active threshold source and all consumers. Invoke trust-gate-reviewer"
     fi
     # skip_gate / force / override flags — WARN
     if match_in_file '(skip_gate|force_execute|override_gate)[[:space:]]*=[[:space:]]*True'; then

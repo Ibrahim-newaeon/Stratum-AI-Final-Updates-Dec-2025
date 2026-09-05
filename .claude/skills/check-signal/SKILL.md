@@ -1,4 +1,5 @@
 ---
+name: check-signal
 description: Analyze signal health, freshness, and trust-gate impact for a named signal
 argument-hint: <signal_name>
 allowed-tools: Read, Grep, Glob, Bash(grep:*), Bash(find:*), Bash(rg:*)
