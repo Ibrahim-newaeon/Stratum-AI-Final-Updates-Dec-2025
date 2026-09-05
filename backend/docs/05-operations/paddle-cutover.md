@@ -142,6 +142,11 @@ PAST_DUE deliberately stays entitling so a customer is not cut off mid-dunning.
 Paddle also ships a webhook simulator (Developer tools > Simulations) which can
 drive the endpoint without a checkout, once the tunnel is up.
 
+[paddle-rehearsal-findings.md](paddle-rehearsal-findings.md) records one run of
+this rehearsal: what it verified, and the local prerequisites step 3 assumes
+(Python 3.12, a pgvector+AGE database, Redis, uvicorn's working directory, and
+cloudflared's address family).
+
 ## Verify with one real transaction
 
 Do this yourself, on a real card, and refund it. A test card will not work in
