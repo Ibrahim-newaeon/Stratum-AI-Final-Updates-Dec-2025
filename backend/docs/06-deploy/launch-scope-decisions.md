@@ -58,14 +58,47 @@ families (see the annotated `include` list). Fixing it means adding the module
 to `include`, adding beat entries for the two sweeps, and un-omitting the
 Pipedrive modules and `crm_sync_tasks.py` from `backend/.coveragerc`.
 
-### Coverage omissions are stale
+### Open defect: the tenant CRM view calls routes that do not exist
 
-`backend/.coveragerc` still omits `salesforce_*` and `zoho_*` modules that no
-longer exist, and still omits the three `pipedrive_*` modules plus
-`crm_sync_tasks.py` on the grounds that they are post-launch. Pipedrive is now
-reachable, so live code sits outside the coverage gate. Un-omit it together
-with the Celery fix above, not before — the ratchet in `fail_under` must not be
-lowered to absorb the newly measured lines.
+`frontend/src/api/crm.ts` targets `/integrations/crm/*`. **No backend route
+contains `crm`** — the integrations router is mounted at `/integrations` and
+its paths are `/contacts`, `/deals`, `/pipeline/summary`, `/hubspot/*`,
+`/pipedrive/*`. Every call in that module therefore 404s.
+
+It is not dead code: `api/hooks.ts` re-exports its hooks, and
+`views/tenant/Integrations.tsx` and `views/tenant/IntegrationsHub.tsx` consume
+them. IntegrationsHub renders from Settings > Integrations, so this is a
+user-reachable view whose data calls cannot succeed.
+
+Of the 15 paths it calls, four differ from a real route only by the extra
+`/crm` segment (`contacts`, `deals`, `pipeline/summary`, `hubspot/connect`);
+two exist but are provider-scoped (`writeback/config` and `writeback/history`
+live under `/hubspot/`); and nine have no backend at all, including
+`/integrations/crm/connections`, which is what `useCRMConnections()` — the
+primary call on both views — depends on.
+
+Fixing it is a decision, not a rename: either build the missing endpoints
+(notably a provider-agnostic connections list) or rework the views onto the
+per-provider routes that exist. `CRMConnection` also has no `sync_enabled` or
+`sync_frequency_minutes` column, though the module's `CRMConnection` type
+declares both, so some of this describes a backend that was never built.
+
+### Open item: reachable Pipedrive code is outside the coverage gate
+
+The `salesforce_*` and `zoho_*` entries in `backend/.coveragerc` named files
+deleted in #721 and omitted nothing; they were removed on 2026-09-05.
+
+The three `pipedrive_*` modules and `crm_sync_tasks.py` are still omitted, and
+that is now wrong: the stated reason was that they were post-launch and
+unreachable, which stopped being true once #722 wired the routes and the CRM
+tasks were registered and scheduled.
+
+They stay omitted only because the impact could not be measured. Un-omitting
+adds 778 statements, ~1.25% of the denominator, so in the worst case (none of
+it covered) the combined figure falls about 0.92pp against a `fail_under` of
+74.0 — enough to fail if the real number sits below ~74.9. Whoever can run the
+full unit+integration suite should measure it and un-omit. **Do not lower the
+ratchet to absorb the newly measured lines.**
 
 The `memory_debug` endpoint that used to be listed here was deleted on
 2026-08-17. Its router was never included in the API router *and*
