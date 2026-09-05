@@ -29,6 +29,7 @@ from app.api.v1.endpoints import (  # Previously unregistered endpoints; Gap end
     competitors,
     compliance,
     copilot,
+    crm,
     dashboard,
     data_driven_attribution,
     developer,
@@ -322,6 +323,14 @@ api_router.include_router(
 api_router.include_router(
     integrations.router,
     tags=["Integrations"],
+)
+
+# Tenant-facing CRM surface. Separate from integrations.router above, which is
+# the superadmin contract (require_super_admin + ?tenant_id=). This one derives
+# the tenant from the caller's token. The router declares its own
+# prefix="/integrations/crm"; do NOT add one here.
+api_router.include_router(
+    crm.router,
 )
 
 # Pacing & Forecasting (Targets, Pacing Alerts, EOM Projections)

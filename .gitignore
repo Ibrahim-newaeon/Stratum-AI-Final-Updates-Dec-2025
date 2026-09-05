@@ -14,6 +14,10 @@ build/
 .env
 .env.local
 .env.*.local
+# Backups and in-flight writes from scripts/set-integration-env.sh and the
+# deploy scripts. These hold the same production secrets as .env itself.
+.env.bak.*
+.env.tmp.*
 
 # TLS material. The Hetzner runbook has operators drop the Cloudflare origin
 # certificate and its private key into ./certs on the host; without this,

@@ -144,6 +144,16 @@ services:
       - SNAPCHAT_CAPI_TOKEN=${SNAPCHAT_CAPI_TOKEN:-}
       - SNAPCHAT_AD_ACCOUNT_ID=${SNAPCHAT_AD_ACCOUNT_ID:-}
       - SNAPCHAT_PIXEL_ID=${SNAPCHAT_PIXEL_ID:-}
+      # CRM Credentials. The prod/beta stacks inject the whole .env via
+      # env_file, but this file passes an explicit allowlist, so a key absent
+      # here never reaches the container no matter what .env says — which is
+      # why HUBSPOT_*/PIPEDRIVE_* worked in production and silently did not
+      # locally.
+      - HUBSPOT_CLIENT_ID=${HUBSPOT_CLIENT_ID:-}
+      - HUBSPOT_CLIENT_SECRET=${HUBSPOT_CLIENT_SECRET:-}
+      - HUBSPOT_API_KEY=${HUBSPOT_API_KEY:-}
+      - PIPEDRIVE_CLIENT_ID=${PIPEDRIVE_CLIENT_ID:-}
+      - PIPEDRIVE_CLIENT_SECRET=${PIPEDRIVE_CLIENT_SECRET:-}
       # Market Intelligence
       - SERPAPI_KEY=${SERPAPI_KEY:-}
       # WhatsApp
@@ -259,6 +269,16 @@ services:
       - SNAPCHAT_CAPI_TOKEN=${SNAPCHAT_CAPI_TOKEN:-}
       - SNAPCHAT_AD_ACCOUNT_ID=${SNAPCHAT_AD_ACCOUNT_ID:-}
       - SNAPCHAT_PIXEL_ID=${SNAPCHAT_PIXEL_ID:-}
+      # CRM Credentials. The prod/beta stacks inject the whole .env via
+      # env_file, but this file passes an explicit allowlist, so a key absent
+      # here never reaches the container no matter what .env says — which is
+      # why HUBSPOT_*/PIPEDRIVE_* worked in production and silently did not
+      # locally.
+      - HUBSPOT_CLIENT_ID=${HUBSPOT_CLIENT_ID:-}
+      - HUBSPOT_CLIENT_SECRET=${HUBSPOT_CLIENT_SECRET:-}
+      - HUBSPOT_API_KEY=${HUBSPOT_API_KEY:-}
+      - PIPEDRIVE_CLIENT_ID=${PIPEDRIVE_CLIENT_ID:-}
+      - PIPEDRIVE_CLIENT_SECRET=${PIPEDRIVE_CLIENT_SECRET:-}
       - SERPAPI_KEY=${SERPAPI_KEY:-}
       - WHATSAPP_PHONE_NUMBER_ID=${WHATSAPP_PHONE_NUMBER_ID:-}
       - WHATSAPP_ACCESS_TOKEN=${WHATSAPP_ACCESS_TOKEN:-}

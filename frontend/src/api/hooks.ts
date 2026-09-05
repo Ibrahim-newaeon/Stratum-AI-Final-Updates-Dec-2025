@@ -177,21 +177,12 @@ export {
 // CRM/HubSpot Integration hooks
 export {
   useCRMConnections,
-  useCRMConnection,
-  useConnectHubSpot,
-  useDisconnectCRM,
   useTriggerCRMSync,
   useCRMContacts,
-  useCRMContact,
-  useContactJourney,
   useCRMDeals,
-  useCRMDeal,
-  usePipelineMetrics,
   usePipelineSummary,
   useWritebackConfig,
   useUpdateWritebackConfig,
-  useWritebackHistory,
-  useRetryWriteback,
 } from './crm'
 
 // Pacing & Forecasting hooks
