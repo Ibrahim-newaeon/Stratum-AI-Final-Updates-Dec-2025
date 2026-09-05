@@ -87,3 +87,46 @@ def test_audience_auto_sync_tasks_are_registered(finalized_celery_app):
         "tasks.schedule_audience_auto_sync",
     ):
         assert name in registered, f"{name} is not registered with the Celery app"
+
+
+def test_crm_sync_tasks_are_registered(finalized_celery_app):
+    """The CRM sync and writeback tasks must stay registered.
+
+    ``app/workers/crm_sync_tasks.py`` was missing from the Celery include
+    list from its creation until 2026-09-05, so none of its seven
+    ``@shared_task`` defs registered. Both sweeps were also absent from the
+    beat schedule, so nothing dispatched them either. The effect was that no
+    scheduled CRM sync or attribution writeback ever ran — for HubSpot as
+    well as Pipedrive. Only the manual endpoints worked, because they call
+    ``sync_all()`` synchronously instead of dispatching.
+    """
+    registered = set(finalized_celery_app.tasks.keys())
+
+    for name in (
+        "app.workers.crm_sync_tasks.sync_hubspot_data",
+        "app.workers.crm_sync_tasks.writeback_hubspot_attribution",
+        "app.workers.crm_sync_tasks.sync_pipedrive_data",
+        "app.workers.crm_sync_tasks.writeback_pipedrive_attribution",
+        "app.workers.crm_sync_tasks.sync_all_crm_connections",
+        "app.workers.crm_sync_tasks.run_scheduled_writebacks",
+        "app.workers.crm_sync_tasks.run_identity_matching",
+    ):
+        assert name in registered, f"{name} is not registered with the Celery app"
+
+
+def test_crm_sweeps_are_scheduled(finalized_celery_app):
+    """Both CRM sweeps must have a beat entry.
+
+    Registering the tasks is only half the fix: a registered task that
+    nothing schedules still never runs. These two entries are what actually
+    drive periodic CRM sync and writeback.
+    """
+    scheduled = {
+        entry["task"] for entry in finalized_celery_app.conf.beat_schedule.values()
+    }
+
+    for name in (
+        "app.workers.crm_sync_tasks.sync_all_crm_connections",
+        "app.workers.crm_sync_tasks.run_scheduled_writebacks",
+    ):
+        assert name in scheduled, f"{name} has no beat schedule entry"

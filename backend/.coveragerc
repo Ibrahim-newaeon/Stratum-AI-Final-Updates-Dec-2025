@@ -25,22 +25,25 @@ omit =
     # test_metrics_endpoint_auth.py.
     app/workers/celery_app.py
     # ---------------------------------------------------------------------
-    # Cut from launch (backend/docs/06-deploy/launch-scope-decisions.md,
-    # 2026-07-05): Salesforce/Pipedrive/Zoho CRM integrations are explicitly
-    # post-launch. Their only entry point outside services/crm is
-    # app/workers/crm_sync_tasks.py, which is absent from the Celery include
-    # list so none of its @shared_task defs ever register. Un-omit each
-    # family when it gets wired. hubspot_* and identity_matching stay IN
-    # coverage — both are imported by the live integrations endpoints.
-    app/services/crm/salesforce_client.py
-    app/services/crm/salesforce_sync.py
-    app/services/crm/salesforce_writeback.py
+    # Pipedrive CRM. The salesforce_* and zoho_* entries that used to sit here
+    # were dropped on 2026-09-05: #721 deleted those nine modules, so the
+    # entries named files that no longer exist and omitted nothing.
+    #
+    # The reason given for omitting these — "post-launch, and their only entry
+    # point, app/workers/crm_sync_tasks.py, is absent from the Celery include
+    # list so none of its @shared_task defs ever register" — stopped being true
+    # when #722 wired the Pipedrive routes and the CRM tasks were registered and
+    # scheduled. This is now reachable production code sitting outside the gate.
+    #
+    # Un-omitting it adds 778 statements, ~1.25% of the denominator, so in the
+    # worst case (none of it covered) the combined figure falls ~0.92pp against
+    # a fail_under of 74.0. Left in place until someone can run the full
+    # unit+integration suite and measure the real number — the ratchet must not
+    # be lowered to absorb it. hubspot_* and identity_matching stay IN coverage;
+    # both are imported by the live integrations endpoints.
     app/services/crm/pipedrive_client.py
     app/services/crm/pipedrive_sync.py
     app/services/crm/pipedrive_writeback.py
-    app/services/crm/zoho_client.py
-    app/services/crm/zoho_sync.py
-    app/services/crm/zoho_writeback.py
     app/workers/crm_sync_tasks.py
     # Dead code (2026-07-02 audit, re-verified 2026-07-05): app/stratum/
     # workers has zero importers. app/monitoring has no importer inside the

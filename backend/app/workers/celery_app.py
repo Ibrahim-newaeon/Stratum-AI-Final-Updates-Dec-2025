@@ -48,6 +48,12 @@ celery_app = Celery(
         # stay dispatchable so an operator can drain in-flight enrollments after
         # turning the flag off.
         "app.workers.drip_tasks",
+        # CRM sync and attribution writeback. Without this none of the seven
+        # @shared_task defs register, so both sweeps below dispatch to nothing
+        # and every scheduled CRM sync silently does not run — HubSpot's as
+        # well as Pipedrive's. The manual endpoints were unaffected because
+        # they call sync_all() synchronously rather than dispatching.
+        "app.workers.crm_sync_tasks",
     ],
 )
 
@@ -105,6 +111,25 @@ celery_app.conf.beat_schedule = {
         "task": "app.workers.tasks.sync_all_campaigns",
         "schedule": crontab(minute=0),
         "options": {"queue": "sync"},
+    },
+    # Sync every connected CRM hourly. sync_all_crm_connections dispatches a
+    # sync for every CONNECTED row — CRMConnection carries no per-tenant
+    # frequency column, so this interval *is* the sync frequency. Offset from
+    # sync-all-campaigns at minute 0 so the two hourly sweeps do not pile onto
+    # the same beat tick.
+    "sync-all-crm-connections": {
+        "task": "app.workers.crm_sync_tasks.sync_all_crm_connections",
+        "schedule": crontab(minute=15),
+        "options": {"queue": "sync"},
+    },
+    # Dispatch attribution writebacks that are due. This sweep honours each
+    # config's next_sync_at and sync_interval_hours, so it is a due-check
+    # rather than a sync: running it twice an hour bounds how late a due
+    # writeback starts without changing how often any tenant is written back.
+    "run-scheduled-crm-writebacks": {
+        "task": "app.workers.crm_sync_tasks.run_scheduled_writebacks",
+        "schedule": crontab(minute="*/30"),
+        "options": {"queue": "default"},
     },
     # Generate daily forecasts at 6 AM UTC
     "generate-daily-forecasts": {

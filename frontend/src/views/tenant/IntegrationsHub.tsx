@@ -287,7 +287,7 @@ export default function IntegrationsHub() {
                 </div>
                 <div className="text-sm text-muted-foreground mt-0.5">
                   {hubspot
-                    ? `Connected · ${hubspot.lastSyncAt ? `last sync ${formatRelative(hubspot.lastSyncAt)}` : 'never synced'}`
+                    ? `Connected · ${hubspot.last_sync_at ? `last sync ${formatRelative(hubspot.last_sync_at)}` : 'never synced'}`
                     : 'Not connected. Use the campaigns connection wizard to OAuth into your HubSpot portal.'}
                 </div>
               </div>

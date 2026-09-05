@@ -9,23 +9,96 @@ before launch or explicitly cut to the post-launch backlog.
 | Subsystem | Status |
 | --------- | ------ |
 | **Audience auto-sync** | `tasks.audience_auto_sync` sweep runs every 15 min from Celery Beat, executing due `PlatformAudience` schedules (`auto_sync` + `next_sync_at`) with `triggered_by="schedule"`. Failures back off 1h instead of retrying every sweep. |
-| **CRM sync history** (`_log_sync`) | Fixed: the log row was flushed after the sync's own commit and rolled back on session close, so history was forever empty. Now committed. (Applies to the Salesforce/Pipedrive services even though those integrations are post-launch — the fix also covers the failure path.) |
+| **CRM sync history** (`_log_sync`) | Fixed: the log row was flushed after the sync's own commit and rolled back on session close, so history was forever empty. Now committed. (Applied to the Salesforce/Pipedrive services too; Salesforce has since been deleted — see below — and the fix also covers the failure path.) |
 
-## Cut from launch (post-launch backlog)
+## Cut from launch
 
-| Subsystem | State at cut | What wiring would take |
-| --------- | ------------ | ---------------------- |
-| **Identity-resolution pipeline** | CDP identity stitching exists as code; nothing invokes it | Hook into the event-ingestion path |
-| **Zoho OAuth** | Zoho CRM sync service exists; no OAuth endpoint, unreachable in product | One OAuth flow via the existing provider factory |
-| **Salesforce / Pipedrive** | Adapters exist; not registered/reachable | Registration + OAuth + productization; largest effort, least-proven demand |
+Superseded 2026-09-05. The 2026-07-05 table described these subsystems as
+"exists in code, needs wiring". Two of them no longer exist, and two are now
+wired, so that table is replaced rather than annotated.
 
-Do not present these three in the product UI as available integrations
-until wired.
+| Subsystem | Decision (2026-09-05) |
+| --------- | --------------------- |
+| **Zoho** | **Removed, not deferred.** Deleted in #721. Product owner confirmed no prospect has asked for it and it is not a deal-blocker in the Gulf pipeline. Do not rebuild without new demand evidence. |
+| **Salesforce** | **Removed, not deferred.** Deleted in #721. Product owner confirmed it is out of launch scope and belongs to a later enterprise motion, if ever. |
+| **Pipedrive** | **Wired** in #722 — five routes under `/api/v1/integrations/pipedrive/*` plus Celery tasks. Needs `PIPEDRIVE_CLIENT_ID`/`PIPEDRIVE_CLIENT_SECRET` only. See the open defect below before treating scheduled sync as working. |
+| **Identity-resolution pipeline** | **Wired.** `IdentityResolutionService` is invoked by the live CDP endpoint (`api/v1/endpoints/cdp.py`) and by `pipedrive_sync.py`. The 2026-07-05 "nothing invokes it" no longer holds. |
 
-The cut modules (and verified-dead code: `stratum/workers/`, `monitoring/`)
-are omitted from the coverage denominator in `backend/.coveragerc` so the CI
-gate measures only reachable code — **un-omit each family when wiring it
-post-launch**.
+Zoho and Salesforce were removed because their clients read config fields
+(`zoho_client_id`, `zoho_region`, `salesforce_client_id`) that were never
+defined in `config.py`. `Settings` is declared `extra="ignore"`, so exporting
+the environment variables did not create them either — every connection
+attempt raised `AttributeError` before reaching the network.
+
+The Postgres `crm_connections.provider` enum still accepts `'salesforce'` and
+`'zoho'`; dropping a value requires rewriting the type and an unused value is
+harmless. Before a production deploy, confirm no rows depend on the deleted
+code:
+
+```sql
+SELECT provider, count(*) FROM crm_connections GROUP BY 1;
+```
+
+### Open defect: CRM background tasks never register
+
+`app/workers/crm_sync_tasks.py` defines seven `@shared_task` functions
+(`sync_hubspot_data`, `writeback_hubspot_attribution`, `sync_pipedrive_data`,
+`writeback_pipedrive_attribution`, `sync_all_crm_connections`,
+`run_scheduled_writebacks`, `run_identity_matching`). The module is **absent
+from the `include` list in `app/workers/celery_app.py`**, and neither sweep has
+a Celery Beat entry. None of these tasks register with the worker, so no CRM
+sync or attribution writeback ever runs on a schedule — **for HubSpot as well
+as Pipedrive**.
+
+The manual endpoints are unaffected: `POST /integrations/{hubspot,pipedrive}/sync`
+call `sync_service.sync_all()` synchronously and do not go through Celery.
+
+This is the same registration gap already fixed four times for other task
+families (see the annotated `include` list). Fixing it means adding the module
+to `include`, adding beat entries for the two sweeps, and un-omitting the
+Pipedrive modules and `crm_sync_tasks.py` from `backend/.coveragerc`.
+
+### Open defect: the tenant CRM view calls routes that do not exist
+
+`frontend/src/api/crm.ts` targets `/integrations/crm/*`. **No backend route
+contains `crm`** — the integrations router is mounted at `/integrations` and
+its paths are `/contacts`, `/deals`, `/pipeline/summary`, `/hubspot/*`,
+`/pipedrive/*`. Every call in that module therefore 404s.
+
+It is not dead code: `api/hooks.ts` re-exports its hooks, and
+`views/tenant/Integrations.tsx` and `views/tenant/IntegrationsHub.tsx` consume
+them. IntegrationsHub renders from Settings > Integrations, so this is a
+user-reachable view whose data calls cannot succeed.
+
+Of the 15 paths it calls, four differ from a real route only by the extra
+`/crm` segment (`contacts`, `deals`, `pipeline/summary`, `hubspot/connect`);
+two exist but are provider-scoped (`writeback/config` and `writeback/history`
+live under `/hubspot/`); and nine have no backend at all, including
+`/integrations/crm/connections`, which is what `useCRMConnections()` — the
+primary call on both views — depends on.
+
+Fixing it is a decision, not a rename: either build the missing endpoints
+(notably a provider-agnostic connections list) or rework the views onto the
+per-provider routes that exist. `CRMConnection` also has no `sync_enabled` or
+`sync_frequency_minutes` column, though the module's `CRMConnection` type
+declares both, so some of this describes a backend that was never built.
+
+### Open item: reachable Pipedrive code is outside the coverage gate
+
+The `salesforce_*` and `zoho_*` entries in `backend/.coveragerc` named files
+deleted in #721 and omitted nothing; they were removed on 2026-09-05.
+
+The three `pipedrive_*` modules and `crm_sync_tasks.py` are still omitted, and
+that is now wrong: the stated reason was that they were post-launch and
+unreachable, which stopped being true once #722 wired the routes and the CRM
+tasks were registered and scheduled.
+
+They stay omitted only because the impact could not be measured. Un-omitting
+adds 778 statements, ~1.25% of the denominator, so in the worst case (none of
+it covered) the combined figure falls about 0.92pp against a `fail_under` of
+74.0 — enough to fail if the real number sits below ~74.9. Whoever can run the
+full unit+integration suite should measure it and un-omit. **Do not lower the
+ratchet to absorb the newly measured lines.**
 
 The `memory_debug` endpoint that used to be listed here was deleted on
 2026-08-17. Its router was never included in the API router *and*
