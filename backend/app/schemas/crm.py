@@ -8,13 +8,19 @@ which serve the superadmin surface: those take a ``tenant_id`` query parameter
 and are guarded by ``require_super_admin``, while everything here derives the
 tenant from the caller's own token.
 
-Two deliberate omissions, both about data that does not exist rather than data
-withheld:
+Two deliberate omissions. The second is data that does not exist; the first is
+data this surface must not carry, which is not the same thing:
 
 * ``CRMContactRead`` exposes no email, name, phone or company. ``CRMContact``
-  stores only ``email_hash`` and ``phone_hash`` — SHA256 digests kept for
-  identity matching. There is no plaintext column to return, and the hashes
-  are not useful to a UI, so neither is serialised.
+  has no plaintext column for any of them — only ``email_hash`` and
+  ``phone_hash``, SHA256 digests kept for identity matching — and the hashes are
+  not useful to a UI, so neither is serialised.
+
+  This is not the same as saying the plaintext is absent from the database.
+  ``CRMContact.raw_properties`` holds HubSpot's whole property payload, which
+  ``hubspot_sync`` requests with ``email``, ``phone``, ``firstname`` and
+  ``lastname`` in the list. Nothing serialises it and this schema must keep it
+  that way; see docs/05-operations/crm-contact-pii-decision.md, which is open.
 * Deal money is ``amount_cents`` only. ``CRMDeal.amount`` is marked DEPRECATED
   in the model ("should not be used for calculations"), so exposing it would
   invite a float rounding bug in the client.
