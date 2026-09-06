@@ -3,7 +3,7 @@
 # Stratum AI - Hetzner deployment (Cloudflare edge)
 # =============================================================================
 # Commands: setup | deploy | update | status | logs | backup | restore | verify
-#           observability
+#           verify-restore | observability
 #
 # Run on the Hetzner host, from the repository root.
 #
@@ -204,6 +204,20 @@ restore() {
 }
 
 # -----------------------------------------------------------------------------
+# verify-restore — prove a backup actually restores
+# -----------------------------------------------------------------------------
+# `restore` above overwrites the live database, so it is not something anyone
+# runs to check that backups work. This restores the newest object (or a named
+# one) into a throwaway database, asserts against it, and drops it. Nothing the
+# application uses is touched.
+verify_restore() {
+    require_env
+    log_info "Restoring the newest backup into a scratch database"
+    log_warn "This briefly holds a second copy of the data on the db volume."
+    dc exec -T backup-verify /bin/sh /opt/backup/verify-restore.sh once "${1:-}"
+}
+
+# -----------------------------------------------------------------------------
 # verify — post-cutover assertions
 # -----------------------------------------------------------------------------
 verify() {
@@ -242,12 +256,40 @@ verify() {
         *)  log_info "    ok ($logged)" ;;
     esac
 
-    log_info "4/4 A backup exists in R2"
+    log_info "4/5 A backup exists in R2"
     if dc exec -T backup aws s3 ls "s3://${R2_BUCKET:-stratum-backups}/postgres/" \
         --endpoint-url "$R2_ENDPOINT" 2>/dev/null | tail -1 | grep -q .; then
         log_info "    ok"
     else
         log_error "    no backup objects found"; fail=1
+    fi
+
+    # An object existing is not the same claim as that object restoring, and
+    # the difference only ever shows up during a recovery. verify-restore.sh
+    # writes this marker after a dump has actually been restored and asserted
+    # against, so its age is the age of the last real proof.
+    log_info "5/5 A backup has been proven restorable recently"
+    local marker marker_date marker_epoch age_days
+    marker="$(dc exec -T backup aws s3 cp \
+        "s3://${R2_BUCKET:-stratum-backups}/postgres/.last-verified" - \
+        --endpoint-url "$R2_ENDPOINT" 2>/dev/null || true)"
+    marker_date="$(echo "$marker" | sed -n 's/^verified_at=\([0-9-]*\)T.*/\1/p')"
+    if [ -z "$marker_date" ]; then
+        log_error "    no verification marker — backups have never been restore-tested"
+        log_info  "    run: $0 verify-restore"
+        fail=1
+    else
+        marker_epoch="$(date -u -d "$marker_date" +%s 2>/dev/null || echo 0)"
+        age_days=$(( ( $(date -u +%s) - marker_epoch ) / 86400 ))
+        # The backup-verify service runs weekly; twice that is a clear signal
+        # it has stopped rather than merely not fired yet.
+        if [ "$marker_epoch" -eq 0 ]; then
+            log_warn "    marker present but unparseable ($marker_date)"
+        elif [ "$age_days" -gt 14 ]; then
+            log_error "    last verified $age_days days ago — backup-verify is not running"; fail=1
+        else
+            log_info "    ok (last verified $age_days day(s) ago)"
+        fi
     fi
 
     [ "$fail" -eq 0 ] && log_info "All checks passed" || log_error "Checks failed"
@@ -387,9 +429,10 @@ case "${1:-}" in
     backup)  backup ;;
     restore) shift; restore "$@" ;;
     verify)  verify ;;
+    verify-restore) shift; verify_restore "$@" ;;
     observability) observability ;;
     *)
-        echo "Usage: $0 {setup|deploy|update|status|logs|backup|restore <key>|verify|observability}"
+        echo "Usage: $0 {setup|deploy|update|status|logs|backup|restore <key>|verify|verify-restore [key]|observability}"
         exit 1
         ;;
 esac
