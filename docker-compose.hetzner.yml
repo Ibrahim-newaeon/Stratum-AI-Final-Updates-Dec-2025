@@ -128,3 +128,42 @@ services:
         limits:
           memory: 256M
           cpus: '0.5'
+
+  # ===========================================================================
+  # Restore verification
+  # ===========================================================================
+  # Separate from `backup` because the two answer different questions on
+  # different clocks: backup asks "did a dump reach R2" every six hours, this
+  # asks "does the newest dump reconstruct a working database" weekly. Folding
+  # the check into run.sh's loop would either run a full restore every six
+  # hours or need its own counter inside a script that is currently one job.
+  #
+  # Same image and the same mounted directory; only the entrypoint differs.
+  backup-verify:
+    image: postgres:16-alpine
+    container_name: stratum_backup_verify
+    restart: always
+    entrypoint: ["/bin/sh", "/opt/backup/verify-restore.sh"]
+    environment:
+      AWS_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?R2_ACCESS_KEY_ID is required}
+      AWS_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?R2_SECRET_ACCESS_KEY is required}
+      AWS_DEFAULT_REGION: auto
+      R2_ENDPOINT: ${R2_ENDPOINT:?R2_ENDPOINT is required}
+      R2_BUCKET: ${R2_BUCKET:?R2_BUCKET is required}
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      PGDATABASE: ${POSTGRES_DB:-stratum_ai}
+      VERIFY_INTERVAL_SECONDS: ${VERIFY_INTERVAL_SECONDS:-604800}
+      VERIFY_MIN_TENANTS: ${VERIFY_MIN_TENANTS:-0}
+    volumes:
+      - ./scripts/backup:/opt/backup:ro
+    networks:
+      - stratum_network
+    depends_on:
+      - db
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
