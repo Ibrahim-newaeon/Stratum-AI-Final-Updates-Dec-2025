@@ -1,3 +1,15 @@
+# Normalise every text file to LF in the repository and in the working tree.
+#
+# Without this, whatever a contributor's editor writes is what lands. #734 was
+# authored with CRLF and five files came across converted, one of them
+# app/api/v1/endpoints/paddle_webhook.py; the churn buried a 56-line test change
+# under a 2,482-line diff in test_deep_features_10_12.py and made `git blame`
+# on those files useless before that commit.
+#
+# text=auto leaves binaries alone: git detects them by content, so the 300-odd
+# tracked fonts and images under .scratch/ are unaffected.
+* text=auto eol=lf
+
 # Force LF line endings for shell scripts (required for Linux containers)
 *.sh text eol=lf
 # Dockerfile* so variants are covered too (Dockerfile.postgres): a CRLF
