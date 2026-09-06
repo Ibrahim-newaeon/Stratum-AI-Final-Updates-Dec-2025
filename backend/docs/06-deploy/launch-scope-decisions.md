@@ -83,22 +83,29 @@ per-provider routes that exist. `CRMConnection` also has no `sync_enabled` or
 `sync_frequency_minutes` column, though the module's `CRMConnection` type
 declares both, so some of this describes a backend that was never built.
 
-### Open item: reachable Pipedrive code is outside the coverage gate
+### Closed: reachable Pipedrive code is back inside the coverage gate
 
 The `salesforce_*` and `zoho_*` entries in `backend/.coveragerc` named files
 deleted in #721 and omitted nothing; they were removed on 2026-09-05.
 
-The three `pipedrive_*` modules and `crm_sync_tasks.py` are still omitted, and
-that is now wrong: the stated reason was that they were post-launch and
-unreachable, which stopped being true once #722 wired the routes and the CRM
-tasks were registered and scheduled.
+The three `pipedrive_*` modules and `crm_sync_tasks.py` were omitted on the
+grounds that they were post-launch and unreachable. That stopped being true
+once #722 wired the routes and #739 registered and scheduled the CRM tasks, at
+which point reachable production code was sitting outside the gate.
 
-They stay omitted only because the impact could not be measured. Un-omitting
-adds 778 statements, ~1.25% of the denominator, so in the worst case (none of
-it covered) the combined figure falls about 0.92pp against a `fail_under` of
-74.0 — enough to fail if the real number sits below ~74.9. Whoever can run the
-full unit+integration suite should measure it and un-omit. **Do not lower the
-ratchet to absorb the newly measured lines.**
+They stayed omitted only because the impact could not be measured locally: the
+figure `fail_under` gates is the combined unit+integration total, and the
+integration suite needs Postgres with pgvector and Apache AGE plus Redis. The
+arithmetic recorded here — 778 statements, ~1.25% of the denominator, ~0.92pp
+worst case — assumed none of it was covered, which was already untrue;
+`test_pipedrive_client_pure.py` and `test_celery_beat_registration.py` both
+exercise these modules.
+
+The entries were removed on 2026-09-06 and CI was used as the instrument: it
+runs both suites with `--cov-append` and enforces the floor, so it measures
+what no local environment could. **The ratchet was not lowered**, and must not
+be to absorb these lines — if the combined total does not hold, the answer is
+tests.
 
 The `memory_debug` endpoint that used to be listed here was deleted on
 2026-08-17. Its router was never included in the API router *and*
