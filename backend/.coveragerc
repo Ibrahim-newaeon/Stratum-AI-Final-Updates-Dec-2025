@@ -25,26 +25,34 @@ omit =
     # test_metrics_endpoint_auth.py.
     app/workers/celery_app.py
     # ---------------------------------------------------------------------
-    # Pipedrive CRM. The salesforce_* and zoho_* entries that used to sit here
-    # were dropped on 2026-09-05: #721 deleted those nine modules, so the
-    # entries named files that no longer exist and omitted nothing.
+    # The Pipedrive CRM family and crm_sync_tasks.py were omitted here until
+    # 2026-09-06. The salesforce_* and zoho_* entries alongside them were
+    # dropped on 2026-09-05: #721 deleted those nine modules, so the entries
+    # named files that no longer existed and omitted nothing.
     #
-    # The reason given for omitting these — "post-launch, and their only entry
-    # point, app/workers/crm_sync_tasks.py, is absent from the Celery include
-    # list so none of its @shared_task defs ever register" — stopped being true
-    # when #722 wired the Pipedrive routes and the CRM tasks were registered and
-    # scheduled. This is now reachable production code sitting outside the gate.
+    # The stated reason for the Pipedrive omission — "post-launch, and their
+    # only entry point, app/workers/crm_sync_tasks.py, is absent from the
+    # Celery include list so none of its @shared_task defs ever register" —
+    # stopped being true in two steps: #722 wired the Pipedrive routes, and
+    # #739 registered and scheduled the CRM tasks. From then on this was
+    # reachable production code sitting outside the gate, which is the one
+    # thing an omit list must never contain.
     #
-    # Un-omitting it adds 778 statements, ~1.25% of the denominator, so in the
-    # worst case (none of it covered) the combined figure falls ~0.92pp against
-    # a fail_under of 74.0. Left in place until someone can run the full
-    # unit+integration suite and measure the real number — the ratchet must not
-    # be lowered to absorb it. hubspot_* and identity_matching stay IN coverage;
-    # both are imported by the live integrations endpoints.
-    app/services/crm/pipedrive_client.py
-    app/services/crm/pipedrive_sync.py
-    app/services/crm/pipedrive_writeback.py
-    app/workers/crm_sync_tasks.py
+    # It was left in place pending a measurement that could not be taken: the
+    # figure fail_under gates is the COMBINED unit+integration total, and the
+    # integration suite needs Postgres with pgvector and Apache AGE plus Redis.
+    # The arithmetic recorded at the time (778 statements, ~1.25% of the
+    # denominator, ~0.92pp worst case) assumed none of it was covered, which was
+    # already untrue — tests/unit/test_pipedrive_client_pure.py and
+    # tests/unit/test_celery_beat_registration.py both exercise these modules.
+    #
+    # Rather than keep guessing, the entries are removed and CI is the
+    # instrument: it runs both suites with --cov-append and enforces the floor
+    # below. If the combined total holds, this was always safe. If it does not,
+    # CI prints the real number and the answer is tests, not a lower ratchet.
+    #
+    # hubspot_* and identity_matching were never omitted; both are imported by
+    # the live integrations endpoints.
     # Dead code (2026-07-02 audit, re-verified 2026-07-05): app/stratum/
     # workers has zero importers. app/monitoring has no importer inside the
     # app either, now that the memory_debug endpoint that never registered
