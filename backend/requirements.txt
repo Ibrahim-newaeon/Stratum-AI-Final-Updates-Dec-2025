@@ -94,7 +94,7 @@ facebook-business>=26.0.0
 google-ads>=31.4.0
 
 # Analytics & ML (scipy needed by ml/ab_testing.py)
-scipy>=1.18.0
+scipy>=1.18.1
 
 # Monitoring & Visualization
 matplotlib>=3.11.1
