@@ -71,7 +71,7 @@ sentry-sdk[fastapi]==2.68.1
 prometheus-client==0.26.0
 
 # Ad Platform SDKs
-stripe>=15.5.1
+stripe>=15.6.1
 requests>=2.34.2
 facebook-business>=26.0.0
 google-ads>=31.4.0

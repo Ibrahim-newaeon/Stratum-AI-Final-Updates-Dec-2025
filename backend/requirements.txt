@@ -88,7 +88,7 @@ mypy==2.3.1
 ruff==0.16.5
 
 # Ad Platform SDKs
-stripe>=15.5.1
+stripe>=15.6.1
 requests>=2.34.2
 facebook-business>=26.0.0
 google-ads>=31.4.0
