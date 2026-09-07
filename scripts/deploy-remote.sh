@@ -22,12 +22,15 @@ case "$TARGET" in
     COMPOSE_FILES="-f docker-compose.staging.yml -f docker-compose.staging.local.yml"
     API_CONTAINER=stratum_staging_api
     HEALTH_URL="http://127.0.0.1:8000/health"
+    # Staging has no Cloudflare-fronted edge to check through.
+    EDGE_HEALTH_HOST=""
     ;;
   prod)
     DIR=/opt/stratum
     COMPOSE_FILES="-f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.hetzner.yml -f docker-compose.observability.yml"
     API_CONTAINER=stratum_api
     HEALTH_URL="http://127.0.0.1:8000/health"
+    EDGE_HEALTH_HOST="api.stratumai.app"
     ;;
   *)
     echo "usage: $0 <staging|prod>" >&2
@@ -94,6 +97,57 @@ for attempt in $(seq 1 40); do
       # shellcheck disable=SC2086
       docker compose $COMPOSE_FILES ps >&2
       exit 1
+    fi
+
+    # -----------------------------------------------------------------------
+    # Recreate the edge, then check through it.
+    #
+    # nginx/stratumai.conf declares `upstream api_upstream { server api:8000; }`
+    # with no resolver, so nginx resolves that name ONCE at startup and caches
+    # the address for the life of the process. `up -d` above recreates the api
+    # container whenever its image changed, which moves it to a new address on
+    # the compose network -- and the edge goes on proxying to the old one.
+    #
+    # The health loop above cannot see this: it runs curl INSIDE the api
+    # container, so it proves the API is up, not that the site is. On
+    # 2026-09-07 that combination reported a successful prod deploy while
+    # api.stratumai.app returned 502 for 25 minutes.
+    #
+    # Recreate rather than reload. A single-file bind mount pins the host
+    # file's inode and the fast-forward writes a new one, so `nginx -s reload`
+    # re-reads the file the container started with and reports success.
+    if docker compose $COMPOSE_FILES config --services | grep -qx edge; then
+      echo "==> recreating edge (api address and config may both have changed)"
+      # shellcheck disable=SC2086
+      docker compose $COMPOSE_FILES up -d --force-recreate --no-deps edge
+      # shellcheck disable=SC2086
+      docker compose $COMPOSE_FILES exec -T edge nginx -t
+
+      if [ -n "$EDGE_HEALTH_HOST" ]; then
+        # End-to-end through nginx, which is the path a real request takes.
+        # --resolve pins the hostname to the loopback so this never leaves the
+        # box, and -k skips verification because the origin certificate is a
+        # Cloudflare Origin Certificate, trusted only by Cloudflare. Encryption
+        # is not what is being tested here; reachability is.
+        echo "==> verifying $EDGE_HEALTH_HOST/health through the edge"
+        edge_ok=""
+        for edge_attempt in $(seq 1 12); do
+          if curl -fsS -k --max-time 10 \
+               --resolve "$EDGE_HEALTH_HOST:443:127.0.0.1" \
+               "https://$EDGE_HEALTH_HOST/health" >/dev/null 2>&1; then
+            echo "==> edge healthy after ${edge_attempt} attempt(s)"
+            edge_ok=1
+            break
+          fi
+          sleep 5
+        done
+        if [ -z "$edge_ok" ]; then
+          echo "!! the api container is healthy but the edge does not serve it" >&2
+          # shellcheck disable=SC2086
+          docker compose $COMPOSE_FILES logs --tail 40 edge >&2 || true
+          exit 1
+        fi
+      fi
     fi
 
     echo "==> alembic: $(docker exec "$API_CONTAINER" sh -lc 'cd /app && alembic current 2>/dev/null | tail -1')"
