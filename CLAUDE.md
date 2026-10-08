@@ -30,6 +30,10 @@ When files disagree, prefer:
 
 Dated audits, checkpoints, generated HTML, datasets, and experiments are historical evidence, not runtime truth. A module existing on disk is not proof that it is registered or launch-ready; check its router, worker, registry, import, and feature-gate paths.
 
+## Change records
+
+A change with a product decision behind it starts as a file in `intent/`, which links to its design in `docs/superpowers/specs/` and its plan in `docs/superpowers/plans/`. Read that chain before implementing, and when the implementation departs from the plan, update the plan in the same commit. These files record what was asked and decided, not current behavior. `intent/README.md` has the format.
+
 ## Stack
 
 - Backend: Python 3.12, FastAPI, Pydantic, SQLAlchemy, Alembic, Celery, and structlog
